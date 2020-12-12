@@ -1,5 +1,5 @@
 import os
-from data_processor.adapted_object_urdf import ObjectUrdfBuilder
+from openvrooms.data_processor.adapted_object_urdf import ObjectUrdfBuilder
 import os
 import pybullet as p
 import numpy as np

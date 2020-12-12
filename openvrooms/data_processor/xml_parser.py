@@ -3,7 +3,7 @@ from shutil import copyfile, rmtree
 import os
 import numpy as np
 import pickle
-from data_processor.obj_transform import ObjTransform, ObjTransformBasic
+from openvrooms.data_processor.obj_transform import ObjTransform, ObjTransformBasic
 from scipy.spatial.transform import Rotation as R
 import matplotlib.pyplot as plt
 import cv2
@@ -225,6 +225,12 @@ class SceneParser:
         ## change original texture coordinates in .obj to match the combined texture
         obj_trans.map_vt_to_combined_texture(mtl_list, texture_size, mtl2uvScale, overwrite=True)
 
+        # ## remove vertex normals
+        # obj_trans.remove_lines(startswith='vn ')
+
+        # ## make faces two-sided
+        # obj_trans.duplicate_faces()
+
         ## save .obj to output directory
         obj_trans.save_obj_file(obj.obj_path)
         
@@ -323,10 +329,14 @@ class SceneParser:
         cnt = 0
         self.xml_root = self.__get_scene_xml()
         for shape_block in tqdm(self.xml_root.findall('shape'), desc='shape block'):
-            obj = self.parse_shape_block(shape_block)
-            if obj == None: 
-                continue
-            self.obj_list.append(obj)
+            if cnt < 10000:
+                obj = self.parse_shape_block(shape_block)
+                if obj == None: 
+                    continue
+                self.obj_list.append(obj)
+            else:
+                break
+            cnt += 1
         
         print('-------------------------------------')
         print('Parsing Done.')

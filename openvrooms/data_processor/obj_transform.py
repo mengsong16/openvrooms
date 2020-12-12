@@ -89,6 +89,28 @@ class ObjTransformBasic:
     def save_obj_file(self, save_path: str):
         with open(save_path, 'w') as f:
             f.writelines(self.lines)
+    def remove_lines(self, startswith: str, overwrite=True):
+        lines = self.lines.copy()
+        for idx, line in enumerate(lines):
+            if line.startswith(startswith):
+                lines[idx] = None
+        # filter out None
+        lines = list(filter(None.__ne__, lines))
+        if overwrite: self.lines = lines
+        return lines
+    def duplicate_faces(self, overwrite=True):
+        lines = self.lines.copy()
+        new_lines = list()
+        for line in lines:
+            if line.startswith('f '):
+                new_lines.append(line)
+                reversed_face = line.strip().split()[1:]
+                reversed_face.reverse()
+                new_lines.append(' '.join(['f']+reversed_face)+'\n')
+            else:
+                new_lines.append(line)
+        if overwrite: self.lines = new_lines
+        return new_lines
     def transform_vertices_and_normals(self, transform_list: list, overwrite=True):
         vertices = np.array(self.vertices)
         normals = np.array(self.normals)

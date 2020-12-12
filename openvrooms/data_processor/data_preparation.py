@@ -6,8 +6,8 @@ from openvrooms.config import *
 import os
 import numpy as np
 import pickle
-from data_processor.xml_parser import SceneParser
-from data_processor.urdf_generator import generate_urdf
+from openvrooms.data_processor.xml_parser import SceneParser
+from openvrooms.data_processor.urdf_generator import generate_urdf
 
 import argparse
 
