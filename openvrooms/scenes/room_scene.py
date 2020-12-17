@@ -31,7 +31,6 @@ import sys
 from openvrooms.config import *
 
 
-# openroom scene
 class RoomScene(Scene):
     """
     Openroom Environment room scenes
@@ -43,18 +42,7 @@ class RoomScene(Scene):
                  fix_interactive_objects=False,
                  empty_room=False
                  ):
-        """
-        Load a building scene and compute traversability
-
-        :param model_id: Scene id
-        :param trav_map_resolution: traversability map resolution
-        :param trav_map_erosion: erosion radius of traversability areas, should be robot footprint radius
-        :param build_graph: build connectivity graph
-        :param is_interactive: whether the scene is interactive. If so, we will replace the annotated objects with the corresponding CAD models and add floor planes with the original floor texture.
-        :param num_waypoints: number of way points returned
-        :param waypoint_resolution: resolution of adjacent way points
-        :param pybullet_load_texture: whether to load texture into pybullet. This is for debugging purpose only and does not affect what the robots see
-        """
+        
         logging.info("Room scene: {}".format(scene_id))
         self.scene_id = scene_id
         self.scene_path = get_scene_path(self.scene_id)
@@ -189,19 +177,6 @@ class RoomScene(Scene):
         print('Loaded meta info of %d static objects'%len(self.static_object_list))
         print('Loaded meta info of %d interactive objects'%len(self.interative_object_list))
 
-    # sample a ramdom location (x,y)
-    def get_random_point(self, floor):
-        # get the traversability map of the given floor
-        trav = self.floor_map[floor]
-        # get traversable region
-        trav_space = np.where(trav == 255)
-        # sample a random x,y on the map
-        idx = np.random.randint(0, high=trav_space[0].shape[0])
-        xy_map = np.array([trav_space[0][idx], trav_space[1][idx]])
-        # convert map coordinate to the world coordinate using resolution
-        x, y = self.map_to_world(xy_map)
-        
-        return floor, np.array([x, y, 0])
 
     def translate_object(self, urdf_id, translate):
         old_translate, old_orn = p.getBasePositionAndOrientation(urdf_id)
