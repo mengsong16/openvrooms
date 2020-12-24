@@ -32,24 +32,33 @@ class RelocatePointGoalFixedTask(BaseTask):
         self.reward_type = self.config.get('reward_type', 'l2')
 
         self.termination_conditions = [
-            MaxCollision(self.config),
+            #MaxCollision(self.config),
             Timeout(self.config),
             OutOfBound(self.config),
-            PointGoal(self.config),
+            #PointGoal(self.config),
         ]
 
         self.reward_functions = [
             PotentialReward(self.config),
-            CollisionReward(self.config),
-            PointGoalReward(self.config),
+            #CollisionReward(self.config),
+            #PointGoalReward(self.config),
         ]
 
-        self.initial_pos = np.array(self.config.get('initial_pos', [0, 0, 0]))
-        self.initial_orn = np.array(self.config.get('initial_orn', [0, 0, 0]))
+        self.agent_initial_pos = np.array(self.config.get('agent_initial_pos', [0, 0, 0]))
+        self.agent_initial_orn = np.array(self.config.get('agent_initial_orn', [0, 0, 0]))  # euler angles: rotatation around x,y,z axis
 
-        self.target_pos = np.array(self.config.get('target_pos', [5, 5, 0]))
+        self.obj_initial_pos = np.array(self.config.get('obj_initial_pos', [[1, 1, 0], [2, 2, 0]]))
+        self.obj_target_pos = np.array(self.config.get('obj_target_pos', [[-1, -1], [-2, -2]]))
+
+        assert self.obj_initial_pos.shape[0] == self.obj_target_pos.shape[0]
+        self.obj_num = self.obj_initial_pos.shape[0]
+
+        print("Number of objects: %d"%(self.obj_num))
+        print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
+        print("Target x-y positions of objects: \n%s"%self.obj_target_pos)
+
         self.goal_format = self.config.get('goal_format', 'polar')
-        self.dist_tol = self.termination_conditions[-1].dist_tol
+        #self.dist_tol = self.termination_conditions[-1].dist_tol
 
         self.visual_object_at_initial_target_pos = self.config.get(
             'visual_object_at_initial_target_pos', True
@@ -120,28 +129,35 @@ class RelocatePointGoalFixedTask(BaseTask):
             return
 
         cyl_length = 0.2
-        self.initial_pos_vis_obj = VisualMarker(
-            visual_shape=p.GEOM_CYLINDER,
-            rgba_color=[1, 0, 0, 0.3],
-            radius=self.dist_tol,
-            length=cyl_length,
-            initial_offset=[0, 0, cyl_length / 2.0])
-        self.target_pos_vis_obj = VisualMarker(
-            visual_shape=p.GEOM_CYLINDER,
-            rgba_color=[0, 0, 1, 0.3],
-            radius=self.dist_tol,
-            length=cyl_length,
-            initial_offset=[0, 0, cyl_length / 2.0])
+
+        self.initial_pos_vis_objs = []
+        for i in list(np.arange(self.obj_num)):
+            self.initial_pos_vis_objs[i] = VisualMarker(
+                visual_shape=p.GEOM_CYLINDER,
+                rgba_color=[1, 0, 0, 0.3],
+                radius=self.dist_tol,
+                length=cyl_length,
+                initial_offset=[0, 0, cyl_length / 2.0])
+
+        self.target_pos_vis_objs = []
+        for i in list(np.arange(self.obj_num)):
+            self.target_pos_vis_objs[i] = VisualMarker(
+                visual_shape=p.GEOM_CYLINDER,
+                rgba_color=[0, 0, 1, 0.3],
+                radius=self.dist_tol,
+                length=cyl_length,
+                initial_offset=[0, 0, cyl_length / 2.0])
 
         if self.target_visual_object_visible_to_agent:
-            env.simulator.import_object(self.initial_pos_vis_obj)
-            env.simulator.import_object(self.target_pos_vis_obj)
+            for i in list(np.arange(self.obj_num)):
+                env.simulator.import_object(self.initial_pos_vis_objs[i])
+                env.simulator.import_object(self.target_pos_vis_objs[i])
         else:
-            self.initial_pos_vis_obj.load()
-            self.target_pos_vis_obj.load()
+            for i in list(np.arange(self.obj_num)):
+                self.initial_pos_vis_objs[i].load()
+                self.target_pos_vis_objs[i].load()
 
         
-
     def get_l2_potential(self, env):
         """
         Get potential based on L2 distance
@@ -149,8 +165,12 @@ class RelocatePointGoalFixedTask(BaseTask):
         :param env: environment instance
         :return: L2 distance to the target position
         """
-        return l2_distance(env.robots[0].get_position()[:2],
-                           self.target_pos[:2])
+
+        total_l2_potential = 0.0
+        for i in list(np.arange(self.obj_num)):
+            total_l2_potential += l2_distance(env.robots[0].get_position()[:2], self.obj_target_pos[i][:])
+
+        return total_l2_potential
 
     def get_potential(self, env):
         """
@@ -184,9 +204,9 @@ class RelocatePointGoalFixedTask(BaseTask):
         """
 
         # land robot at initial pose
-        env.land(env.robots[0], self.initial_pos, self.initial_orn)
+        env.land(env.robots[0], self.agent_initial_pos, self.agent_initial_orn)
     
-        self.robot_pos = self.initial_pos[:2]
+        self.robot_pos = self.agent_initial_pos[:2]
 
         for reward_function in self.reward_functions:
             reward_function.reset(self, env)
@@ -218,23 +238,30 @@ class RelocatePointGoalFixedTask(BaseTask):
         :param env: environment instance
         :return: task-specific observation
         """
+
+        '''
         task_obs = self.global_to_local(env, self.target_pos)[:2]
+
         if self.goal_format == 'polar':
             task_obs = np.array(cartesian_to_polar(task_obs[0], task_obs[1]))
-
-        # linear velocity along the x-axis
-        linear_velocity = rotate_vector_3d(
+        '''
+        # robot linear velocity along the x-axis
+        robot_linear_velocity = rotate_vector_3d(
             env.robots[0].get_linear_velocity(),
             *env.robots[0].get_rpy())[0]
         
-        # angular velocity along the z-axis
-        angular_velocity = rotate_vector_3d(
+        # robot angular velocity along the z-axis
+        robot_angular_velocity = rotate_vector_3d(
             env.robots[0].get_angular_velocity(),
             *env.robots[0].get_rpy())[2]
         
-        task_obs = np.append(
-            task_obs, [linear_velocity, angular_velocity])
+        task_obs = np.array([robot_linear_velocity, robot_angular_velocity])
 
+        '''
+        for i in list(np.arange(self.obj_num)):
+            obj_current_pos[i][:]
+            task_obs = np.append(task_obs, [robot_linear_velocity, robot_angular_velocity])
+        '''
         return task_obs
 
     def step_visualization(self, env):
@@ -246,8 +273,9 @@ class RelocatePointGoalFixedTask(BaseTask):
         if env.mode != 'gui':
             return
 
-        self.initial_pos_vis_obj.set_position(self.initial_pos)
-        self.target_pos_vis_obj.set_position(self.target_pos)
+        for i in list(np.arange(self.obj_num)):
+            self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
+            self.target_pos_vis_objs[i].set_position([self.obj_target_pos[i][0], self.obj_target_pos[i][1], 0])
 
 
     def step(self, env):

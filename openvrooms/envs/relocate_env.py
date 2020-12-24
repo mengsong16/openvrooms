@@ -316,7 +316,7 @@ class RelocateEnv(iGibsonEnv):
 
         :param obj: an instance of robot or object
         :param pos: position
-        :param orn: orientation
+        :param orn: orientation (euler angles: rotatation around x,y,z axis)
         :param offset: z offset
         """
         if orn is None:
