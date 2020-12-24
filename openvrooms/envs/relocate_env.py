@@ -136,10 +136,11 @@ class RelocateEnv(iGibsonEnv):
 
 
         # task
-        if self.config['task'] == 'relocate_single_goal_fixed':
+        if self.config['task'] == 'relocate_point_goal_fixed':
             self.task = RelocatePointGoalFixedTask(self)
         else:
             self.task = None
+            print("No such task defined")
 
 
     def load_observation_space(self):
@@ -152,6 +153,15 @@ class RelocateEnv(iGibsonEnv):
         observation_space = OrderedDict()
         sensors = OrderedDict()
         vision_modalities = []
+
+        if 'task_obs' in self.output:
+            observation_space['task_obs'] = self.build_obs_space(
+                shape=(self.task.task_obs_dim,), low=-np.inf, high=-np.inf)
+        if 'rgb' in self.output:
+            observation_space['rgb'] = self.build_obs_space(
+                shape=(self.image_height, self.image_width, 3),
+                low=0.0, high=1.0)
+            vision_modalities.append('rgb')    
         
         if len(vision_modalities) > 0:
             sensors['vision'] = VisionSensor(self, vision_modalities)
@@ -410,7 +420,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--config',
         '-c',
-        help='which config file to use [default: use yaml files in examples/configs]', default='/Users/meng/Documents/openvrooms/openvrooms/configs/turtlebot_relocate.yaml')
+        help='which config file to use [default: use yaml files in examples/configs]', default='/home/meng/openvrooms/openvrooms/configs/turtlebot_relocate.yaml')
     parser.add_argument('--mode',
                         '-m',
                         choices=['headless', 'gui', 'iggui'],

@@ -27,7 +27,7 @@ class RelocatePointGoalFixedTask(BaseTask):
     """
 
     def __init__(self, env):
-        super(PointNavFixedTask, self).__init__(env)
+        super(RelocatePointGoalFixedTask, self).__init__(env)
 
         self.reward_type = self.config.get('reward_type', 'l2')
 
@@ -195,7 +195,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         """
         Aggreate termination conditions and fill info
         """
-        done, info = super(PointNavFixedTask, self).get_termination(
+        done, info = super(RelocatePointGoalFixedTask, self).get_termination(
             env, collision_links, action, info)
 
         return done, info
@@ -258,5 +258,4 @@ class RelocatePointGoalFixedTask(BaseTask):
         """
         self.step_visualization(env)
         new_robot_pos = env.robots[0].get_position()[:2]
-        self.path_length += l2_distance(self.robot_pos, new_robot_pos)
         self.robot_pos = new_robot_pos

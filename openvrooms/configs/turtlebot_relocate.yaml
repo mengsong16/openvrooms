@@ -9,6 +9,9 @@ robot: Turtlebot
 is_discrete: false
 velocity: 1.0
 
+# sensor spec
+output: [task_obs]
+
 # task
 task: relocate_point_goal_fixed
 target_dist_min: 1.0
@@ -21,6 +24,8 @@ reward_type: l2
 success_reward: 10.0
 potential_reward_weight: 1.0
 collision_reward_weight: -0.1
+
+
 
 # discount factor
 discount_factor: 0.99
