@@ -1,0 +1,39 @@
+# scene
+scene: relocate
+scene_id: scene0420_01
+load_texture: true
+obj_num: 1
+
+# robot
+robot: Turtlebot
+is_discrete: false
+velocity: 1.0
+
+# task
+task: relocate_point_goal_fixed
+target_dist_min: 1.0
+target_dist_max: 10.0
+goal_format: polar
+task_obs_dim: 4
+
+# reward
+reward_type: l2
+success_reward: 10.0
+potential_reward_weight: 1.0
+collision_reward_weight: -0.1
+
+# discount factor
+discount_factor: 0.99
+
+# termination condition
+dist_tol: 0.36  # body width
+max_step: 500
+max_collisions_allowed: 500
+
+# misc config
+initial_pos_z_offset: 0.1
+collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
+
+# visual objects
+visual_object_at_initial_target_pos: true
+target_visual_object_visible_to_agent: false

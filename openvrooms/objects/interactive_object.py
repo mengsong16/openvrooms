@@ -16,6 +16,8 @@ class InteractiveObj(Object):
         self.filename = filename
         self.body_id = None
         self.fix_base = fix_base
+        self.volume = 0
+        self.bbox = None
     
     # load from urdf and use material and colors from mtl
     def _load(self):

@@ -22,7 +22,7 @@ def generate_trav_map(scene_id='scene0420_01'):
     
     s.import_scene(scene)
 
-    for i in range(20):
+    for i in range(480):
         s.step()
    
     vertices_info, faces_info = s.renderer.dump()

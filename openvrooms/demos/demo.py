@@ -301,8 +301,8 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    # pushing_demo(args.id)
-    navigation_demo()
+    pushing_demo(args.id)
+    #navigation_demo()
     #navigation_demo_reset_positions(args.id)
 
 

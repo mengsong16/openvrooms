@@ -28,6 +28,7 @@ import trimesh
 import argparse
 
 from openvrooms.scenes.room_scene import RoomScene
+from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.objects.interactive_object import InteractiveObj
 
 def test_object():
@@ -74,6 +75,30 @@ def test_layout():
 
 	p.disconnect()
 
+def test_relocate_scene(scene_id='scene0420_01', fix_interactive_objects=False, n_interactive_objects=1):
+	time_step = 1./240. 
+	p.connect(p.GUI)
+	p.setGravity(0, 0, -9.8)
+	p.setTimeStep(time_step)
+	
+	scene = RelocateScene(scene_id=scene_id, fix_interactive_objects=fix_interactive_objects, n_interactive_objects=n_interactive_objects)
+	scene.load()
+	
+	robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
+	turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
+
+	turtlebot.load()
+	
+	turtlebot.set_position([0, 0, 0])
+	turtlebot.robot_specific_reset()
+	turtlebot.keep_still()
+	
+	for _ in range(2400000):  # at least 100 seconds
+		 p.stepSimulation()
+		 time.sleep(1./240.)
+
+	p.disconnect()
+
 
 def test_scene(scene_id='scene0420_01', fix_interactive_objects=True):
 	time_step = 1./240. 
@@ -83,7 +108,6 @@ def test_scene(scene_id='scene0420_01', fix_interactive_objects=True):
 
 	#floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
 	#p.loadMJCF(floor)
-
 	scene = RoomScene(scene_id=scene_id, load_from_xml=True, fix_interactive_objects=fix_interactive_objects, empty_room=False)
 	scene.load()
 	
@@ -137,7 +161,7 @@ class DemoInteractive(object):
 		return
 
 	def run_demo(self):
-		s = Simulator(mode='pbgui', image_width=700, image_height=700)
+		s = Simulator(mode='iggui', image_width=700, image_height=700)
 
 		robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
 		turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file)
@@ -160,7 +184,8 @@ if __name__ == "__main__":
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 	
-	test_scene(args.id, fix_interactive_objects=True)
+	test_relocate_scene(args.id, fix_interactive_objects=False, n_interactive_objects=2)
+	#test_scene(args.id, fix_interactive_objects=True)
 	#test_layout()
 	#test_robot()
 	#test_object()

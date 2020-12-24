@@ -36,8 +36,7 @@ class RoomScene(Scene):
     Openroom Environment room scenes
     """
     def __init__(self,
-                 scene_id,
-                 pybullet_load_texture=False, 
+                 scene_id, 
                  load_from_xml=True,
                  fix_interactive_objects=False,
                  empty_room=False
@@ -46,7 +45,6 @@ class RoomScene(Scene):
         logging.info("Room scene: {}".format(scene_id))
         self.scene_id = scene_id
         self.scene_path = get_scene_path(self.scene_id)
-        self.pybullet_load_texture = pybullet_load_texture
         self.is_interactive = True 
 
         self.static_object_list = []  # metainfo list of static objects except layout
@@ -58,12 +56,16 @@ class RoomScene(Scene):
         self.layout_id = None # urdf id of layout
 
         self.ground_z = None
+        self.room_height = None
 
         self.load_from_xml = load_from_xml
 
         self.fix_interactive_objects = fix_interactive_objects
 
         self.empty_room = empty_room
+
+        self.x_range = []
+        self.y_range = []
         
 
     def load(self):
@@ -91,9 +93,6 @@ class RoomScene(Scene):
         
         # print object poses
         #self.print_scene_info(interactive_only=True)
-
-        # load map
-        #self.load_trav_map()
 
         # return static object ids including layout id 
         return [self.layout_id] + self.static_object_ids
@@ -142,14 +141,21 @@ class RoomScene(Scene):
 
         print('Layout urdf loaded: %s'%(layout_urdf_file))
 
-        # compute z coordinate of the ground
+        # compute z coordinate, x and y range of the ground
+        #filename, _ = os.path.splitext(obj_file_name)
+        #obj_file_name = filename + "_vhacd.obj"
+        #print(obj_file_name)
         mesh = trimesh.load(os.path.join(self.scene_path, obj_file_name))
         bounds = mesh.bounds
         # bounds - axis aligned bounds of mesh
         # 2*3 matrix, min, max, x, y, z
-        self.ground_z = bounds[0][2] 
-        # change scene's friction
-        #p.changeDynamics(self.layout_id, -1, lateralFriction=1)
+        self.ground_z = bounds[0][2]
+        self.room_height =  bounds[1][2] - bounds[0][2]
+        self.x_range = [bounds[0][0], bounds[1][0]]
+        self.y_range = [bounds[0][1], bounds[1][1]]
+
+        print("Layout range: x=%s, y=%s"%(self.x_range, self.y_range))
+        
     
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)
@@ -217,7 +223,7 @@ class RoomScene(Scene):
             for i in list(range(n_interactive_objs)):
                 self.get_metric_centroid_physics_pose(obj_file_name=self.interative_object_list[i].obj_path, urdf_id=self.interative_objects[i].body_id)   
 
-    def reset_scene_object_positions_to_centroids(self):
+    def reset_layout_static_object_positions_to_centroids(self):
         if self.layout_id is not None:
             self.set_mesh_centroid_as_position(obj_file_name=self.layout.obj_path, urdf_id=self.layout_id)
 
@@ -225,6 +231,9 @@ class RoomScene(Scene):
         if n_static_objs > 0:
             for i in list(range(n_static_objs)):
                 self.set_mesh_centroid_as_position(obj_file_name=self.static_object_list[i].obj_path, urdf_id=self.static_object_ids[i])
+
+    def reset_scene_object_positions_to_centroids(self):
+        self.reset_layout_static_object_positions_to_centroids()
 
         n_interactive_objs = len(self.interative_objects) 
         if n_interactive_objs > 0:
