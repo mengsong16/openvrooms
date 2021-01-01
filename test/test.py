@@ -5,6 +5,8 @@ from gibson2.utils.utils import parse_config
 from gibson2.utils.utils import l2_distance
 from gibson2.render.mesh_renderer.mesh_renderer_cpu import MeshRenderer
 from gibson2.render.profiler import Profiler
+from gibson2.scenes.igibson_indoor_scene import InteractiveIndoorScene
+from gibson2.scenes.scene_base import Scene
 
 import pytest
 import pybullet as p
@@ -161,7 +163,7 @@ class DemoInteractive(object):
 		return
 
 	def run_demo(self):
-		s = Simulator(mode='iggui', image_width=700, image_height=700)
+		s = Simulator(mode='pbgui', image_width=700, image_height=700)
 
 		robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
 		turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file)
@@ -184,11 +186,11 @@ if __name__ == "__main__":
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 	
-	test_relocate_scene(args.id, fix_interactive_objects=False, n_interactive_objects=2)
+	#test_relocate_scene(args.id, fix_interactive_objects=False, n_interactive_objects=2)
 	#test_scene(args.id, fix_interactive_objects=True)
 	#test_layout()
 	#test_robot()
 	#test_object()
 
-	#demo = DemoInteractive()
-	#demo.run_demo()
+	demo = DemoInteractive()
+	demo.run_demo()

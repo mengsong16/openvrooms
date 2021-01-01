@@ -9,7 +9,8 @@ import pybullet_data
 from gibson2.utils.utils import l2_distance
 
 from openvrooms.objects.interactive_object import InteractiveObj
-from openvrooms.scenes.base_scene import Scene
+#from openvrooms.scenes.base_scene import Scene
+from gibson2.scenes.scene_base import Scene
 
 import numpy as np
 from PIL import Image
