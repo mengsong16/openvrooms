@@ -48,5 +48,4 @@ initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
 
 # visual objects
-visual_object_at_initial_target_pos: true
 target_visual_object_visible_to_agent: false

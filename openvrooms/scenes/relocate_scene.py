@@ -7,6 +7,7 @@ os.sys.path.insert(0, parentdir)
 import pybullet_data
 
 from gibson2.utils.utils import l2_distance
+from transforms3d.euler import euler2quat
 
 from openvrooms.objects.interactive_object import InteractiveObj
 #from openvrooms.scenes.base_scene import Scene
@@ -116,6 +117,16 @@ class RelocateScene(RoomScene):
 
         
         print("Object positions when initially loading the scene: "+s)
+   
+
+    # reset the poses of interactive objects according to given values
+    # orn: eular angles
+    def reset_interactive_object_poses(self, obj_pos_list, obj_orn_list):  
+        n_interactive_objs = len(self.interative_objects) 
+
+        for i in list(range(n_interactive_objs)):
+            #print(obj_orn_list[i])
+            p.resetBasePositionAndOrientation(bodyUniqueId=self.interative_objects[i].body_id, posObj=obj_pos_list[i], ornObj=euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]))
 
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)

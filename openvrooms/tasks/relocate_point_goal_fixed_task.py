@@ -44,16 +44,15 @@ class RelocatePointGoalFixedTask(BaseTask):
             #PointGoalReward(self.config),
         ]
 
-        # set robot's initial pose
+        # get robot's initial pose
         self.agent_initial_pos = np.array(self.config.get('agent_initial_pos', [0, 0, 0]))
         self.agent_initial_orn = np.array(self.config.get('agent_initial_orn', [0, 0, 0]))  # euler angles: rotatation around x,y,z axis
 
-        # set object intial positions (only for visualization)
+        # get object intial positions (for scene and visualization)
         self.obj_initial_pos = np.array(self.config.get('obj_initial_pos'))
+        self.obj_initial_orn = np.array(self.config.get('obj_initial_orn'))
         self.obj_target_pos = np.array(self.config.get('obj_target_pos'))
-
-        print(self.obj_initial_pos)
-        print(self.obj_target_pos)
+        self.obj_target_orn = np.array(self.config.get('obj_target_orn'))
 
 
         if self.obj_initial_pos.shape[0] != self.obj_target_pos.shape[0]:
@@ -76,9 +75,9 @@ class RelocatePointGoalFixedTask(BaseTask):
         #self.dist_tol = self.termination_conditions[-1].dist_tol
         self.dist_tol = 0.36
 
-        self.visual_object_at_initial_target_pos = self.config.get(
-            'visual_object_at_initial_target_pos', True
-        )
+        #self.visual_object_at_initial_target_pos = self.config.get(
+        #    'visual_object_at_initial_target_pos', True
+        #)
         self.target_visual_object_visible_to_agent = self.config.get(
             'target_visual_object_visible_to_agent', False
         )
@@ -86,45 +85,25 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         self.load_visualization(env)
 
-        self.interactive_objects = self.load_interactive_objects(env)
+        self.get_loaded_interactive_objects(env)
+
+        # ignore collisions with these interactive objects
         env.collision_ignore_body_b_ids |= set(
             [obj.body_id for obj in self.interactive_objects])
         
 
-    def load_interactive_objects(self, env):
+    def get_loaded_interactive_objects(self, env):
         """
-        Load interactive objects (YCB objects)
+        Get loaded interactive objects from the scene
 
         :param env: environment instance
         :return: a list of interactive objects
         """
-        interactive_objects = []
+        self.interactive_objects = env.scene.interative_objects
+
+        if len(self.interactive_objects) < 1:
+            raise Exception("Interactive objects not loaded in the scene!")
         
-        return interactive_objects
-
-    def reset_interactive_objects(self, env):
-        """
-        Reset the poses of interactive objects to have no collisions with the scene or the robot
-
-        :param env: environment instance
-        """
-        max_trials = 100
-
-        for obj in self.interactive_objects:
-            # TODO: p.saveState takes a few seconds, need to speed up
-            state_id = p.saveState()
-            for _ in range(max_trials):
-                _, pos = env.scene.get_random_point(floor=self.floor_num)
-                orn = np.array([0, 0, np.random.uniform(0, np.pi * 2)])
-                reset_success = env.test_valid_position(obj, pos, orn)
-                p.restoreState(state_id)
-                if reset_success:
-                    break
-
-            if not reset_success:
-                print("WARNING: Failed to reset interactive obj without collision")
-
-            env.land(obj, pos, orn)
 
     def reset_scene(self, env):
         """
@@ -132,8 +111,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         :param env: environment instance
         """
-        super(InteractiveNavRandomTask, self).reset_scene(env)
-        self.reset_interactive_objects(env)
+        env.scene.reset_interactive_object_poses(self.obj_initial_pos, self.obj_initial_orn)
 
     def load_visualization(self, env):
         """
@@ -148,21 +126,21 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         self.initial_pos_vis_objs = []
         for i in list(np.arange(self.obj_num)):
-            self.initial_pos_vis_objs[i] = VisualMarker(
+            self.initial_pos_vis_objs.append(VisualMarker(
                 visual_shape=p.GEOM_CYLINDER,
                 rgba_color=[1, 0, 0, 0.3],
                 radius=self.dist_tol,
                 length=cyl_length,
-                initial_offset=[0, 0, cyl_length / 2.0])
+                initial_offset=[0, 0, cyl_length / 2.0]))
 
         self.target_pos_vis_objs = []
         for i in list(np.arange(self.obj_num)):
-            self.target_pos_vis_objs[i] = VisualMarker(
+            self.target_pos_vis_objs.append(VisualMarker(
                 visual_shape=p.GEOM_CYLINDER,
                 rgba_color=[0, 0, 1, 0.3],
                 radius=self.dist_tol,
                 length=cyl_length,
-                initial_offset=[0, 0, cyl_length / 2.0])
+                initial_offset=[0, 0, cyl_length / 2.0]))
 
         if self.target_visual_object_visible_to_agent:
             for i in list(np.arange(self.obj_num)):
@@ -201,16 +179,6 @@ class RelocatePointGoalFixedTask(BaseTask):
             print("Not implemented!")
             return
 
-    def reset_scene(self, env):
-        """
-        Task-specific scene reset: reset scene objects or floor plane
-
-        :param env: environment instance
-        """
-        if isinstance(env.scene, InteractiveIndoorScene):
-            env.scene.reset_scene_objects()
-        elif isinstance(env.scene, StaticIndoorScene):
-            env.scene.reset_floor(floor=self.floor_num)
 
     def reset_agent(self, env):
         """
