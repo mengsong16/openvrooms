@@ -44,21 +44,37 @@ class RelocatePointGoalFixedTask(BaseTask):
             #PointGoalReward(self.config),
         ]
 
+        # set robot's initial pose
         self.agent_initial_pos = np.array(self.config.get('agent_initial_pos', [0, 0, 0]))
         self.agent_initial_orn = np.array(self.config.get('agent_initial_orn', [0, 0, 0]))  # euler angles: rotatation around x,y,z axis
 
-        self.obj_initial_pos = np.array(self.config.get('obj_initial_pos', [[1, 1, 0], [2, 2, 0]]))
-        self.obj_target_pos = np.array(self.config.get('obj_target_pos', [[-1, -1], [-2, -2]]))
+        # set object intial positions (only for visualization)
+        self.obj_initial_pos = np.array(self.config.get('obj_initial_pos'))
+        self.obj_target_pos = np.array(self.config.get('obj_target_pos'))
 
-        assert self.obj_initial_pos.shape[0] == self.obj_target_pos.shape[0]
-        self.obj_num = self.obj_initial_pos.shape[0]
+        print(self.obj_initial_pos)
+        print(self.obj_target_pos)
+
+
+        if self.obj_initial_pos.shape[0] != self.obj_target_pos.shape[0]:
+            raise Exception("Initial position list should have the same shape as target position list!")
+
+        self.obj_num = self.config.get('obj_num', 1)
+        
+
+        if self.obj_initial_pos.shape[0] != self.obj_num:
+            raise Exception("Initial position list should have %d objects, instead of %d !"%(self.obj_num, self.obj_initial_pos.shape[0]))
+
 
         print("Number of objects: %d"%(self.obj_num))
         print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
         print("Target x-y positions of objects: \n%s"%self.obj_target_pos)
 
         self.goal_format = self.config.get('goal_format', 'polar')
+
+        # distance tolerance for goal reaching
         #self.dist_tol = self.termination_conditions[-1].dist_tol
+        self.dist_tol = 0.36
 
         self.visual_object_at_initial_target_pos = self.config.get(
             'visual_object_at_initial_target_pos', True

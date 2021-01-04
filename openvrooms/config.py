@@ -6,12 +6,13 @@ import numpy as np
 
 wd = os.getcwd()
 root_path = os.path.join(wd[:wd.find('/openvrooms')], 'openvrooms') 
-#print(root_path)
 dataset_path = os.path.join(root_path, "dataset")
 interative_dataset_path = os.path.join(dataset_path, "interactive")
 metadata_path = os.path.join(interative_dataset_path, "metadata")
 assets_path = os.path.join(root_path, "assets")
-config_path = os.path.join(assets_path, "configs")	
+
+code_path = os.path.join(root_path, "openvrooms")
+config_path = os.path.join(code_path, "configs")	
 
 turtlebot_urdf_file = os.path.join(assets_path, "models/turtlebot/turtlebot.urdf")
 

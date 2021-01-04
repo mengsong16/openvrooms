@@ -68,7 +68,7 @@ class RelocateScene(RoomScene):
         # set layout and object's positions to their centroids
         self.reset_scene_object_positions_to_centroids()
 
-        # reset the poses of interative objects
+        # randomly reset the poses of interative objects without collisions
         self.set_interative_object_initial_poses()
 
         # align the bottom of layout to z = 0 in world frame
@@ -101,6 +101,8 @@ class RelocateScene(RoomScene):
 
         #print(sel_cell_list)
 
+        s = ""
+
         for i, obj in enumerate(self.interative_objects):
             x_coord = self.x_range[0] + (sel_cell_list[i][0] + 0.5) * self.x_cell_size
             y_coord = self.y_range[0] + (sel_cell_list[i][1] + 0.5) * self.y_cell_size
@@ -109,7 +111,11 @@ class RelocateScene(RoomScene):
             #print(y_coord)
 
             obj.set_xy_position(x_coord, y_coord)
+
+            s += "[%.1f,%.1f] "%(x_coord, y_coord)
+
         
+        print("Object positions when initially loading the scene: "+s)
 
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)

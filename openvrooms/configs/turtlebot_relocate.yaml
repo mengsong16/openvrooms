@@ -2,17 +2,20 @@
 scene: relocate
 scene_id: scene0420_01
 load_texture: true
-obj_num: 1
+obj_num: 2
 
 # robot
 robot: Turtlebot
 is_discrete: false
 velocity: 1.0
-agent_initial_pos: [0,0,0]
+agent_initial_pos: [0, 0, 0]
+agent_initial_orn: [0, 0, 0]
 
 # objects
-obj_initial_pos: [[1, 1], [2, 2]]
-obj_target_pos: [[-1, -1], [-2, -2]]
+obj_initial_pos: [[1, 1, 0], [2, 2, 0]]
+obj_initial_orn: [[0, 0, 0], [0, 0, 0]]
+obj_target_pos: [[-1, -1, 0], [-2, -2, 0]]
+obj_target_orn: [[0, 0, 0], [0, 0, 0]]
 
 # sensor spec
 output: [task_obs]
