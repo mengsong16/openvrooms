@@ -151,7 +151,7 @@ class RelocatePointGoalFixedTask(BaseTask):
                 self.initial_pos_vis_objs[i].load()
                 self.target_pos_vis_objs[i].load()
 
-        
+    # compute total distance of objects from initial positions to target positions       
     def get_l2_potential(self, env):
         """
         Get potential based on L2 distance
@@ -162,7 +162,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         total_l2_potential = 0.0
         for i in list(np.arange(self.obj_num)):
-            total_l2_potential += l2_distance(env.robots[0].get_position()[:2], self.obj_target_pos[i][:])
+            total_l2_potential += l2_distance(env.robots[0].get_position()[:2], self.obj_target_pos[i][:2])
 
         return total_l2_potential
 
@@ -182,6 +182,40 @@ class RelocatePointGoalFixedTask(BaseTask):
 
     def reset_agent(self, env):
         """
+        Reset robot initial pose.
+        Sample initial pose and target position, check validity, and land it.
+
+        :param env: environment instance
+        """
+        reset_success = False
+        max_trials = 100
+
+        # cache pybullet state
+        # TODO: p.saveState takes a few seconds, need to speed up
+        state_id = p.saveState()
+        for i in range(max_trials):
+            initial_pos, initial_orn, target_pos = \
+                self.sample_initial_pose_and_target_pos(env)
+            reset_success = env.test_valid_position(
+                env.robots[0], initial_pos, initial_orn) and \
+                env.test_valid_position(
+                    env.robots[0], target_pos)
+            p.restoreState(state_id)
+            if reset_success:
+                break
+
+        if not reset_success:
+            logging.warning("WARNING: Failed to reset robot without collision")
+
+        p.removeState(state_id)
+
+        self.target_pos = target_pos
+        self.initial_pos = initial_pos
+
+        super(PointNavRandomTask, self).reset_agent(env)
+        
+    def reset_agent(self, env):
+        """
         Task-specific agent reset: land the robot to initial pose, compute initial potential
 
         :param env: environment instance
@@ -192,6 +226,7 @@ class RelocatePointGoalFixedTask(BaseTask):
     
         self.robot_pos = self.agent_initial_pos[:2]
 
+        # reset reward functions
         for reward_function in self.reward_functions:
             reward_function.reset(self, env)
 

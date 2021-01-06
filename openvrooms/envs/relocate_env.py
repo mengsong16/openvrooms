@@ -74,7 +74,7 @@ class RelocateEnv(iGibsonEnv):
 
 	def load_scene_robot(self):
 		"""
-		Load the scene and robot according to the config file
+		Import the scene and robot (but have not reset their poses)
 		"""
 		if self.config['scene'] == 'relocate':
 			scene_id = self.config['scene_id']
@@ -226,6 +226,7 @@ class RelocateEnv(iGibsonEnv):
 			bodyA=self.robots[0].robot_ids[0]))
 		return self.filter_collision_links(collision_links)
 
+	# get collision links with robot base link except those should be ignored
 	def filter_collision_links(self, collision_links):
 		"""
 		Filter out collisions that should be ignored
@@ -249,6 +250,7 @@ class RelocateEnv(iGibsonEnv):
 			new_collision_links.append(item)
 		return new_collision_links
 
+	# populate information into info
 	def populate_info(self, info):
 		"""
 		Populate info dictionary with any useful information
@@ -273,6 +275,7 @@ class RelocateEnv(iGibsonEnv):
 		if action is not None:
 			self.robots[0].apply_action(action)
 
+		# check collisions
 		collision_links = self.run_simulation()
 		self.collision_links = collision_links
 		self.collision_step += int(len(collision_links) > 0)
@@ -294,6 +297,7 @@ class RelocateEnv(iGibsonEnv):
 
 		return state, reward, done, info
 
+	# return contact points with body_id
 	def check_collision(self, body_id):
 		"""
 		Check with the given body_id has any collision after one simulator step
@@ -329,6 +333,7 @@ class RelocateEnv(iGibsonEnv):
 		is_robot = isinstance(obj, BaseRobot)
 		body_id = obj.robot_ids[0] if is_robot else obj.body_id
 		# first set the correct orientation
+		# param orn: quaternion in xyzw
 		obj.set_position_orientation(pos, quatToXYZW(euler2quat(*orn), 'wxyz'))
 		# compute stable z based on this orientation
 		stable_z = stable_z_on_aabb(body_id, [pos, pos])
@@ -357,6 +362,7 @@ class RelocateEnv(iGibsonEnv):
 		has_collision = self.check_collision(body_id)
 		return has_collision
 
+	# land object or robot with an initial height above the floor
 	def land(self, obj, pos, orn):
 		"""
 		Land the robot or the object onto the floor, given a valid position and orientation
@@ -407,7 +413,9 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		# move robot away from the scene
 		self.robots[0].set_position([100.0, 100.0, 100.0])
+		# reset scene
 		self.task.reset_scene(self)
+		# reset agent
 		self.task.reset_agent(self)
 		self.simulator.sync()
 		state = self.get_state()
@@ -430,7 +438,7 @@ if __name__ == '__main__':
 						help='which mode for simulation (default: headless)')
 	args = parser.parse_args()
 
-	
+
 
 	env = RelocateEnv(config_file=args.config,
 					 mode=args.mode,
