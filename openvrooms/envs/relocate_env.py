@@ -113,6 +113,8 @@ class RelocateEnv(iGibsonEnv):
 		for robot in self.robots:
 			self.simulator.import_robot(robot)
 
+
+
 	def load_task_setup(self):
 		"""
 		Load task setup
@@ -141,7 +143,7 @@ class RelocateEnv(iGibsonEnv):
 			self.task = RelocatePointGoalFixedTask(self)
 		else:
 			self.task = None
-			print("No such task defined")
+			print("No such task defined")	
 
 
 	def load_observation_space(self):
@@ -226,7 +228,7 @@ class RelocateEnv(iGibsonEnv):
 			bodyA=self.robots[0].robot_ids[0]))
 		return self.filter_collision_links(collision_links)
 
-	# get collision links with robot base link except those should be ignored
+	# get collision links with robot base link except those should be ignored during simulation
 	def filter_collision_links(self, collision_links):
 		"""
 		Filter out collisions that should be ignored
@@ -334,6 +336,7 @@ class RelocateEnv(iGibsonEnv):
 		body_id = obj.robot_ids[0] if is_robot else obj.body_id
 		# first set the correct orientation
 		# param orn: quaternion in xyzw
+		# quatToXYZW: convert quaternion from arbitrary sequence to XYZW (pybullet convention)
 		obj.set_position_orientation(pos, quatToXYZW(euler2quat(*orn), 'wxyz'))
 		# compute stable z based on this orientation
 		stable_z = stable_z_on_aabb(body_id, [pos, pos])
@@ -445,6 +448,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
+	'''
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -459,3 +463,4 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
+	'''

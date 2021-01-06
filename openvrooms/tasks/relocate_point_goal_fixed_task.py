@@ -91,6 +91,11 @@ class RelocatePointGoalFixedTask(BaseTask):
         env.collision_ignore_body_b_ids |= set(
             [obj.body_id for obj in self.interactive_objects])
         
+        # check validity of initial and target scene
+        print("--------------- Check validity of initial and target scene ------------")
+        self.check_inital_scene_collision(env)
+        self.check_target_scene_collision(env)
+        print("--------------------------------------------- ")
 
     def get_loaded_interactive_objects(self, env):
         """
@@ -180,40 +185,35 @@ class RelocatePointGoalFixedTask(BaseTask):
             return
 
 
-    def reset_agent(self, env):
-        """
-        Reset robot initial pose.
-        Sample initial pose and target position, check validity, and land it.
-
-        :param env: environment instance
-        """
-        reset_success = False
-        max_trials = 100
-
-        # cache pybullet state
-        # TODO: p.saveState takes a few seconds, need to speed up
+    def check_inital_scene_collision(self, env):
         state_id = p.saveState()
-        for i in range(max_trials):
-            initial_pos, initial_orn, target_pos = \
-                self.sample_initial_pose_and_target_pos(env)
-            reset_success = env.test_valid_position(
-                env.robots[0], initial_pos, initial_orn) and \
-                env.test_valid_position(
-                    env.robots[0], target_pos)
-            p.restoreState(state_id)
-            if reset_success:
-                break
 
-        if not reset_success:
-            logging.warning("WARNING: Failed to reset robot without collision")
-
-        p.removeState(state_id)
-
-        self.target_pos = target_pos
-        self.initial_pos = initial_pos
-
-        super(PointNavRandomTask, self).reset_agent(env)
+        success = env.test_valid_position(env.robots[0],  self.agent_initial_pos,  self.agent_initial_orn)
+        if not success:
+            print("Initial scene Failed: unable to set robot initial pose without collision.")
         
+        for i, obj in enumerate(env.scene.interative_objects):    
+            success = env.test_valid_position(obj,  self.obj_initial_pos[i],  self.obj_initial_orn[i])
+            if not success:
+                print("Initial scene Failed: unable to set object %d's initial pose without collision."%(i))
+                
+
+        p.restoreState(state_id)
+        p.removeState(state_id)
+        print("Validity check of initial scene Finished!")
+
+    def check_target_scene_collision(self, env):
+        state_id = p.saveState()
+        
+        for i, obj in enumerate(env.scene.interative_objects):    
+            success = env.test_valid_position(obj,  self.obj_target_pos[i],  self.obj_target_orn[i])
+            if not success:
+                print("Target scene Failed: unable to set object %d's target pose without collision."%(i))
+
+        p.restoreState(state_id)
+        p.removeState(state_id)
+        print("Validity check of target scene Finished!")    
+
     def reset_agent(self, env):
         """
         Task-specific agent reset: land the robot to initial pose, compute initial potential
@@ -283,6 +283,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         '''
         return task_obs
 
+    # visualize initial and target positions of the objects
     def step_visualization(self, env):
         """
         Step visualization
