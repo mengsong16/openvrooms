@@ -11,6 +11,7 @@ from gibson2.sensors.vision_sensor import VisionSensor
 from gibson2.robots.robot_base import BaseRobot
 from gibson2.external.pybullet_tools.utils import stable_z_on_aabb
 from gibson2.envs.igibson_env import iGibsonEnv
+from gibson2.envs.env_base import BaseEnv
 
 from gibson2.robots.turtlebot_robot import Turtlebot
 from gibson2.robots.husky_robot import Husky
@@ -25,6 +26,7 @@ from gibson2.robots.locobot_robot import Locobot
 
 from openvrooms.tasks.relocate_point_goal_fixed_task import RelocatePointGoalFixedTask
 from openvrooms.scenes.relocate_scene import RelocateScene
+from openvrooms.sensors.external_vision_sensor import ExternalVisionSensor
 from openvrooms.config import *
 
 from transforms3d.euler import euler2quat
@@ -36,6 +38,10 @@ import pybullet as p
 import time
 import logging
 
+#from gibson2.simulator import Simulator
+from openvrooms.simulator.simulator import Simulator
+from gibson2.utils.utils import parse_config
+from gibson2.render.mesh_renderer.mesh_renderer_settings import MeshRendererSettings
 
 class RelocateEnv(iGibsonEnv):
 	"""
@@ -63,6 +69,7 @@ class RelocateEnv(iGibsonEnv):
 		:param render_to_tensor: whether to render directly to pytorch tensors
 		:param automatic_reset: whether to automatic reset after an episode finishes
 		"""
+		'''
 		super(RelocateEnv, self).__init__(config_file=config_file,
 										 scene_id=scene_id,
 										 mode = mode,
@@ -70,6 +77,45 @@ class RelocateEnv(iGibsonEnv):
 										 physics_timestep=physics_timestep,
 										 device_idx=device_idx,
 										 render_to_tensor=render_to_tensor)
+		'''
+		
+		self.config = parse_config(config_file)
+		if scene_id is not None:
+			self.config['scene_id'] = scene_id
+
+		self.mode = mode
+		self.action_timestep = action_timestep
+		self.physics_timestep = physics_timestep
+		self.texture_randomization_freq = self.config.get(
+			'texture_randomization_freq', None)
+		self.object_randomization_freq = self.config.get(
+			'object_randomization_freq', None)
+		self.object_randomization_idx = 0
+		self.num_object_randomization_idx = 10
+
+		enable_shadow = self.config.get('enable_shadow', False)
+		enable_pbr = self.config.get('enable_pbr', True)
+		texture_scale = self.config.get('texture_scale', 1.0)
+
+		settings = MeshRendererSettings(enable_shadow=enable_shadow,
+										enable_pbr=enable_pbr,
+										msaa=False,
+										texture_scale=texture_scale)
+
+		self.simulator = Simulator(mode=mode,
+								   physics_timestep=physics_timestep,
+								   render_timestep=action_timestep,
+								   image_width=self.config.get(
+									   'image_width', 128),
+								   image_height=self.config.get(
+									   'image_height', 128),
+								   vertical_fov=self.config.get(
+									   'vertical_fov', 90),
+								   device_idx=device_idx,
+								   render_to_tensor=render_to_tensor,
+								   rendering_settings=settings)
+		self.load()								 
+
 		self.automatic_reset = automatic_reset
 
 	def load_scene_robot(self):
@@ -167,7 +213,8 @@ class RelocateEnv(iGibsonEnv):
 			vision_modalities.append('rgb')    
 		
 		if len(vision_modalities) > 0:
-			sensors['vision'] = VisionSensor(self, vision_modalities)
+			#sensors['vision'] = VisionSensor(self, vision_modalities)
+			sensors['vision'] = ExternalVisionSensor(self, vision_modalities)
 
 		self.observation_space = gym.spaces.Dict(observation_space)
 		self.sensors = sensors
@@ -448,7 +495,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-	'''
+	
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -458,9 +505,10 @@ if __name__ == '__main__':
 			action = env.action_space.sample()
 			state, reward, done, _ = env.step(action)
 			print('reward', reward)
+			print(state)
 			if done:
 				break
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
-	'''
+	
