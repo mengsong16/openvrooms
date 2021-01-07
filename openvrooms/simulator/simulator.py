@@ -20,6 +20,9 @@ import numpy as np
 import platform
 import logging
 
+from transforms3d.euler import euler2quat
+from gibson2.utils.mesh_util import perspective, lookat, xyz2mat, quat2rotmat, mat2xyz, safemat2quat, xyzw2wxyz, ortho, transform_vertex
+import math
 
 class Simulator:
     """
@@ -37,7 +40,9 @@ class Simulator:
                  vertical_fov=90,
                  device_idx=0,
                  render_to_tensor=False,
-                 rendering_settings=MeshRendererSettings()):
+                 rendering_settings=MeshRendererSettings(),
+                 external_camera_pos=[0, 0, 1.2],
+                 external_camera_view_direction=[1, 0, 0]):
         """
         :param gravity: gravity on z direction.
         :param physics_timestep: timestep of physical simulation, p.stepSimulation()
@@ -83,10 +88,16 @@ class Simulator:
         self.optimized_renderer = rendering_settings.optimized
         self.rendering_settings = rendering_settings
         self.viewer = None
+
+        # camera position and direction should be set before self.load()
+        self.external_camera_pos = np.array(external_camera_pos)
+        self.external_camera_view_direction = np.array(external_camera_view_direction)
+
         self.load()
 
         self.class_name_to_class_id = get_class_name_to_class_id()
         self.body_links_awake = 0
+
 
     def set_timestep(self, physics_timestep, render_timestep):
         """
@@ -99,12 +110,14 @@ class Simulator:
         self.render_timestep = render_timestep
         p.setTimeStep(self.physics_timestep)
 
+    # two windows: one is external view, the other is robot view
     def add_viewer(self):
         """
         Attach a debugging viewer to the renderer.
         This will make the step much slower so should be avoided when training agents
         """
-        self.viewer = Viewer(simulator=self, renderer=self.renderer)
+
+        self.viewer = Viewer(initial_pos=self.external_camera_pos, initial_view_direction=self.external_camera_view_direction, simulator=self, renderer=self.renderer)
 
     def reload(self):
         """

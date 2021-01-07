@@ -78,8 +78,8 @@ class RelocatePointGoalFixedTask(BaseTask):
         #self.visual_object_at_initial_target_pos = self.config.get(
         #    'visual_object_at_initial_target_pos', True
         #)
-        self.target_visual_object_visible_to_agent = self.config.get(
-            'target_visual_object_visible_to_agent', False
+        self.visual_object_visible_to_agent = self.config.get(
+            'visual_object_visible_to_agent', False
         )
         self.floor_num = 0
 
@@ -96,6 +96,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         self.check_inital_scene_collision(env)
         self.check_target_scene_collision(env)
         print("--------------------------------------------- ")
+        
 
     def get_loaded_interactive_objects(self, env):
         """
@@ -147,7 +148,7 @@ class RelocatePointGoalFixedTask(BaseTask):
                 length=cyl_length,
                 initial_offset=[0, 0, cyl_length / 2.0]))
 
-        if self.target_visual_object_visible_to_agent:
+        if self.visual_object_visible_to_agent:
             for i in list(np.arange(self.obj_num)):
                 env.simulator.import_object(self.initial_pos_vis_objs[i])
                 env.simulator.import_object(self.target_pos_vis_objs[i])
@@ -193,7 +194,7 @@ class RelocatePointGoalFixedTask(BaseTask):
             print("Initial scene Failed: unable to set robot initial pose without collision.")
         
         for i, obj in enumerate(env.scene.interative_objects):    
-            success = env.test_valid_position(obj,  self.obj_initial_pos[i],  self.obj_initial_orn[i])
+            success = env.test_valid_position(obj,  [self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], obj.get_position()[2]],  self.obj_initial_orn[i])
             if not success:
                 print("Initial scene Failed: unable to set object %d's initial pose without collision."%(i))
                 
@@ -206,7 +207,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         state_id = p.saveState()
         
         for i, obj in enumerate(env.scene.interative_objects):    
-            success = env.test_valid_position(obj,  self.obj_target_pos[i],  self.obj_target_orn[i])
+            success = env.test_valid_position(obj,  [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.get_position()[2]],  self.obj_target_orn[i])
             if not success:
                 print("Target scene Failed: unable to set object %d's target pose without collision."%(i))
 

@@ -156,6 +156,7 @@ class RoomScene(Scene):
         self.y_range = [bounds[0][1], bounds[1][1]]
 
         print("Layout range: x=%s, y=%s"%(self.x_range, self.y_range))
+        print("Room height: %f"%(self.room_height))
         
     
     def load_scene_metainfo(self):

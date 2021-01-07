@@ -41,3 +41,8 @@ class Object(object):
 
     def set_position_orientation(self, pos, orn):
         p.resetBasePositionAndOrientation(self.body_id, pos, orn)
+
+    # pos: [x,y]
+    def set_xy_position_orientation(self, pos, orn):
+        old_pos, _ = p.getBasePositionAndOrientation(self.body_id)
+        p.resetBasePositionAndOrientation(self.body_id, [pos[0], pos[1], old_pos[2]], orn)    

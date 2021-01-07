@@ -16,24 +16,22 @@ class ExternalVisionSensor(VisionSensor):
     not from robot's first person view point
     """
 
-    def __init__(self, env, modalities):
+    def __init__(self, env, modalities, camera_pos=[0, 0, 1.2], camera_view_direction=[1, 0, 0]):
         super(ExternalVisionSensor, self).__init__(env, modalities)
+        self.camera_pos = np.array(camera_pos)
+        self.camera_view_direction = np.array(camera_view_direction)
 
     # camera_orn: quarternion x,y,z,w
     # camera_pos: x,y,z
-    def render_third_person_view_cameras(self, env, modes=('rgb'), camera_pos=[0,0,0], camera_orn=[0,0,0,1]):
+    def render_third_person_view_cameras(self, env, modes=('rgb')):
         """
         Render robot camera images
 
         :return: a list of frames (number of modalities x number of robots)
         """
         frames = []
-        
-        mat = quat2rotmat(xyzw2wxyz(camera_orn))[:3, :3]
-        view_direction = mat.dot(np.array([1, 0, 0]))
 
-        env.simulator.renderer.set_camera(camera_pos, camera_pos +
-                        view_direction, [0, 0, 1], cache=True)
+        env.simulator.renderer.set_camera(self.camera_pos, self.camera_pos + self.camera_view_direction, [0, 0, 1], cache=True)
         hidden_instances = []
         
         for item in env.simulator.renderer.render(modes=modes):

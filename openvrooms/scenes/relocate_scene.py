@@ -122,6 +122,7 @@ class RelocateScene(RoomScene):
    
 
     # reset the poses of interactive objects according to given values
+    # pos: [x,y]
     # orn: eular angles
     def reset_interactive_object_poses(self, obj_pos_list, obj_orn_list): 
         ''' 
@@ -132,7 +133,9 @@ class RelocateScene(RoomScene):
             p.resetBasePositionAndOrientation(bodyUniqueId=self.interative_objects[i].body_id, posObj=obj_pos_list[i], ornObj=quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2])))
         '''
         for i, obj in enumerate(self.interative_objects):    
-            obj.set_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            #obj.set_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            print(obj_pos_list[i])
 
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)
