@@ -193,8 +193,15 @@ class Simulator:
             'import_scene can only be called with Scene that is not InteractiveIndoorScene'
         # Load the scene. Returns a list of pybullet ids of the objects loaded that we can use to
         # load them in the renderer
+
+        # get layout and static object ids
         new_object_pb_ids = scene.load()
         self.objects += new_object_pb_ids
+
+        # get interactive object ids
+        interactive_object_pb_ids = scene.get_interative_object_pb_ids()
+        new_object_pb_ids += interactive_object_pb_ids
+        self.objects += interactive_object_pb_ids
 
         # Load the objects in the renderer
         for new_object_pb_id in new_object_pb_ids:

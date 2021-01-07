@@ -306,4 +306,13 @@ class RoomScene(Scene):
         
 
         _, old_orn = p.getBasePositionAndOrientation(urdf_id)
-        p.resetBasePositionAndOrientation(bodyUniqueId=urdf_id, posObj=mesh_centroid, ornObj=old_orn)   
+        p.resetBasePositionAndOrientation(bodyUniqueId=urdf_id, posObj=mesh_centroid, ornObj=old_orn)  
+
+
+    def get_interative_object_pb_ids(self):
+         
+        ids = []
+        for obj in self.interative_objects:
+            ids.append(obj.body_id) 
+
+        return ids       
