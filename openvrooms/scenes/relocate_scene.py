@@ -135,7 +135,7 @@ class RelocateScene(RoomScene):
         for i, obj in enumerate(self.interative_objects):    
             #obj.set_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
             obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
-            print(obj_pos_list[i])
+            #print(obj_pos_list[i])
 
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)

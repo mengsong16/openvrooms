@@ -13,7 +13,9 @@ from gibson2.external.pybullet_tools.utils import stable_z_on_aabb
 from gibson2.envs.igibson_env import iGibsonEnv
 from gibson2.envs.env_base import BaseEnv
 
-from gibson2.robots.turtlebot_robot import Turtlebot
+#from gibson2.robots.turtlebot_robot import Turtlebot
+from openvrooms.robots.turtlebot import Turtlebot
+
 from gibson2.robots.husky_robot import Husky
 from gibson2.robots.ant_robot import Ant
 from gibson2.robots.humanoid_robot import Humanoid
@@ -227,7 +229,20 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Load action space
 		"""
-		self.action_space = self.robots[0].action_space
+		agent = self.robots[0]
+		self.action_space = agent.action_space
+		print("-----------------------------------")
+		print("Action space: ")
+		if agent.is_discrete:
+			print("Discrete: dim = %d"%(agent.action_dim))
+			print("%d actions"%(agent.action_space.n))
+			for action in agent.action_list:
+				print(str(action))
+		else:
+			print("Continuous: dim = %d"%(agent.action_dim))
+			print("Action low: %s"%(agent.action_low))
+			print("Action high: %s"%(agent.action_high))
+		print("-----------------------------------")
 
 	def load_miscellaneous_variables(self):
 		"""
@@ -505,7 +520,7 @@ if __name__ == '__main__':
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(100):  # 10 seconds
+		for _ in range(500):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, _ = env.step(action)
 			#print('reward', reward)

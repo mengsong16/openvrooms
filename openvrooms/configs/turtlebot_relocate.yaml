@@ -6,10 +6,15 @@ obj_num: 2
 
 # robot
 robot: Turtlebot
-is_discrete: false
-velocity: 1.0
 agent_initial_pos: [0, 0, 0]
 agent_initial_orn: [0, 0, 0]
+
+# action space
+is_discrete: true
+velocity: 1.0
+move_distance: 0.1  #0.05
+turn_angle: 0.1 #0.03
+joint_control: true
 
 # objects
 obj_initial_pos: [[1, 1], [2, 2]]
@@ -17,7 +22,7 @@ obj_initial_orn: [[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 0], [0, 0, 0]]
 
-# sensor spec
+# observation space: sensor spec
 output: [task_obs, rgb]
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 

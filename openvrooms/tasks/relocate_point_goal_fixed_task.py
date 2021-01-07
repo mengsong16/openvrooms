@@ -240,6 +240,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         return done, info
 
+    # useful when the first person view is adopted
     def global_to_local(self, env, pos):
         """
         Convert a 3D point in global frame to agent's local frame
