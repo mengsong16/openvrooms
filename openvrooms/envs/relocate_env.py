@@ -218,9 +218,15 @@ class RelocateEnv(iGibsonEnv):
 			vision_modalities.append('rgb')    
 		
 		if len(vision_modalities) > 0:
-			#sensors['vision'] = VisionSensor(self, vision_modalities)
-			sensors['vision'] = ExternalVisionSensor(self, vision_modalities, camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
+			
+			third_person_view = self.config.get("third_person_view", True)
+			# third person view
+			if third_person_view:
+				sensors['vision'] = ExternalVisionSensor(self, vision_modalities, camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
 								   camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]))
+			# first person view
+			else:
+				sensors['vision'] = VisionSensor(self, vision_modalities)	
 
 		self.observation_space = gym.spaces.Dict(observation_space)
 		self.sensors = sensors
@@ -523,10 +529,12 @@ if __name__ == '__main__':
 		for _ in range(500):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, _ = env.step(action)
-			#print('reward', reward)
-			#print(state)
+			#print('-------------------------------')
+			print('reward', reward)
+			#print(state['task_obs'])
 			if done:
 				break
+		
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()

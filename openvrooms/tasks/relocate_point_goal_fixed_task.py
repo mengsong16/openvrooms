@@ -19,6 +19,8 @@ from openvrooms.objects.interactive_object import InteractiveObj
 
 import numpy as np
 
+from gibson2.utils.utils import quatToXYZW
+from transforms3d.euler import euler2quat
 
 class RelocatePointGoalFixedTask(BaseTask):
     """
@@ -69,7 +71,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
         print("Target x-y positions of objects: \n%s"%self.obj_target_pos)
 
-        self.goal_format = self.config.get('goal_format', 'polar')
+        self.goal_format = self.config.get('goal_format', 'cartesian')
 
         # distance tolerance for goal reaching
         #self.dist_tol = self.termination_conditions[-1].dist_tol
@@ -81,7 +83,8 @@ class RelocatePointGoalFixedTask(BaseTask):
         self.visual_object_visible_to_agent = self.config.get(
             'visual_object_visible_to_agent', False
         )
-        self.floor_num = 0
+        
+        self.third_person_view = self.config.get("third_person_view", True)
 
         self.load_visualization(env)
 
@@ -167,8 +170,11 @@ class RelocatePointGoalFixedTask(BaseTask):
         """
 
         total_l2_potential = 0.0
-        for i in list(np.arange(self.obj_num)):
-            total_l2_potential += l2_distance(env.robots[0].get_position()[:2], self.obj_target_pos[i][:2])
+
+        # x,y distance
+        for i, obj in enumerate(self.interactive_objects):
+            pos, _ = obj.get_position_orientation()
+            total_l2_potential += l2_distance(pos[:2], self.obj_target_pos[i])
 
         return total_l2_potential
 
@@ -260,29 +266,52 @@ class RelocatePointGoalFixedTask(BaseTask):
         :return: task-specific observation
         """
 
-        '''
-        task_obs = self.global_to_local(env, self.target_pos)[:2]
+        agent = env.robots[0]
 
-        if self.goal_format == 'polar':
-            task_obs = np.array(cartesian_to_polar(task_obs[0], task_obs[1]))
-        '''
-        # robot linear velocity along the x-axis
-        robot_linear_velocity = rotate_vector_3d(
-            env.robots[0].get_linear_velocity(),
-            *env.robots[0].get_rpy())[0]
+        # [x,y,z]
+        robot_position = agent.get_position()
         
-        # robot angular velocity along the z-axis
-        robot_angular_velocity = rotate_vector_3d(
-            env.robots[0].get_angular_velocity(),
-            *env.robots[0].get_rpy())[2]
-        
-        task_obs = np.array([robot_linear_velocity, robot_angular_velocity])
+        # [x,y,z,w]
+        robot_orientation = agent.get_orientation()
 
-        '''
-        for i in list(np.arange(self.obj_num)):
-            obj_current_pos[i][:]
-            task_obs = np.append(task_obs, [robot_linear_velocity, robot_angular_velocity])
-        '''
+        # 3d in world frame if third person view is adopted
+        robot_linear_velocity = agent.get_linear_velocity()
+        if self.third_person_view == False:
+            # rotate_vector_3d: Rotates 3d vector by roll, pitch and yaw counterclockwise
+            robot_linear_velocity = rotate_vector_3d(robot_linear_velocity, *agent.get_rpy())
+        
+        # 3d in world frame if third person view is adopted
+        robot_angular_velocity = agent.get_angular_velocity()
+        if self.third_person_view == False:
+            robot_angular_velocity = rotate_vector_3d(robot_angular_velocity, *agent.get_rpy())
+
+        # 13 d in total
+        task_obs = np.concatenate((robot_position, robot_orientation, robot_linear_velocity, robot_angular_velocity), axis=None)
+        
+        
+        # object current pose: 6d each
+        for obj in self.interactive_objects:
+            pos, orn = obj.get_position_orientation()
+            
+            if self.third_person_view == False:
+                pos = self.global_to_local(env, pos)[:2]
+                if self.goal_format == 'polar':
+                    # 2d x,y to 2d polar
+                    pos = np.array(cartesian_to_polar(pos[0], pos[1]))    
+            else:
+                pos = pos[:2]
+
+            task_obs = np.append(task_obs, pos)
+            task_obs = np.append(task_obs, orn)
+
+        
+        # object target pose: 6d each
+        for i in list(range(self.obj_num)):
+            task_obs = np.append(task_obs, self.obj_target_pos[i])
+            orn_rpy = np.array(self.obj_target_orn[i])
+            orn = quatToXYZW(euler2quat(orn_rpy[0], orn_rpy[1], orn_rpy[2]), 'wxyz')
+            task_obs = np.append(task_obs, orn)
+
         return task_obs
 
     # visualize initial and target positions of the objects
