@@ -520,13 +520,14 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-	
+
+	'''
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(500):  # 10 seconds
+		for _ in range(200):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, _ = env.step(action)
 			#print('-------------------------------')
@@ -538,4 +539,4 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
-	
+	'''

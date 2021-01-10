@@ -76,6 +76,9 @@ class RelocateScene(RoomScene):
 
         # align the bottom of layout to z = 0 in world frame
         self.translate_scene([0, 0, -self.ground_z])
+
+        # set initial z as goal z for all interactive objects
+        self.set_goal_z()
         
         # print object poses
         #self.print_scene_info(interactive_only=True)
@@ -83,7 +86,7 @@ class RelocateScene(RoomScene):
         # return static object ids including layout id 
         return [self.layout_id] + self.static_object_ids
 
-    # ensure no collision
+    # ensure no collision, set x,y position
     def set_interative_object_initial_poses(self):
         # divide x,y space into grid
         self.x_cell_n = 4
@@ -120,10 +123,16 @@ class RelocateScene(RoomScene):
         
         print("Object positions when initially loading the scene: "+s)
    
+    # set initial z as goal z for all interactive objects
+    def set_goal_z(self):
+        for obj in self.interative_objects:
+            obj_pos = obj.get_position()
+            obj.goal_z = obj_pos[2]
+
 
     # reset the poses of interactive objects according to given values
-    # pos: [x,y]
-    # orn: eular angles
+    # input pos: [x,y]
+    # input orn: eular angles
     def reset_interactive_object_poses(self, obj_pos_list, obj_orn_list): 
         ''' 
         n_interactive_objs = len(self.interative_objects) 
@@ -133,8 +142,8 @@ class RelocateScene(RoomScene):
             p.resetBasePositionAndOrientation(bodyUniqueId=self.interative_objects[i].body_id, posObj=obj_pos_list[i], ornObj=quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2])))
         '''
         for i, obj in enumerate(self.interative_objects):    
-            #obj.set_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
-            obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            obj.set_position_orientation([obj_pos_list[i][0], obj_pos_list[i][1], obj.goal_z], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            #obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
             #print(obj_pos_list[i])
 
     def load_scene_metainfo(self):

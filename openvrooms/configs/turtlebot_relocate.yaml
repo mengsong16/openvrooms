@@ -16,7 +16,7 @@ move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
 
-# objects
+# objects: pos:[x,y], orn: eular angles
 obj_initial_pos: [[1, 1], [2, 2]]
 obj_initial_orn: [[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[-1, -1], [-2, -2]]

@@ -200,7 +200,7 @@ class RelocatePointGoalFixedTask(BaseTask):
             print("Initial scene Failed: unable to set robot initial pose without collision.")
         
         for i, obj in enumerate(env.scene.interative_objects):    
-            success = env.test_valid_position(obj,  [self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], obj.get_position()[2]],  self.obj_initial_orn[i])
+            success = env.test_valid_position(obj,  [self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], obj.goal_z],  self.obj_initial_orn[i])
             if not success:
                 print("Initial scene Failed: unable to set object %d's initial pose without collision."%(i))
                 
@@ -213,7 +213,7 @@ class RelocatePointGoalFixedTask(BaseTask):
         state_id = p.saveState()
         
         for i, obj in enumerate(env.scene.interative_objects):    
-            success = env.test_valid_position(obj,  [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.get_position()[2]],  self.obj_target_orn[i])
+            success = env.test_valid_position(obj,  [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z],  self.obj_target_orn[i])
             if not success:
                 print("Target scene Failed: unable to set object %d's target pose without collision."%(i))
 
@@ -276,38 +276,28 @@ class RelocatePointGoalFixedTask(BaseTask):
 
         # 3d in world frame if third person view is adopted
         robot_linear_velocity = agent.get_linear_velocity()
-        if self.third_person_view == False:
-            # rotate_vector_3d: Rotates 3d vector by roll, pitch and yaw counterclockwise
-            robot_linear_velocity = rotate_vector_3d(robot_linear_velocity, *agent.get_rpy())
         
         # 3d in world frame if third person view is adopted
         robot_angular_velocity = agent.get_angular_velocity()
-        if self.third_person_view == False:
-            robot_angular_velocity = rotate_vector_3d(robot_angular_velocity, *agent.get_rpy())
+        
 
         # 13 d in total
         task_obs = np.concatenate((robot_position, robot_orientation, robot_linear_velocity, robot_angular_velocity), axis=None)
         
         
-        # object current pose: 6d each
+        # object current pose: 7d each
         for obj in self.interactive_objects:
             pos, orn = obj.get_position_orientation()
-            
-            if self.third_person_view == False:
-                pos = self.global_to_local(env, pos)[:2]
-                if self.goal_format == 'polar':
-                    # 2d x,y to 2d polar
-                    pos = np.array(cartesian_to_polar(pos[0], pos[1]))    
-            else:
-                pos = pos[:2]
 
             task_obs = np.append(task_obs, pos)
             task_obs = np.append(task_obs, orn)
 
         
-        # object target pose: 6d each
-        for i in list(range(self.obj_num)):
-            task_obs = np.append(task_obs, self.obj_target_pos[i])
+        # object target pose: 7d each
+        for i, obj in enumerate(self.interactive_objects):
+            target_pos = [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z]
+            task_obs = np.append(task_obs, target_pos)
+
             orn_rpy = np.array(self.obj_target_orn[i])
             orn = quatToXYZW(euler2quat(orn_rpy[0], orn_rpy[1], orn_rpy[2]), 'wxyz')
             task_obs = np.append(task_obs, orn)
