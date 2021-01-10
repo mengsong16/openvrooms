@@ -521,7 +521,7 @@ if __name__ == '__main__':
 					 physics_timestep=1.0 / 40.0)
 
 
-	'''
+	
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -539,4 +539,4 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
-	'''
+	
