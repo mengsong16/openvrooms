@@ -22,6 +22,8 @@ import numpy as np
 from gibson2.utils.utils import quatToXYZW, quatFromXYZW
 from transforms3d.euler import euler2quat, quat2euler
 
+from openvrooms.utils.utils import *
+
 class RelocatePointGoalFixedTask(BaseTask):
     """
     Relocate Point Goal Fixed Task
@@ -70,6 +72,8 @@ class RelocatePointGoalFixedTask(BaseTask):
         print("Number of objects: %d"%(self.obj_num))
         print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
         print("Target x-y positions of objects: \n%s"%self.obj_target_pos)
+
+        self.duplicated_objects = self.config.get('duplicated_objects', True)
 
         self.goal_format = self.config.get('goal_format', 'cartesian')
 
@@ -191,116 +195,66 @@ class RelocatePointGoalFixedTask(BaseTask):
             print("Not implemented!")
             return
 
-    def rot_dist_func():
-        return rotation.subtract_euler(goal_state["obj_rot"], current_state["obj_rot"])
+    
+    # goal_orn, current_orn: [w,x,y,z]
+    # output: angle distance or quaternion distance
+    def rot_dist_func(self, goal_orn, current_orn, output_angle=True):
+        #return subtract_euler(goal_state["obj_rot"], current_state["obj_rot"])
+        q_diff = subtract_quat(goal_orn, current_orn)
 
-    def relative_goal(self, goal_state: dict, current_state: dict) -> dict:
-        goal_pos = goal_state["obj_pos"]
-        obj_pos = current_state["obj_pos"]
+        if output_angle:
+            return quat2euler_array(q_diff)
+        else:
+            return q_diff    
 
-        if self.mujoco_simulation.num_objects == self.mujoco_simulation.num_groups:
-            # All the objects are different.
+    def relative_goal(self, output_angle=True):
+        current_pos = self.get_obj_current_pos()
+        # current_orn: n*4, quaterion [x,y,z,w]
+        current_orn = self.get_obj_current_rot()
+        goal_pos = self.get_obj_goal_pos()
+        # goal_orn: n*3, euler angles
+        goal_orn = self.get_obj_goal_rot()
+
+        # current_orn, goal_orn: n*4, quaterion [w,x,y,z]
+        goal_orn = euler2quat_array(goal_orn)
+        current_orn = quatFromXYZW_array(current_orn, 'wxyz')
+        #print(quatFromXYZW_array(quatToXYZW_array(goal_orn, 'wxyz'), 'wxyz'))
+
+        if self.duplicated_objects == False or self.obj_num == 1:
+            # All the objects are different
             relative_obj_pos = goal_pos - obj_pos
-            relative_obj_rot = self.rot_dist_func(goal_state, current_state)
+            relative_obj_rot = self.rot_dist_func(goal_orn, current_orn, output_angle=output_angle)
 
         else:
-            # per object relative pos & rot distance.
-            rel_pos_dict = {}
-            rel_rot_dict = {}
+            assert current_pos.shape == goal_pos.shape
+            assert current_orn.shape[0] == goal_orn.shape[0]
+            # n*1*3, 1*n*3 --> n*n
+            dist = np.linalg.norm(np.expand_dims(current_pos, 1) - np.expand_dims(goal_pos, 0), axis=-1)
+            assert dist.shape == (self.obj_num, self.obj_num)
 
-            def get_rel_rot(target_obj_id, curr_obj_id):
-                group_goal_state = {"obj_rot": goal_state["obj_rot"][[target_obj_id]]}
-                group_current_state = {
-                    "obj_rot": current_state["obj_rot"][[curr_obj_id]]
-                }
+            relative_obj_pos = np.zeros([self.obj_num, goal_pos.shape[-1]]) # n*3
+            relative_obj_rot = np.zeros([self.obj_num, goal_orn.shape[-1]]) # n*3
+            
+            for _ in range(self.obj_num):
+                i, j = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
+                relative_obj_pos[i] = goal_pos[j] - current_pos[i]
+                relative_obj_rot[i] = self.rot_dist_func(goal_orn[j], current_orn[i], output_angle=output_angle)
+                # once we select a pair of match (i, j), wipe out their distance info.
+                dist[i, :] = np.inf
+                dist[:, j] = np.inf
+               
+        # normalize angles to [-pi, pi] 
+        relative_obj_rot = normalize_angles(relative_obj_rot)
 
-                if self.args.rot_dist_type == "icp":
-                    group_goal_state["icp"] = [goal_state["icp"][target_obj_id]]
-                    group_current_state["vertices"] = [
-                        current_state["vertices"][curr_obj_id]
-                    ]
+        return relative_obj_pos, relative_obj_rot
 
-                return self.rot_dist_func(group_goal_state, group_current_state)[0]
 
-            for group_id, obj_group in enumerate(self.mujoco_simulation.object_groups):
-                object_ids = obj_group.object_ids
-
-                # Duplicated objects share the same group id.
-                # Within each group we match objects with goals according to position in a greedy
-                # fashion. Note that we ignore object rotation during matching.
-                if len(object_ids) == 1:
-                    object_id = object_ids[0]
-                    rel_pos_dict[object_id] = goal_pos[object_id] - obj_pos[object_id]
-                    rel_rot_dict[object_id] = get_rel_rot(object_id, object_id)
-                else:
-                    n = len(object_ids)
-
-                    # find the optimal pair matching through greedy.
-                    # TODO: may consider switching to `scipy.optimize.linear_sum_assignment`
-                    assert obj_pos.shape == goal_pos.shape
-                    dist = np.linalg.norm(
-                        np.expand_dims(obj_pos[object_ids], 1)
-                        - np.expand_dims(goal_pos[object_ids], 0),
-                        axis=-1,
-                    )
-                    assert dist.shape == (n, n)
-
-                    for _ in range(n):
-                        i, j = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
-                        rel_pos_dict[object_ids[i]] = (
-                            goal_pos[object_ids[j]] - obj_pos[object_ids[i]]
-                        )
-                        rel_rot_dict[object_ids[i]] = get_rel_rot(
-                            object_ids[j], object_ids[i]
-                        )
-                        # once we select a pair of match (i, j), wipe out their distance info.
-                        dist[i, :] = np.inf
-                        dist[:, j] = np.inf
-
-            assert (
-                len(rel_pos_dict)
-                == len(rel_rot_dict)
-                == self.mujoco_simulation.num_objects
-            )
-            rel_pos = np.array(
-                [rel_pos_dict[i] for i in range(self.mujoco_simulation.num_objects)]
-            )
-            rel_rot = np.array(
-                [rel_rot_dict[i] for i in range(self.mujoco_simulation.num_objects)]
-            )
-            assert len(rel_pos.shape) == len(rel_rot.shape) == 2
-
-            # padding zeros for the final output.
-            relative_obj_pos = np.zeros(
-                (self.mujoco_simulation.max_num_objects, rel_pos.shape[-1])
-            )
-            relative_obj_rot = np.zeros(
-                (self.mujoco_simulation.max_num_objects, rel_rot.shape[-1])
-            )
-            relative_obj_pos[: rel_pos.shape[0]] = rel_pos
-            relative_obj_rot[: rel_rot.shape[0]] = rel_rot
-
-        # normalize angles
-        relative_obj_rot = rotation.normalize_angles(relative_obj_rot)
-        return {
-            "obj_pos": relative_obj_pos.copy(),
-            "obj_rot": relative_obj_rot.copy(),
-        }
-
-    def goal_distance(self, goal_state: dict, current_state: dict) -> dict:
-        relative_goal = self.relative_goal(goal_state, current_state)
-        pos_distances = np.linalg.norm(relative_goal["obj_pos"], axis=-1)
-        rot_distances = rotation.quat_magnitude(
-            rotation.quat_normalize(rotation.euler2quat(relative_goal["obj_rot"]))
-        )
-        return {
-            "relative_goal": relative_goal,
-            "obj_pos": np.maximum(
-                pos_distances + self.mujoco_simulation.goal_pos_offset, 0
-            ),  # L2 dist
-            "obj_rot": self.mujoco_simulation.goal_rot_weight
-            * rot_distances,  # quat magnitude
-        }
+    def goal_distance(self):
+        relative_pos, relative_orn = self.relative_goal(output_angle=False)
+        pos_distances = np.linalg.norm(relative_pos, axis=-1)
+        rot_distances = quat_magnitude(quat_normalize(relative_orn))
+        
+        return pos_distances, rot_distances
 
     def check_inital_scene_collision(self, env):
         state_id = p.saveState()
@@ -415,8 +369,53 @@ class RelocatePointGoalFixedTask(BaseTask):
             orn = np.array(self.obj_target_orn[i])
             task_obs = np.append(task_obs, orn)
 
-        print(task_obs.shape)
+        #print(task_obs.shape)
         return task_obs
+
+    # n*3
+    def get_obj_current_pos(self):
+        pos_array = []
+        for obj in self.interactive_objects:
+            pos, _ = obj.get_position_orientation() 
+            pos_array.append(pos)
+        
+        pos_array = np.array(pos_array)
+
+        return pos_array
+        
+    # n*4, quaternion [x,y,z,w]     
+    def get_obj_current_rot(self):
+        rot_array = []
+        for obj in self.interactive_objects:
+            _, rot = obj.get_position_orientation() 
+            rot_array.append(rot)
+        
+        rot_array = np.array(rot_array)
+
+        return rot_array
+
+    # n*3
+    def get_obj_goal_pos(self):
+        pos_array = []
+        
+        for i, obj in enumerate(self.interactive_objects):
+            pos = [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z] 
+            pos_array.append(pos)
+        
+        pos_array = np.array(pos_array)
+
+        return pos_array  
+
+    # n*3, euler angle
+    def get_obj_goal_rot(self):
+        rot_array = []
+        
+        for i in list(range(self.obj_num)):
+            rot_array.append(self.obj_target_orn[i])
+        
+        rot_array = np.array(rot_array)
+
+        return rot_array      
 
     # visualize initial and target positions of the objects
     def step_visualization(self, env):

@@ -3,6 +3,7 @@ scene: relocate
 scene_id: scene0420_01
 load_texture: true
 obj_num: 2
+duplicated_objects: true
 
 # robot
 robot: Turtlebot
@@ -40,6 +41,9 @@ reward_type: l2
 success_reward: 10.0
 potential_reward_weight: 1.0
 collision_reward_weight: -0.1
+
+# goal
+goal_rot_weight: 1
 
 # discount factor
 discount_factor: 0.99

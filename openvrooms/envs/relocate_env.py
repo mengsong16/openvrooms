@@ -530,8 +530,13 @@ if __name__ == '__main__':
 		for _ in range(200):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, _ = env.step(action)
+			#env.task.get_obj_goal_pos()
+			pos_distances, rot_distances = env.task.goal_distance()
+			print(pos_distances)
+			print(rot_distances)
+			print('-----------------------------')
 			#print('-------------------------------')
-			print('reward', reward)
+			#print('reward', reward)
 			#print(state['task_obs'])
 			if done:
 				break
