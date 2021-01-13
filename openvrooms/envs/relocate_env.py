@@ -269,6 +269,87 @@ class RelocateEnv(iGibsonEnv):
 		self.load_action_space()
 		self.load_miscellaneous_variables()
 
+	def load_observation_space(self):
+		"""
+		Load observation space
+		"""
+		self.output = self.config['output']
+		self.image_width = self.config.get('image_width', 128)
+		self.image_height = self.config.get('image_height', 128)
+		observation_space = OrderedDict()
+		sensors = OrderedDict()
+		vision_modalities = []
+		scan_modalities = []
+
+		if 'task_obs' in self.output:
+			observation_space['task_obs'] = self.build_obs_space(
+				shape=(self.task.task_obs_dim+self.task.obj_num*12,), low=-np.inf, high=-np.inf)
+		if 'rgb' in self.output:
+			observation_space['rgb'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=0.0, high=1.0)
+			vision_modalities.append('rgb')
+		if 'depth' in self.output:
+			observation_space['depth'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 1),
+				low=0.0, high=1.0)
+			vision_modalities.append('depth')
+		if 'pc' in self.output:
+			observation_space['pc'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)
+			vision_modalities.append('pc')
+		if 'optical_flow' in self.output:
+			observation_space['optical_flow'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 2),
+				low=-np.inf, high=np.inf)
+			vision_modalities.append('optical_flow')
+		if 'scene_flow' in self.output:
+			observation_space['scene_flow'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)
+			vision_modalities.append('scene_flow')
+		if 'normal' in self.output:
+			observation_space['normal'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)
+			vision_modalities.append('normal')
+		if 'seg' in self.output:
+			observation_space['seg'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 1),
+				low=0.0, high=1.0)
+			vision_modalities.append('seg')
+		if 'rgb_filled' in self.output:  # use filler
+			observation_space['rgb_filled'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=0.0, high=1.0)
+			vision_modalities.append('rgb_filled')
+		if 'scan' in self.output:
+			self.n_horizontal_rays = self.config.get('n_horizontal_rays', 128)
+			self.n_vertical_beams = self.config.get('n_vertical_beams', 1)
+			assert self.n_vertical_beams == 1, 'scan can only handle one vertical beam for now'
+			observation_space['scan'] = self.build_obs_space(
+				shape=(self.n_horizontal_rays * self.n_vertical_beams, 1),
+				low=0.0, high=1.0)
+			scan_modalities.append('scan')
+		if 'occupancy_grid' in self.output:
+			self.grid_resolution = self.config.get('grid_resolution', 128)
+			self.occupancy_grid_space = gym.spaces.Box(low=0.0,
+													   high=1.0,
+													   shape=(self.grid_resolution,
+															  self.grid_resolution, 1))
+			observation_space['occupancy_grid'] = self.occupancy_grid_space
+			scan_modalities.append('occupancy_grid')
+
+		if len(vision_modalities) > 0:
+			sensors['vision'] = VisionSensor(self, vision_modalities)
+
+		if len(scan_modalities) > 0:
+			sensors['scan_occ'] = ScanSensor(self, scan_modalities)
+
+		self.observation_space = gym.spaces.Dict(observation_space)	
+		self.sensors = sensors
+
 	def get_state(self, collision_links=[]):
 		"""
 		Get the current observation
@@ -356,11 +437,13 @@ class RelocateEnv(iGibsonEnv):
 
 		state = self.get_state(collision_links)
 		info = {}
+
 		reward, info = self.task.get_reward(
 			self, collision_links, action, info)
 		done, info = self.task.get_termination(
 			self, collision_links, action, info)
 
+		# transite to next state
 		self.task.step(self)
 
 		self.populate_info(info)
@@ -532,12 +615,13 @@ if __name__ == '__main__':
 			state, reward, done, _ = env.step(action)
 			#env.task.get_obj_goal_pos()
 			pos_distances, rot_distances = env.task.goal_distance()
-			print(pos_distances)
-			print(rot_distances)
+			#print(pos_distances)
+			#print(rot_distances)
+			#print(env.observation_space)
 			print('-----------------------------')
 			#print('-------------------------------')
 			#print('reward', reward)
-			#print(state['task_obs'])
+			#print(state['task_obs'].shape)
 			if done:
 				break
 		

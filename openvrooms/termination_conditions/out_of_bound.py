@@ -1,33 +1,39 @@
 from gibson2.termination_conditions.termination_condition_base import BaseTerminationCondition
-from gibson2.scenes.igibson_indoor_scene import InteractiveIndoorScene
-
+import numpy as np
 
 class OutOfBound(BaseTerminationCondition):
     """
-    OutOfBound used for navigation tasks in InteractiveIndoorScene
     Episode terminates if the robot goes outside the valid region
     """
 
-    def __init__(self, config):
+    def __init__(self, config, env):
         super(OutOfBound, self).__init__(config)
-        self.fall_off_thresh = self.config.get(
-            'fall_off_thresh', 0.03)
+        self.safty_thresh = float(self.config.get('dist_tol', 0.36)) / 2.0 + 0.1
+        self.x_bound = np.array(env.scene.x_range)  
+        self.y_bound = np.array(env.scene.y_range)
+
+        self.x_bound[0] += self.safty_thresh
+        self.x_bound[1] -= self.safty_thresh
+        self.y_bound[0] += self.safty_thresh
+        self.y_bound[1] -= self.safty_thresh
 
     def get_termination(self, task, env):
         """
         Return whether the episode should terminate.
         Terminate if the robot goes outside the valid region
-
-        :param task: task instance
-        :param env: environment instance
-        :return: done, info
         """
+        
+        robot_x, robot_y, _ = env.robots[0].get_position()
 
-        done = False
-        # fall off the cliff of valid region
-        if isinstance(env.scene, InteractiveIndoorScene):
-            robot_z = env.robots[0].get_position()[2]
-            if robot_z < (env.scene.get_floor_height() - self.fall_off_thresh):
-                done = True
-        success = False
+        print(robot_x)
+        print(robot_y)
+
+        # Out of valid region
+        if robot_x <= self.x_bound[0] or robot_x >= self.x_bound[1] or robot_y <= self.y_bound[0] or robot_y >= self.y_bound[1]:
+            done = True
+        else:
+            done = False 
+
+        success = False   
+        
         return done, success

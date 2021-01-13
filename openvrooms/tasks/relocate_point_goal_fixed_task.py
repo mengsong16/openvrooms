@@ -2,10 +2,13 @@ from gibson2.tasks.task_base import BaseTask
 import pybullet as p
 from gibson2.scenes.igibson_indoor_scene import InteractiveIndoorScene
 from gibson2.scenes.gibson_indoor_scene import StaticIndoorScene
+
 from gibson2.termination_conditions.max_collision import MaxCollision
 from gibson2.termination_conditions.timeout import Timeout
-from gibson2.termination_conditions.out_of_bound import OutOfBound
-from gibson2.termination_conditions.point_goal import PointGoal
+
+from openvrooms.termination_conditions.out_of_bound import OutOfBound
+from openvrooms.termination_conditions.point_goal import PointGoal
+
 from gibson2.reward_functions.potential_reward import PotentialReward
 from gibson2.reward_functions.collision_reward import CollisionReward
 from gibson2.reward_functions.point_goal_reward import PointGoalReward
@@ -36,9 +39,9 @@ class RelocatePointGoalFixedTask(BaseTask):
         self.reward_type = self.config.get('reward_type', 'l2')
 
         self.termination_conditions = [
-            #MaxCollision(self.config),
+            MaxCollision(self.config), # collide with non-interactive objects reach maximum times
             Timeout(self.config),
-            OutOfBound(self.config),
+            OutOfBound(self.config, env),
             #PointGoal(self.config),
         ]
 
@@ -301,12 +304,49 @@ class RelocatePointGoalFixedTask(BaseTask):
         for reward_function in self.reward_functions:
             reward_function.reset(self, env)
 
+    def get_reward(self, env, collision_links=[], action=None, info={}):
+        """
+        Aggreate reward functions
+
+        :param env: environment instance
+        :param collision_links: collision links after executing action
+        :param action: the executed action
+        :param info: additional info
+        :return reward: total reward of the current timestep
+        :return info: additional info
+        """
+        reward = 0.0
+        for reward_function in self.reward_functions:
+            reward += reward_function.get_reward(self, env)
+
+        return reward, info
+
+    def super_get_termination(self, env, collision_links=[], action=None, info={}):
+        """
+        Aggreate termination conditions
+
+        :param env: environment instance
+        :param collision_links: collision links after executing action
+        :param action: the executed action
+        :param info: additional info
+        :return done: whether the episode has terminated
+        :return info: additional info
+        """
+        done = False
+        success = False
+        for condition in self.termination_conditions:
+            d, s = condition.get_termination(self, env)
+            done = done or d
+            success = success or s
+        info['done'] = done
+        info['success'] = success
+        return done, info
+
     def get_termination(self, env, collision_links=[], action=None, info={}):
         """
         Aggreate termination conditions and fill info
         """
-        done, info = super(RelocatePointGoalFixedTask, self).get_termination(
-            env, collision_links, action, info)
+        done, info = self.super_get_termination(env, collision_links, action, info)
 
         return done, info
 
