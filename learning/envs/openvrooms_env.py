@@ -1,100 +1,113 @@
 import torch
 import numpy as np
+import os
 import gym
 from all.core.state import State
 from all.environments.gym import GymEnvironment
-import openvrooms
 from openvrooms.envs.relocate_env import RelocateEnv
+from openvrooms.config import *
 
 class OpenvroomsEnvironment(GymEnvironment):
-    def __init__(self, name, save_path=None, *args, **kwargs):
-        # need these for duplication
+    def __init__(self, name, config_file,
+        mode='headless',
+        action_timestep=1 / 10.0,
+        physics_timestep=1 / 240.0,
+        device_idx=0,  # pass to simulator
+        device=torch.device('cuda:0'), # device used by this environment
+        render_to_tensor=False,
+        automatic_reset=False,
+        save_path=None, *args, **kwargs):
+
+        # save parameters specific to this class
+        self._config_file = config_file
+        self._mode = mode
+        self._action_timestep = action_timestep
+        self._physics_timestep = physics_timestep
+        self._device_idx = device_idx
+        self._device = device
+        self._render_to_tensor = render_to_tensor
+        self._automatic_reset = automatic_reset
+        self._save_path = save_path
+        # need these for duplication and being called by base class
         self._args = args
         self._kwargs = kwargs
+
         # make a gym environment
-        env = gym.make(name, start=start, goal=goal, goal_conditioned=goal_conditioned, random_start=random_start, wall_illegal=wall_illegal)
+        env = gym.make(id=name, config_file=config_file, mode=mode, action_timestep=action_timestep, physics_timestep=physics_timestep, device_idx=device_idx,
+        render_to_tensor=render_to_tensor, automatic_reset=automatic_reset)
+        
         # monitor wrapper
-        if save_path:
-            env = gym.wrappers.Monitor(env, save_path, force=True)
+        if self._save_path:
+            env = gym.wrappers.Monitor(env, self._save_path, force=True)
+       
         # initialize
-        super().__init__(env, *args, **kwargs) # self._done is True
-        self._env = env 
-        
+        super().__init__(env, *args, **kwargs) 
+       
 
-    
-        #print('-----------------------')
-        #print(env._max_episode_steps)  #2000
-        #print('-----------------------')
-        
-        
-        
-    # self._state is State
-    # self._desired_goal and self._achieved_goal are raw data (numpy array) 
-    # restart an episode   
-    def reset(self):
-        # Note that super().reset() will call MazeEnv's _make_state() instead of GymEnv's
-        #init_state = super().reset()
-        super()._lazy_init()
-        #print(self._env.goal_conditioned)
-        #print(self._env.random_start)
-        raw_state = self._env.reset()
-        # 0 means not done, it is not reward
-        # self._state is State
-        self._state = self._make_state(raw=raw_state, done=0, info=action_mask)
-        # initialize _reward=-1, although the reward is undefined when reset() is called
-        self._reward = -1
-        #self._reward = 1
-        self._done = False
-
-
-    @property
-    def name(self):
-        return self._name
 
     def duplicate(self, n):
         print("-------duplicate-----")
-        return [OpenvroomsEnvironment(self._name, self._save_path, *self._args, **self._kwargs) for _ in range(n)]
 
-
-    # wrap done and info into state
-    # step() will call this function instead super()._make_state()?
-    # ensure that raw is a numpy with a specific type consistant with goal state  
-    # info is a numpy array of action mask
-    def _make_state(self, raw, done, info=None):
-        #print("Maze")
-        #Convert numpy array into State
-        return State(
-            torch.from_numpy(np.array(
-                    raw,
-                    dtype=self.state_space.dtype
-                )).unsqueeze(0).to(self._device),
-            self._done_mask if done else self._not_done_mask,
-            [torch.from_numpy(info).to(self._device)] if info is not None else []
-        )
-
-    def step(self, action):
-        # will call this _make_state, not super's _make_state
-        super().step(action)
-        #if self._goal_conditioned:
-        self._achieved_goal = self.raw_state
-
-        return self._state, self._reward
-
-    # keep action the same, still a Tensor
-    # called by heritated step()     
-    def _convert(self, action):
-        if isinstance(self.action_space, gym.spaces.Discrete):
-            return action
-        raise TypeError("Unknown action space type")  
-         
+        return [OpenvroomsEnvironment(name=self._name, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
+        physics_timestep=self._physics_timestep,
+        device_idx=self._device_idx,  
+        device=self._device, 
+        render_to_tensor=self._render_to_tensor,
+        automatic_reset=self._automatic_reset, save_path=self._save_path) 
+        for _ in range(n)] 
 
     @property    
-    def raw_state(self):
-        return self._state._raw.cpu().squeeze().numpy()       
+    def observation(self):
+        return self.state['observation']
+
+    # return numpy array on cpus
+    @property    
+    def observation_np(self):
+        return self.state['observation'][0].cpu().squeeze().numpy()  
+
+    @property    
+    def reward(self):
+        return self.state['reward']
+
+    @property    
+    def done(self):
+        return self.state['done']   
+
+    # part of info
+    # keys in info: 'success', 'episode_length', 'non_interactive_collision_step', 'interactive_collision_step'
+    @property    
+    def success(self):
+        return self.state['success']     
     
-        
-if __name__ == "__main__":  
+
+
+def test_env():
     print("Start!") 
 
-    env = gym.make("openvrooms-v0") 
-    print("Succeed!")                          
+    #env = gym.make("openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0) 
+
+    env = OpenvroomsEnvironment(name="openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
+    #print(env._name)
+    #print(env._env)  
+    #print(env.duplicate(1)) 
+
+    
+    #print(env._env._elapsed_steps)
+    i = 0
+    env.reset()
+    while i < 2000:
+        action = env.action_space.sample()
+        env.step(torch.from_numpy(np.array([action])))
+        
+        i += 1
+
+        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation_np.shape, env.reward, env.done, env.success))
+        print("--------------------------------------------------------")
+        
+    env.close()
+    print("Done!")
+
+    
+
+if __name__ == "__main__":  
+    test_env()                              

@@ -26,7 +26,7 @@ obj_target_pos: [[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 0], [0, 0, 0]]
 
 # observation space: sensor spec
-output: [task_obs, rgb]
+output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
 third_person_view: true
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
@@ -34,7 +34,7 @@ external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0
 # task
 task: relocate_point_goal_fixed
 goal_format: cartesian
-task_obs_dim: 12 # basic dimensions in state
+task_obs_dim: 12 # basic dimensions in state, addtional dimensions 12 per object
 
 # reward
 use_goal_dist_reward: true

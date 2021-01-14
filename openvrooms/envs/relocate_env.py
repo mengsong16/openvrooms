@@ -348,6 +348,8 @@ class RelocateEnv(iGibsonEnv):
 		self.observation_space = gym.spaces.Dict(observation_space)	
 		self.sensors = sensors
 
+	# to use all and make it gym compatible, ensure that the output is np.array
+	# right now, can only handle single modal
 	def get_state(self):
 		"""
 		Get the current observation
@@ -356,6 +358,7 @@ class RelocateEnv(iGibsonEnv):
 		:return: observation as a dictionary
 		"""
 		state = OrderedDict()
+		
 		# state 
 		if 'task_obs' in self.output:
 			state['task_obs'] = self.task.get_task_obs(self)
@@ -366,7 +369,14 @@ class RelocateEnv(iGibsonEnv):
 			for modality in vision_obs:
 				state[modality] = vision_obs[modality]
 
-		return state
+		#return state
+
+		# single state modal as np.array
+		if 'task_obs' in self.output:
+			return state['task_obs']
+		elif 'rgb' in self.output:
+			return state['rgb']
+		
 
 	def run_simulation(self):
 		"""
@@ -445,7 +455,7 @@ class RelocateEnv(iGibsonEnv):
 
 		reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
 
-		print(sub_reward)
+		#print(sub_reward)
 
 		# step task related variables
 		self.task.step(self)
@@ -453,7 +463,7 @@ class RelocateEnv(iGibsonEnv):
 		self.populate_info(info)
 
 		if done and self.automatic_reset:
-			info['last_observation'] = state
+			#info['last_observation'] = state  # useless in iGibson
 			state = self.reset()
 
 		return state, reward, done, info
@@ -626,6 +636,7 @@ if __name__ == '__main__':
 			#print(pos_distances)
 			#print(rot_distances)
 			#print(env.observation_space)
+			print(info)
 			print('-----------------------------')
 			#print('-------------------------------')
 			#print('reward', reward)

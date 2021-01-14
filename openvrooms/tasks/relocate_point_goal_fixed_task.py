@@ -290,7 +290,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 
 			sub_reward[reward_termination.get_name()] = r
 
-		info['done'] = done
+		#info['done'] = done
 		info['success'] = success
 
 		return reward, done, info, sub_reward
