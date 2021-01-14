@@ -5,14 +5,16 @@ load_texture: true
 obj_num: 2
 duplicated_objects: true
 
+
 # robot
 robot: Turtlebot
 agent_initial_pos: [0, 0, 0]
 agent_initial_orn: [0, 0, 0]
+body_width: 0.36  # diameter of base link
 
 # action space
 is_discrete: true
-velocity: 1.0
+velocity: 1.0 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
@@ -32,19 +34,23 @@ external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0
 # task
 task: relocate_point_goal_fixed
 goal_format: cartesian
-task_obs_dim: 12
+task_obs_dim: 12 # basic dimensions in state
 
 # reward
-reward_type: l2
-success_reward: 10.0
-potential_reward_weight: 1.0
-collision_reward_weight: -0.1
+use_goal_dist_reward: true
+rot_dist_reward_weight: 0.2 # (position distance reward weight is 1)
 
-# goal
-goal_rot_weight: 1
+success_reward: 10.0
+dist_tol: 0.1 # l2 distance in meter
+angle_tol: 0.2 # eular angle distance ?
+
+collision_penalty: -1.0
+collision_reward: 0.1
+time_elapse_reward: -0.01
+out_of_bound_reward: -10.0
+
 
 # termination condition
-dist_tol: 0.36  # body width (diameter)
 max_step: 500
 max_collisions_allowed: 500
 
@@ -52,9 +58,11 @@ max_collisions_allowed: 500
 initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
 
-# visual objects
+# visual target landmarks
 visual_object_visible_to_agent: false
 
 # rl
 # discount factor
 discount_factor: 0.99
+# dqn
+

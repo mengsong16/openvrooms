@@ -185,10 +185,6 @@ class RelocateEnv(iGibsonEnv):
 		self.collision_ignore_link_a_ids = set(
 			self.config.get('collision_ignore_link_a_ids', []))
 
-		# discount factor
-		self.discount_factor = self.config.get('discount_factor', 0.99)
-
-
 		# task
 		if self.config['task'] == 'relocate_point_goal_fixed':
 			self.task = RelocatePointGoalFixedTask(self)
@@ -255,9 +251,11 @@ class RelocateEnv(iGibsonEnv):
 		Load miscellaneous variables for book keeping
 		"""
 		self.current_step = 0
-		self.collision_step = 0
+		self.non_interactive_collision_step = 0
+		self.interactive_collision_step = 0
 		self.current_episode = 0
-		self.collision_links = []
+		self.non_interactive_collision_links = []
+		self.interactive_collision_links = []
 
 	def load(self):
 		"""
@@ -350,7 +348,7 @@ class RelocateEnv(iGibsonEnv):
 		self.observation_space = gym.spaces.Dict(observation_space)	
 		self.sensors = sensors
 
-	def get_state(self, collision_links=[]):
+	def get_state(self):
 		"""
 		Get the current observation
 
@@ -377,11 +375,10 @@ class RelocateEnv(iGibsonEnv):
 		:return: collision_links: collisions from last physics timestep
 		"""
 		self.simulator_step()
-		collision_links = list(p.getContactPoints(
-			bodyA=self.robots[0].robot_ids[0]))
+		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 		return self.filter_collision_links(collision_links)
 
-	# get collision links with robot base link except those should be ignored during simulation
+	# get collision links with robot base link, ignore some, return collisions with interactive and non-interactive links respectively
 	def filter_collision_links(self, collision_links):
 		"""
 		Filter out collisions that should be ignored
@@ -389,12 +386,10 @@ class RelocateEnv(iGibsonEnv):
 		:param collision_links: original collisions, a list of collisions
 		:return: filtered collisions
 		"""
-		new_collision_links = []
-		for item in collision_links:
-			# ignore collision with body b
-			if item[2] in self.collision_ignore_body_b_ids:
-				continue
+		non_interactive_collision_links = []
+		interactive_collision_links = []
 
+		for item in collision_links:
 			# ignore collision with robot link a
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
@@ -402,8 +397,14 @@ class RelocateEnv(iGibsonEnv):
 			# ignore self collision with robot link a (body b is also robot itself)
 			if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
 				continue
-			new_collision_links.append(item)
-		return new_collision_links
+
+			# ignore collision with body b - interactive objects
+			if item[2] in self.collision_ignore_body_b_ids:
+				interactive_collision_links.append(item)
+			else:
+				non_interactive_collision_links.append(item)
+
+		return non_interactive_collision_links, interactive_collision_links
 
 	# populate information into info
 	def populate_info(self, info):
@@ -411,7 +412,8 @@ class RelocateEnv(iGibsonEnv):
 		Populate info dictionary with any useful information
 		"""
 		info['episode_length'] = self.current_step
-		info['collision_step'] = self.collision_step
+		info['non_interactive_collision_step'] = self.non_interactive_collision_step # how many steps involve collision with non-interactive objects
+		info['interactive_collision_step'] = self.interactive_collision_step # how many steps involve collision with interactive objects
 
 	def step(self, action):
 		"""
@@ -431,19 +433,21 @@ class RelocateEnv(iGibsonEnv):
 			self.robots[0].apply_action(action)
 
 		# check collisions
-		collision_links = self.run_simulation()
-		self.collision_links = collision_links
-		self.collision_step += int(len(collision_links) > 0)
+		non_interactive_collision_links, interactive_collision_links = self.run_simulation()
+		self.non_interactive_collision_links = non_interactive_collision_links
+		self.interactive_collision_links = interactive_collision_links
 
-		state = self.get_state(collision_links)
+		self.non_interactive_collision_step += int(len(non_interactive_collision_links) > 0)
+		self.interactive_collision_step += int(len(interactive_collision_links) > 0)
+
+		state = self.get_state()
 		info = {}
 
-		reward, info = self.task.get_reward(
-			self, collision_links, action, info)
-		done, info = self.task.get_termination(
-			self, collision_links, action, info)
+		reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
 
-		# transite to next state
+		print(sub_reward)
+
+		# step task related variables
 		self.task.step(self)
 
 		self.populate_info(info)
@@ -561,8 +565,10 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		self.current_episode += 1
 		self.current_step = 0
-		self.collision_step = 0
-		self.collision_links = []
+		self.non_interactive_collision_step = 0
+		self.interactive_collision_step = 0
+		self.non_interactive_collision_links = []
+		self.interactive_collision_links = []
 
 
 	def reset(self):
@@ -604,7 +610,7 @@ if __name__ == '__main__':
 					 physics_timestep=1.0 / 40.0)
 
 
-	
+
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -628,4 +634,3 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
-	

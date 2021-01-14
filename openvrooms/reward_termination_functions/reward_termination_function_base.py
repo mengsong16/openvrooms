@@ -1,10 +1,10 @@
 from abc import abstractmethod, ABC
 
 
-class BaseRewardFunction(ABC):
+class BaseRewardTerminationFunction(ABC):
     """
-    Base RewardFunction class
-    Reward-specific reset and get_reward methods are implemented in subclasses
+    Base RewardTerminationFunction class
+    Specific reset and get_reward methods are implemented in subclasses
     """
 
     def __init__(self, config):
@@ -21,7 +21,7 @@ class BaseRewardFunction(ABC):
         return
 
     @abstractmethod
-    def get_reward(self, task, env):
+    def get_reward_termination(self, task, env):
         """
         Compute the reward at the current timestep. Overwritten by subclasses.
 
