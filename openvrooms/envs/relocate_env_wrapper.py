@@ -7,7 +7,7 @@ from all.environments.gym import GymEnvironment
 from openvrooms.envs.relocate_env import RelocateEnv
 from openvrooms.config import *
 
-class OpenvroomsEnvironment(GymEnvironment):
+class OpenRelocateEnvironment(GymEnvironment):
     def __init__(self, name, config_file,
         mode='headless',
         action_timestep=1 / 10.0,
@@ -48,7 +48,7 @@ class OpenvroomsEnvironment(GymEnvironment):
     def duplicate(self, n):
         print("-------duplicate-----")
 
-        return [OpenvroomsEnvironment(name=self._name, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
+        return [OpenRelocateEnvironment(name=self._name, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
         physics_timestep=self._physics_timestep,
         device_idx=self._device_idx,  
         device=self._device, 
@@ -86,7 +86,7 @@ def test_env():
 
     #env = gym.make("openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0) 
 
-    env = OpenvroomsEnvironment(name="openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
+    env = OpenRelocateEnvironment(name="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
     #print(env._name)
     #print(env._env)  
     #print(env.duplicate(1)) 
@@ -101,7 +101,7 @@ def test_env():
         
         i += 1
 
-        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation_np.shape, env.reward, env.done, env.success))
+        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation, env.reward, env.done, env.success))
         print("--------------------------------------------------------")
         
     env.close()
