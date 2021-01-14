@@ -13,9 +13,29 @@ class PointGoal(BaseRewardTerminationFunction):
         super(PointGoal, self).__init__(config)
         self.dist_tol = self.config.get('dist_tol', 0.1)
         self.angle_tol = self.config.get('angle_tol', 0.2)
+        self.success_reward = self.config.get('success_reward', 10.0)
+
         self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', True)
         self.rot_dist_reward_weight = self.config.get('rot_dist_reward_weight', 0.2)
-        self.success_reward = self.config.get('success_reward', 10.0)
+        self.goal_dist_reward_weight = self.config.get('goal_dist_reward_weight', 1.0)
+
+    def reset(self, task, env):
+        """
+        Compute the initial goal distance after episode reset
+
+        :param task: task instance
+        :param env: environment instance
+        """
+        if self.use_goal_dist_reward:
+            self.goal_dist = self.get_goal_dist(task)
+
+    def get_goal_dist(self, task):
+        pos_distances, rot_distances = task.goal_distance()
+        return self.compute_weighted_distance(pos_distances, rot_distances)
+
+    def compute_weighted_distance(self, pos_distances, rot_distances):    
+        weighted_distance = np.mean(pos_distances) + self.rot_dist_reward_weight * np.mean(rot_distances)
+        return weighted_distance
 
     def get_reward_termination(self, task, env):
         """
@@ -47,9 +67,14 @@ class PointGoal(BaseRewardTerminationFunction):
             reward = self.success_reward
         else:
             reward = 0.0    
+        
         # get goal reward
         if self.use_goal_dist_reward:
-            reward += (np.mean(pos_distances) + self.rot_dist_reward_weight * np.mean(rot_distances))
+            new_goal_dist = self.compute_weighted_distance(pos_distances, rot_distances)
+            goal_dist_reward = self.goal_dist_reward_weight * (self.goal_dist - new_goal_dist)
+            self.goal_dist = new_goal_dist
+
+            reward += goal_dist_reward
    
 
         return reward, done, success

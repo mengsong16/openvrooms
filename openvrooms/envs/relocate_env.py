@@ -579,10 +579,11 @@ class RelocateEnv(iGibsonEnv):
 		self.robots[0].set_position([100.0, 100.0, 100.0])
 		# reset scene
 		self.task.reset_scene(self)
-		# reset agent
+		# reset agent and rewards
 		self.task.reset_agent(self)
 		self.simulator.sync()
 		state = self.get_state()
+		# reset other variables
 		self.reset_variables()
 
 		return state
@@ -618,9 +619,9 @@ if __name__ == '__main__':
 		env.reset()
 		for _ in range(200):  # 10 seconds
 			action = env.action_space.sample()
-			state, reward, done, _ = env.step(action)
+			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
-			pos_distances, rot_distances = env.task.goal_distance()
+			#pos_distances, rot_distances = env.task.goal_distance()
 			#print(pos_distances)
 			#print(rot_distances)
 			#print(env.observation_space)

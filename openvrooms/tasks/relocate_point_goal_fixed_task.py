@@ -89,7 +89,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 			[obj.body_id for obj in self.interactive_objects])
 
 		#print(env.collision_ignore_body_b_ids)
-		
+
 		# check validity of initial and target scene
 		print("--------------- Check validity of initial and target scene ------------")
 
@@ -262,8 +262,8 @@ class RelocatePointGoalFixedTask(BaseTask):
 		self.robot_pos = self.agent_initial_pos[:2]
 
 		# reset reward functions
-		for reward_function in self.reward_functions:
-			reward_function.reset(self, env)
+		for reward_termination_function in self.reward_termination_functions:
+			reward_termination_function.reset(self, env)
 
 	def get_reward_termination(self, env, info):
 		"""
