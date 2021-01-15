@@ -91,8 +91,9 @@ def test_env():
     #print(env._env)  
     #print(env.duplicate(1)) 
 
-    
-    #print(env._env._elapsed_steps)
+    #print(env.action_space)
+    #print(env.state_space)
+
     i = 0
     env.reset()
     while i < 2000:

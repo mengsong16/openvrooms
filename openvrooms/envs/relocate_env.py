@@ -345,11 +345,18 @@ class RelocateEnv(iGibsonEnv):
 		if len(scan_modalities) > 0:
 			sensors['scan_occ'] = ScanSensor(self, scan_modalities)
 
-		self.observation_space = gym.spaces.Dict(observation_space)	
+		# right now, learning can only handle single modal
+		#self.observation_space = gym.spaces.Dict(observation_space)	
+
+		if 'task_obs' in self.output:
+			self.observation_space = observation_space['task_obs']
+		elif 'rgb' in self.output:
+			self.observation_space = observation_space['rgb']
+
 		self.sensors = sensors
 
 	# to use all and make it gym compatible, ensure that the output is np.array
-	# right now, can only handle single modal
+	# right now, learning can only handle single modal
 	def get_state(self):
 		"""
 		Get the current observation
