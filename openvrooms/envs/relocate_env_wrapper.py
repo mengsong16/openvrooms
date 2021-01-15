@@ -57,25 +57,40 @@ class OpenRelocateEnvironment(GymEnvironment):
 
     @property    
     def observation(self):
+        if self._state == None:
+            return None
+
         return self.state['observation']
 
     # return numpy array on cpus
     @property    
     def observation_np(self):
+        if self._state == None:
+            return None
+
         return self.state['observation'].cpu().squeeze().numpy()  
 
     @property    
     def reward(self):
+        if self._state == None:
+            return None
+
         return self.state['reward']
 
     @property    
     def done(self):
+        if self._state == None:
+            return False
+    
         return self.state['done']   
 
     # part of info
     # keys in info: 'success', 'episode_length', 'non_interactive_collision_step', 'interactive_collision_step'
     @property    
     def success(self):
+        if self._state == None:
+            return False
+
         return self.state['success']     
     
 

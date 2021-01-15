@@ -1,4 +1,4 @@
-from all.experiments import plot_returns_100, GreedyAgent
+from all.experiments import plot_returns_100
 import time
 import os
 wd = os.getcwd()
@@ -9,6 +9,7 @@ sys.path.insert(0, wd)
 from presets import dqn
 from presets.models import *
 from run_experiment import run_experiment
+from greedy_agent import GreedyAgent
 
 from openvrooms.envs.relocate_env_wrapper import OpenRelocateEnvironment
 
@@ -21,23 +22,27 @@ import torch
 def deploy(agent_dir, env, fps=60):
 	agent = GreedyAgent.load(agent_dir, env)
 
+	print('----------------- Deployment Start --------------------')
 	action = None
 	returns = 0
-	# have to call this before initial reset for pybullet envs
-	#env.render(mode="human")
 	env.reset()
 	while True:
-		time.sleep(1 / fps)
-		if env.done:
+		# run policy
+		# env.reward is just a place holder
+		action = agent.act(env.state, env.reward)
+
+		# step env
+		if not env.done:
+			env.step(action)
+			returns += env.reward
+		else:
+			# next episode
 			print('returns:', returns)
 			env.reset()
 			returns = 0
-		else:
-			env.step(action)
-		#env.render()
-		action = agent.act(env.state, env.reward)
-		returns += env.reward
-
+		
+	print("-----------------Done!-----------------")	
+	
 def train(args, config, env):
 	training_timesteps = config.get('training_timesteps')
 	print('----------------- Training Start --------------------')
