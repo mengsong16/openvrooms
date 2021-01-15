@@ -7,8 +7,9 @@ from all.environments.gym import GymEnvironment
 from openvrooms.envs.relocate_env import RelocateEnv
 from openvrooms.config import *
 
+
 class OpenRelocateEnvironment(GymEnvironment):
-    def __init__(self, name, config_file,
+    def __init__(self, gym_id, config_file,
         mode='headless',
         action_timestep=1 / 10.0,
         physics_timestep=1 / 240.0,
@@ -16,7 +17,7 @@ class OpenRelocateEnvironment(GymEnvironment):
         device=torch.device('cuda:0'), # device used by this environment
         render_to_tensor=False,
         automatic_reset=False,
-        save_path=None, *args, **kwargs):
+        save_path=None):
 
         # save parameters specific to this class
         self._config_file = config_file
@@ -24,16 +25,14 @@ class OpenRelocateEnvironment(GymEnvironment):
         self._action_timestep = action_timestep
         self._physics_timestep = physics_timestep
         self._device_idx = device_idx
-        self._device = device
         self._render_to_tensor = render_to_tensor
         self._automatic_reset = automatic_reset
         self._save_path = save_path
-        # need these for duplication and being called by base class
-        self._args = args
-        self._kwargs = kwargs
+        self._gym_id = gym_id
+
 
         # make a gym environment
-        env = gym.make(id=name, config_file=config_file, mode=mode, action_timestep=action_timestep, physics_timestep=physics_timestep, device_idx=device_idx,
+        env = gym.make(id=gym_id, config_file=config_file, mode=mode, action_timestep=action_timestep, physics_timestep=physics_timestep, device_idx=device_idx,
         render_to_tensor=render_to_tensor, automatic_reset=automatic_reset)
         
         # monitor wrapper
@@ -41,14 +40,14 @@ class OpenRelocateEnvironment(GymEnvironment):
             env = gym.wrappers.Monitor(env, self._save_path, force=True)
        
         # initialize
-        super().__init__(env, *args, **kwargs) 
+        super().__init__(env=env, device=device) 
        
 
 
     def duplicate(self, n):
         print("-------duplicate-----")
 
-        return [OpenRelocateEnvironment(name=self._name, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
+        return [OpenRelocateEnvironment(gym_id=self._gym_id, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
         physics_timestep=self._physics_timestep,
         device_idx=self._device_idx,  
         device=self._device, 
@@ -86,14 +85,16 @@ def test_env():
 
     #env = gym.make("openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0) 
 
-    env = OpenRelocateEnvironment(name="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
+    env = OpenRelocateEnvironment(gym_id="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
     #print(env._name)
     #print(env._env)  
-    #print(env.duplicate(1)) 
+    print(env.name)
+    print(env.duplicate(1)) 
+    print(env.name)
 
     #print(env.action_space)
     #print(env.state_space)
-
+    '''
     i = 0
     env.reset()
     while i < 2000:
@@ -107,6 +108,7 @@ def test_env():
         
     env.close()
     print("Done!")
+    '''
 
     
 
