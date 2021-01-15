@@ -62,7 +62,7 @@ class OpenRelocateEnvironment(GymEnvironment):
     # return numpy array on cpus
     @property    
     def observation_np(self):
-        return self.state['observation'][0].cpu().squeeze().numpy()  
+        return self.state['observation'].cpu().squeeze().numpy()  
 
     @property    
     def reward(self):
@@ -98,7 +98,7 @@ def test_env():
         
         i += 1
 
-        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation, env.reward, env.done, env.success))
+        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation_np.shape, env.reward, env.done, env.success))
         print("--------------------------------------------------------")
         
     env.close()

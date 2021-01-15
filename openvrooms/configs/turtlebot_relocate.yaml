@@ -50,17 +50,14 @@ collision_reward: 0.1
 time_elapse_reward: -0.01
 out_of_bound_reward: -10.0
 
-
-# termination condition
+# episode termination condition
 max_step: 500
 max_collisions_allowed: 500
 
 # misc config
 initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
-
-# visual target landmarks
-visual_object_visible_to_agent: false
+visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
 action_timestep: 0.1  # environment executes action per action_timestep second
@@ -68,10 +65,11 @@ physics_timestep: 0.025 # physics timestep for pybullet
 
 # rl
 # general training settings
-training_timesteps: 4 #40000
+training_timesteps: 40000
 discount_factor: 0.99
 learning_rate: 0.001
 minibatch_size: 64
+
 # dqn
 update_frequency: 1
 target_update_frequency: 100

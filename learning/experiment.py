@@ -28,6 +28,11 @@ def main():
 						choices=['headless', 'gui', 'iggui'],
 						default='headless',
 						help='which mode for simulation (default: headless)')
+	parser.add_argument('--device',
+						'-d',
+						choices=['cuda:0', 'cuda:1', 'cpu'],
+						default='cuda:0',
+						help='cpu or gpu (default: cuda:0)')
 	args = parser.parse_args()
 
 	config_file = os.path.join(config_path,'turtlebot_relocate.yaml')
@@ -35,17 +40,18 @@ def main():
 
 	training_timesteps = config.get('training_timesteps')
 
+
 	env = OpenRelocateEnvironment(gym_id="openrelocate-v0", 
 		config_file=config_file, 
 		mode=args.mode, 
 		action_timestep=config.get('action_timestep'), 
 		physics_timestep=config.get('physics_timestep'),
-		device=torch.device('cuda:0'),
+		device=torch.device(args.device),
 		device_idx=0)
 
 	agent = dqn(
 		# Common settings
-		device='cuda:0',
+		device=args.device,
 		discount_factor=config.get('discount_factor'),
 		# Adam optimizer settings
 		lr=config.get('learning_rate'),
