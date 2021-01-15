@@ -45,7 +45,7 @@ class OpenRelocateEnvironment(GymEnvironment):
 
 
     def duplicate(self, n):
-        print("-------duplicate-----")
+        #print("-------duplicate-----")
 
         return [OpenRelocateEnvironment(gym_id=self._gym_id, config_file=self._config_file, mode=self._mode, action_timestep=self._action_timestep,
         physics_timestep=self._physics_timestep,
@@ -86,15 +86,10 @@ def test_env():
     #env = gym.make("openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0) 
 
     env = OpenRelocateEnvironment(gym_id="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0)
-    #print(env._name)
-    #print(env._env)  
-    print(env.name)
-    print(env.duplicate(1)) 
-    print(env.name)
 
     #print(env.action_space)
     #print(env.state_space)
-    '''
+    
     i = 0
     env.reset()
     while i < 2000:
@@ -108,7 +103,7 @@ def test_env():
         
     env.close()
     print("Done!")
-    '''
+    
 
     
 

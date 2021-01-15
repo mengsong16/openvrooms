@@ -1,7 +1,7 @@
 '''
 Quick example of usage of the run_experiment API.
 '''
-from all.experiments import run_experiment, plot_returns_100
+from all.experiments import plot_returns_100
 
 import os
 wd = os.getcwd()
@@ -11,6 +11,8 @@ sys.path.insert(0, wd)
 
 from presets import dqn
 from presets.models import *
+from run_experiment import run_experiment
+
 from openvrooms.envs.relocate_env_wrapper import OpenRelocateEnvironment
 
 from openvrooms.config import *
@@ -41,7 +43,7 @@ def main():
 		device=torch.device('cuda:0'),
 		device_idx=0)
 
-	alg = dqn(
+	agent = dqn(
 		# Common settings
 		device='cuda:0',
 		discount_factor=config.get('discount_factor'),
@@ -63,11 +65,13 @@ def main():
 
 
 	run_experiment(
-		[alg],
-		[env],
-		training_timesteps,
+		agents=[agent],
+		envs=[env],
+		frames=training_timesteps,
+		test_episodes=0
 	)
-	plot_returns_100('runs', timesteps=training_timesteps)
+
+	print("Done!")
 
 
 if __name__ == "__main__":
