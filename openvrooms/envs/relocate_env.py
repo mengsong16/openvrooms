@@ -401,7 +401,7 @@ class RelocateEnv(iGibsonEnv):
 		for modal in vision_modalities[1:]:
 			combined_state = np.concatenate((combined_state, state[modal]), axis=2)
 
-		print(combined_state.shape)
+		#print(combined_state.shape)
 		return combined_state	
 	
 	def run_simulation(self):
