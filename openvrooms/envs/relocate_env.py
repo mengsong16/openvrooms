@@ -329,6 +329,8 @@ class RelocateEnv(iGibsonEnv):
 			sensors['scan_occ'] = ScanSensor(self, scan_modalities)
 
 		self.sensors = sensors
+		self.vision_modalities = vision_modalities
+		self.scan_modalities = scan_modalities
 		
 		# create observation space
 		#self.observation_space = gym.spaces.Dict(observation_space)	
@@ -336,8 +338,27 @@ class RelocateEnv(iGibsonEnv):
 			self.observation_space = observation_space['task_obs']
 		elif 'rgb' in self.output:
 			self.observation_space = observation_space['rgb']
-	
 
+	
+	# can only combine when the each modality has the same image size
+	def combine_vision_observation_space(self, vision_modalities, observation_space):
+		channel_num = 0
+		low = np.inf
+		high = -np.inf
+		for modal in vision_modalities:
+			channel_num += observation_space[modal].shape[2]
+			cur_low = np.amin(observation_space[modal].low)
+			cur_high = np.amax(observation_space[modal].high)
+
+			if cur_low < low:
+				low = cur_low
+
+			if cur_high > high:
+				high = cur_high	
+
+		return self.build_obs_space(
+				shape=(self.image_height, self.image_width, channel_num),
+				low=low, high=high)
 	# to use all and make it gym compatible, ensure that the output is np.array
 	# right now, learning can only handle single modal
 	def get_state(self):
@@ -363,15 +384,26 @@ class RelocateEnv(iGibsonEnv):
 			scan_obs = self.sensors['scan_occ'].get_obs(self)
 			for modality in scan_obs:
 				state[modality] = scan_obs[modality]
-		#return state
+		
+		#self.combine_vision_observation(self.vision_modalities, state)
 
+		#return state
 		# single state modal as np.array
 		if 'task_obs' in self.output:
 			return state['task_obs']
 		elif 'rgb' in self.output:
 			return state['rgb']
 		
+	# can only combine when the each modality has the same image size
+	def combine_vision_observation(self, vision_modalities, state):
+		combined_state = state[vision_modalities[0]]
+		
+		for modal in vision_modalities[1:]:
+			combined_state = np.concatenate((combined_state, state[modal]), axis=2)
 
+		print(combined_state.shape)
+		return combined_state	
+	
 	def run_simulation(self):
 		"""
 		Run simulation for one action timestep (same as one render timestep in Simulator class)
@@ -616,7 +648,7 @@ if __name__ == '__main__':
 					 physics_timestep=1.0 / 40.0)
 
 
-
+	
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -632,6 +664,7 @@ if __name__ == '__main__':
 			#print(env.observation_space)
 			#print(info)
 			print(state.shape)
+			#print(state)
 			print('-----------------------------')
 			#print('-------------------------------')
 			#print('reward', reward)
@@ -642,3 +675,4 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
+	

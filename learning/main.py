@@ -40,7 +40,8 @@ def deploy(agent_dir, env, fps=60):
 			print('returns:', returns)
 			env.reset()
 			returns = 0
-		
+	
+	env.close()	
 	print("-----------------Done!-----------------")	
 	
 def train(args, config, env):
