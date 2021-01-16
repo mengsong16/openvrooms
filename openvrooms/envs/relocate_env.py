@@ -193,39 +193,7 @@ class RelocateEnv(iGibsonEnv):
 			print("No such task defined")	
 
 
-	def load_observation_space(self):
-		"""
-		Load observation space
-		"""
-		self.output = self.config['output']
-		self.image_width = self.config.get('image_width', 128)
-		self.image_height = self.config.get('image_height', 128)
-		observation_space = OrderedDict()
-		sensors = OrderedDict()
-		vision_modalities = []
-
-		if 'task_obs' in self.output:
-			observation_space['task_obs'] = self.build_obs_space(
-				shape=(self.task.task_obs_dim,), low=-np.inf, high=-np.inf)
-		if 'rgb' in self.output:
-			observation_space['rgb'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
-				low=0.0, high=1.0)
-			vision_modalities.append('rgb')    
-		
-		if len(vision_modalities) > 0:
-			
-			third_person_view = self.config.get("third_person_view", True)
-			# third person view
-			if third_person_view:
-				sensors['vision'] = ExternalVisionSensor(self, vision_modalities, camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
-								   camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]))
-			# first person view
-			else:
-				sensors['vision'] = VisionSensor(self, vision_modalities)	
-
-		self.observation_space = gym.spaces.Dict(observation_space)
-		self.sensors = sensors
+	
 
 	def load_action_space(self):
 		"""
@@ -271,6 +239,10 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Load observation space
 		"""
+		# Three modes: task_obs, vision, scan, only one of them can exist
+		# Sensors can be vision or scan 
+		# output can have task_objs or vision modalities or scan modalities
+		# vision and scan can have multiple modalities
 		self.output = self.config['output']
 		self.image_width = self.config.get('image_width', 128)
 		self.image_height = self.config.get('image_height', 128)
@@ -279,9 +251,11 @@ class RelocateEnv(iGibsonEnv):
 		vision_modalities = []
 		scan_modalities = []
 
+		# task obs
 		if 'task_obs' in self.output:
 			observation_space['task_obs'] = self.build_obs_space(
 				shape=(self.task.task_obs_dim+self.task.obj_num*12,), low=-np.inf, high=-np.inf)
+		# vision modalities	
 		if 'rgb' in self.output:
 			observation_space['rgb'] = self.build_obs_space(
 				shape=(self.image_height, self.image_width, 3),
@@ -322,6 +296,7 @@ class RelocateEnv(iGibsonEnv):
 				shape=(self.image_height, self.image_width, 3),
 				low=0.0, high=1.0)
 			vision_modalities.append('rgb_filled')
+		# scan modalities		
 		if 'scan' in self.output:
 			self.n_horizontal_rays = self.config.get('n_horizontal_rays', 128)
 			self.n_vertical_beams = self.config.get('n_vertical_beams', 1)
@@ -339,21 +314,29 @@ class RelocateEnv(iGibsonEnv):
 			observation_space['occupancy_grid'] = self.occupancy_grid_space
 			scan_modalities.append('occupancy_grid')
 
+		# create sensors
 		if len(vision_modalities) > 0:
-			sensors['vision'] = VisionSensor(self, vision_modalities)
+			third_person_view = self.config.get("third_person_view", True)
+			# third person view
+			if third_person_view:
+				sensors['vision'] = ExternalVisionSensor(self, vision_modalities, camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
+								   camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]))
+			# first person view
+			else:
+				sensors['vision'] = VisionSensor(self, vision_modalities)
 
 		if len(scan_modalities) > 0:
 			sensors['scan_occ'] = ScanSensor(self, scan_modalities)
 
-		# right now, learning can only handle single modal
+		self.sensors = sensors
+		
+		# create observation space
 		#self.observation_space = gym.spaces.Dict(observation_space)	
-
 		if 'task_obs' in self.output:
 			self.observation_space = observation_space['task_obs']
 		elif 'rgb' in self.output:
 			self.observation_space = observation_space['rgb']
-
-		self.sensors = sensors
+	
 
 	# to use all and make it gym compatible, ensure that the output is np.array
 	# right now, learning can only handle single modal
@@ -376,6 +359,10 @@ class RelocateEnv(iGibsonEnv):
 			for modality in vision_obs:
 				state[modality] = vision_obs[modality]
 
+		if 'scan_occ' in self.sensors:
+			scan_obs = self.sensors['scan_occ'].get_obs(self)
+			for modality in scan_obs:
+				state[modality] = scan_obs[modality]
 		#return state
 
 		# single state modal as np.array
@@ -642,7 +629,7 @@ if __name__ == '__main__':
 			#pos_distances, rot_distances = env.task.goal_distance()
 			#print(pos_distances)
 			#print(rot_distances)
-			print(env.observation_space)
+			#print(env.observation_space)
 			#print(info)
 			print(state.shape)
 			print('-----------------------------')
