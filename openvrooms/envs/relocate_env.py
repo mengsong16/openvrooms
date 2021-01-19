@@ -258,42 +258,42 @@ class RelocateEnv(iGibsonEnv):
 		# vision modalities	
 		if 'rgb' in self.output:
 			observation_space['rgb'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
+				shape=(3, self.image_height, self.image_width),
 				low=0.0, high=1.0)
 			vision_modalities.append('rgb')
 		if 'depth' in self.output:
 			observation_space['depth'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 1),
+				shape=(1, self.image_height, self.image_width),
 				low=0.0, high=1.0)
 			vision_modalities.append('depth')
 		if 'pc' in self.output:
 			observation_space['pc'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
+				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
 			vision_modalities.append('pc')
 		if 'optical_flow' in self.output:
 			observation_space['optical_flow'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 2),
+				shape=(2, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
 			vision_modalities.append('optical_flow')
 		if 'scene_flow' in self.output:
 			observation_space['scene_flow'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
+				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
 			vision_modalities.append('scene_flow')
 		if 'normal' in self.output:
 			observation_space['normal'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
+				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
 			vision_modalities.append('normal')
 		if 'seg' in self.output:
 			observation_space['seg'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 1),
+				shape=(1, self.image_height, self.image_width),
 				low=0.0, high=1.0)
 			vision_modalities.append('seg')
 		if 'rgb_filled' in self.output:  # use filler
 			observation_space['rgb_filled'] = self.build_obs_space(
-				shape=(self.image_height, self.image_width, 3),
+				shape=(3, self.image_height, self.image_width),
 				low=0.0, high=1.0)
 			vision_modalities.append('rgb_filled')
 		# scan modalities		
@@ -309,8 +309,8 @@ class RelocateEnv(iGibsonEnv):
 			self.grid_resolution = self.config.get('grid_resolution', 128)
 			self.occupancy_grid_space = gym.spaces.Box(low=0.0,
 													   high=1.0,
-													   shape=(self.grid_resolution,
-															  self.grid_resolution, 1))
+													   shape=(1, self.grid_resolution,
+															  self.grid_resolution))
 			observation_space['occupancy_grid'] = self.occupancy_grid_space
 			scan_modalities.append('occupancy_grid')
 
@@ -333,12 +333,14 @@ class RelocateEnv(iGibsonEnv):
 		self.scan_modalities = scan_modalities
 		
 		# create observation space
-		#self.observation_space = gym.spaces.Dict(observation_space)	
+		#self.observation_space = gym.spaces.Dict(observation_space)
+		#self.observation_space = self.combine_vision_observation_space(vision_modalities, observation_space)
+		
 		if 'task_obs' in self.output:
 			self.observation_space = observation_space['task_obs']
 		elif 'rgb' in self.output:
 			self.observation_space = observation_space['rgb']
-
+		
 	
 	# can only combine when the each modality has the same image size
 	def combine_vision_observation_space(self, vision_modalities, observation_space):
@@ -346,7 +348,7 @@ class RelocateEnv(iGibsonEnv):
 		low = np.inf
 		high = -np.inf
 		for modal in vision_modalities:
-			channel_num += observation_space[modal].shape[2]
+			channel_num += observation_space[modal].shape[0]
 			cur_low = np.amin(observation_space[modal].low)
 			cur_high = np.amax(observation_space[modal].high)
 
@@ -356,8 +358,9 @@ class RelocateEnv(iGibsonEnv):
 			if cur_high > high:
 				high = cur_high	
 
+		# [C,H,W]
 		return self.build_obs_space(
-				shape=(self.image_height, self.image_width, channel_num),
+				shape=(channel_num, self.image_height, self.image_width),
 				low=low, high=high)
 	# to use all and make it gym compatible, ensure that the output is np.array
 	# right now, learning can only handle single modal
@@ -378,14 +381,16 @@ class RelocateEnv(iGibsonEnv):
 		if 'vision' in self.sensors:
 			vision_obs = self.sensors['vision'].get_obs(self)
 			for modality in vision_obs:
-				state[modality] = vision_obs[modality]
-
+				state[modality] = np.transpose(vision_obs[modality], (2,0,1))
 		if 'scan_occ' in self.sensors:
 			scan_obs = self.sensors['scan_occ'].get_obs(self)
 			for modality in scan_obs:
-				state[modality] = scan_obs[modality]
+				if modality == 'occupancy_grid':
+					state[modality] = np.transpose(scan_obs[modality], (2,0,1))
+				else:	
+					state[modality] = scan_obs[modality]
 		
-		#self.combine_vision_observation(self.vision_modalities, state)
+		#return self.combine_vision_observation(self.vision_modalities, state)
 
 		#return state
 		# single state modal as np.array
@@ -398,8 +403,9 @@ class RelocateEnv(iGibsonEnv):
 	def combine_vision_observation(self, vision_modalities, state):
 		combined_state = state[vision_modalities[0]]
 		
+		# [C,H,W]
 		for modal in vision_modalities[1:]:
-			combined_state = np.concatenate((combined_state, state[modal]), axis=2)
+			combined_state = np.concatenate((combined_state, state[modal]), axis=0)
 
 		#print(combined_state.shape)
 		return combined_state	
@@ -494,6 +500,14 @@ class RelocateEnv(iGibsonEnv):
 
 		return state, reward, done, info
 
+	# C,H,W
+	# for gym compatibility
+	def render(self, mode='rgb'):
+		if 'vision' in self.sensors:
+			vision_obs = self.sensors['vision'].get_obs(self)
+			return vision_obs[mode]
+		else:
+			raise Exception('Missing vision sensor')		
 	# return contact points with body_id
 	def check_collision(self, body_id):
 		"""
@@ -648,7 +662,6 @@ if __name__ == '__main__':
 					 physics_timestep=1.0 / 40.0)
 
 
-	
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -661,7 +674,8 @@ if __name__ == '__main__':
 			#pos_distances, rot_distances = env.task.goal_distance()
 			#print(pos_distances)
 			#print(rot_distances)
-			#print(env.observation_space)
+			print(env.observation_space)
+			#print(env.state_space)
 			#print(info)
 			print(state.shape)
 			#print(state)
@@ -675,4 +689,3 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
-	

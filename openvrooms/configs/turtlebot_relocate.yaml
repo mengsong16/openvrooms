@@ -29,6 +29,8 @@ output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
 third_person_view: true
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
+image_width: 128
+image_height: 128
 
 # task
 task: relocate_point_goal_fixed
