@@ -44,28 +44,50 @@ def deploy(agent_dir, env, fps=60):
 	env.close()	
 	print("-----------------Done!-----------------")	
 	
-def train(args, config, env):
+def train(args, config, env, control_mode='state'):
 	training_timesteps = config.get('training_timesteps')
 	print('----------------- Training Start --------------------')
-	agent = dqn(
-		# Common settings
-		device=args.device,
-		discount_factor=config.get('discount_factor'),
-		# Adam optimizer settings
-		lr=config.get('learning_rate'),
-		# Training settings
-		minibatch_size=config.get('minibatch_size'),
-		update_frequency=config.get('update_frequency'),
-		target_update_frequency=config.get('target_update_frequency'),
-		# Replay buffer settings
-		replay_start_size=config.get('replay_start_size'),
-		replay_buffer_size=config.get('replay_buffer_size'),
-		# Exploration settings
-		initial_exploration=config.get('initial_exploration'),
-		final_exploration=config.get('final_exploration'),
-		final_exploration_frame=config.get('final_exploration_frame'),
-		# Model construction
-		model_constructor=fc_relu_q)
+	if control_mode == 'state':
+		agent = dqn(
+			# Common settings
+			device=args.device,
+			discount_factor=config.get('discount_factor'),
+			# Adam optimizer settings
+			lr=config.get('learning_rate'),
+			# Training settings
+			minibatch_size=config.get('minibatch_size'),
+			update_frequency=config.get('update_frequency'),
+			target_update_frequency=config.get('target_update_frequency'),
+			# Replay buffer settings
+			replay_start_size=config.get('replay_start_size'),
+			replay_buffer_size=config.get('replay_buffer_size'),
+			# Exploration settings
+			initial_exploration=config.get('initial_exploration'),
+			final_exploration=config.get('final_exploration'),
+			final_exploration_frame=config.get('final_exploration_frame'),
+			# Model construction
+			model_constructor=fc_relu_q)
+	else:	
+		agent = dqn(
+			# Common settings
+			device=args.device,
+			discount_factor=config.get('discount_factor'),
+			# Adam optimizer settings
+			lr=config.get('learning_rate'),
+			# Training settings
+			minibatch_size=config.get('minibatch_size'),
+			update_frequency=config.get('update_frequency'),
+			target_update_frequency=config.get('target_update_frequency'),
+			# Replay buffer settings
+			replay_start_size=config.get('replay_start_size'),
+			replay_buffer_size=config.get('replay_buffer_size'),
+			# Exploration settings
+			initial_exploration=config.get('initial_exploration'),
+			final_exploration=config.get('final_exploration'),
+			final_exploration_frame=config.get('final_exploration_frame'),
+			# Model construction
+			model_constructor=vision_q)
+	
 
 
 	run_experiment(
@@ -76,6 +98,7 @@ def train(args, config, env):
 	)
 
 	print("-----------------Done!-----------------")
+
 
 def run():
 	parser = argparse.ArgumentParser()
@@ -100,6 +123,15 @@ def run():
 	config_file = os.path.join(config_path,'turtlebot_relocate.yaml')
 	config = parse_config(config_file)
 
+	# if vision-based, need to stack frames
+	output = config.get('output')
+	
+	if 'task_obs' not in output:
+		frame_stack = config.get('frame_stack')
+		control_mode = 'vision'
+	else:
+		frame_stack = None	
+		control_mode = 'state'
 
 	env = OpenRelocateEnvironment(gym_id="openrelocate-v0", 
 		config_file=config_file, 
@@ -107,10 +139,11 @@ def run():
 		action_timestep=config.get('action_timestep'), 
 		physics_timestep=config.get('physics_timestep'),
 		device=torch.device(args.device),
-		device_idx=0)
+		device_idx=0, frame_stack=frame_stack)
+
 
 	if args.mode == "train":
-		train(args, config, env)
+		train(args, config, env, control_mode)
 	else:
 		agent_dir = "./runs/dqn"
 		deploy(agent_dir, env)

@@ -44,6 +44,7 @@ class OpenRelocateEnvironment(GymEnvironment):
         env = gym.make(id=gym_id, config_file=config_file, mode=mode, action_timestep=action_timestep, physics_timestep=physics_timestep, device_idx=device_idx,
         render_to_tensor=render_to_tensor, automatic_reset=automatic_reset)
 
+        
         # vision wrapper
         if self._frame_stack:
             env = FrameStack(env, self._frame_stack)
@@ -51,11 +52,14 @@ class OpenRelocateEnvironment(GymEnvironment):
         # video recorder wrapper
         if self._save_path:
             env = VideoRecorder(env, dir_name=self._save_path, file_format=self._save_format, width=env.image_width, height=env.image_width)
-       
-        # initialize: self._env = env
+        
+        # initialize GymEnvironment: self._env = env
         super().__init__(env=env, device=device) 
        
-
+        print("-----------------------------------")
+        print("Observation (state) space: ")
+        print(self.observation_space)
+        print("-----------------------------------")
 
     def duplicate(self, n):
         #print("-------duplicate-----")

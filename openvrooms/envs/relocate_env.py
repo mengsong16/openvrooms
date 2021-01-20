@@ -340,6 +340,8 @@ class RelocateEnv(iGibsonEnv):
 			self.observation_space = observation_space['task_obs']
 		elif 'rgb' in self.output:
 			self.observation_space = observation_space['rgb']
+
+		
 		
 	
 	# can only combine when the each modality has the same image size

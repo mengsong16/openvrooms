@@ -70,6 +70,7 @@ training_timesteps: 40000
 discount_factor: 0.99
 learning_rate: 0.001
 minibatch_size: 64
+frame_stack: 4
 
 # dqn
 update_frequency: 1
