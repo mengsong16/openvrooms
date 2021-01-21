@@ -7,7 +7,7 @@ from openvrooms.reward_termination_functions.collision import Collision
 from openvrooms.reward_termination_functions.timeout import Timeout
 
 from openvrooms.reward_termination_functions.out_of_bound import OutOfBound
-from openvrooms.reward_termination_functions.point_goal import PointGoal
+from openvrooms.reward_termination_functions.object_goal import ObjectGoal
 
 from gibson2.utils.utils import l2_distance, rotate_vector_3d, cartesian_to_polar
 from gibson2.objects.visual_marker import VisualMarker
@@ -23,21 +23,21 @@ from transforms3d.euler import euler2quat, quat2euler
 
 from openvrooms.utils.utils import *
 
-class RelocatePointGoalFixedTask(BaseTask):
+class RelocateGoalFixedTask(BaseTask):
 	"""
 	Relocate Point Goal Fixed Task
 	The goal is to push objects to fixed goal locations
 	"""
 
 	def __init__(self, env):
-		super(RelocatePointGoalFixedTask, self).__init__(env)
+		super(RelocateGoalFixedTask, self).__init__(env)
 
 		self.reward_type = self.config.get('reward_type', 'l2')
 
 		self.reward_termination_functions = [
 			Timeout(self.config),
 			OutOfBound(self.config, env),
-			PointGoal(self.config),
+			ObjectGoal(self.config),
 			Collision(self.config)
 		]
 

@@ -3,14 +3,14 @@ from gibson2.utils.utils import l2_distance
 import numpy as np
 
 
-class PointGoal(BaseRewardTerminationFunction):
+class ObjectGoal(BaseRewardTerminationFunction):
     """
-    PointGoal used for PointNavFixed/RandomTask
+    ObjectGoal used for object relocation tasks
     Episode terminates if point goal is reached
     """
 
     def __init__(self, config):
-        super(PointGoal, self).__init__(config)
+        super(ObjectGoal, self).__init__(config)
         self.dist_tol = self.config.get('dist_tol', 0.1)
         self.angle_tol = self.config.get('angle_tol', 0.2)
         self.success_reward = self.config.get('success_reward', 10.0)

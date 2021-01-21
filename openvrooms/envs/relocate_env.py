@@ -26,7 +26,7 @@ from gibson2.robots.fetch_robot import Fetch
 from gibson2.robots.locobot_robot import Locobot
 
 
-from openvrooms.tasks.relocate_point_goal_fixed_task import RelocatePointGoalFixedTask
+from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
 from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.sensors.external_vision_sensor import ExternalVisionSensor
 from openvrooms.config import *
@@ -88,7 +88,7 @@ class RelocateEnv(iGibsonEnv):
 		self.mode = mode
 		self.action_timestep = action_timestep
 		self.physics_timestep = physics_timestep
-		
+
 
 		enable_shadow = self.config.get('enable_shadow', False)
 		enable_pbr = self.config.get('enable_pbr', True)
@@ -182,7 +182,7 @@ class RelocateEnv(iGibsonEnv):
 
 		# task
 		if self.config['task'] == 'relocate_point_goal_fixed':
-			self.task = RelocatePointGoalFixedTask(self)
+			self.task = RelocateGoalFixedTask(self)
 		else:
 			self.task = None
 			print("No such task defined")	
