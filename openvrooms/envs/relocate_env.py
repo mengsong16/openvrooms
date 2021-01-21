@@ -88,12 +88,7 @@ class RelocateEnv(iGibsonEnv):
 		self.mode = mode
 		self.action_timestep = action_timestep
 		self.physics_timestep = physics_timestep
-		self.texture_randomization_freq = self.config.get(
-			'texture_randomization_freq', None)
-		self.object_randomization_freq = self.config.get(
-			'object_randomization_freq', None)
-		self.object_randomization_idx = 0
-		self.num_object_randomization_idx = 10
+		
 
 		enable_shadow = self.config.get('enable_shadow', False)
 		enable_pbr = self.config.get('enable_pbr', True)
@@ -419,6 +414,7 @@ class RelocateEnv(iGibsonEnv):
 		:return: collision_links: collisions from last physics timestep
 		"""
 		self.simulator_step()
+		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
 		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 		return self.filter_collision_links(collision_links)
 
@@ -430,6 +426,8 @@ class RelocateEnv(iGibsonEnv):
 		:param collision_links: original collisions, a list of collisions
 		:return: filtered collisions
 		"""
+
+		# 0-contactFlag, 1-bodyUniqueIdA, 2-bodyUniqueIdB, 3-linkIndexA, 4-linkIndexB
 		non_interactive_collision_links = []
 		interactive_collision_links = []
 
@@ -446,6 +444,8 @@ class RelocateEnv(iGibsonEnv):
 			if item[2] in self.collision_ignore_body_b_ids:
 				interactive_collision_links.append(item)
 			else:
+				#print("***********************************")
+				#print("non-interactive collision: %d"%(item[2]))
 				non_interactive_collision_links.append(item)
 
 		return non_interactive_collision_links, interactive_collision_links
@@ -615,6 +615,12 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
+
+		print("***********************************")
+		print("total step: %d"%(self.current_step))
+		print("non_interactive_collision_step: %d"%(self.non_interactive_collision_step))
+		print("interactive_collision_step: %d"%(self.interactive_collision_step))
+
 		self.current_episode += 1
 		self.current_step = 0
 		self.non_interactive_collision_step = 0
@@ -663,7 +669,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-
+	
 	step_time_list = []
 	for episode in range(100):
 		print('Episode: {}'.format(episode))
@@ -676,12 +682,12 @@ if __name__ == '__main__':
 			#pos_distances, rot_distances = env.task.goal_distance()
 			#print(pos_distances)
 			#print(rot_distances)
-			print(env.observation_space)
+			#print(env.observation_space)
 			#print(env.state_space)
 			#print(info)
-			print(state.shape)
+			#print(state.shape)
 			#print(state)
-			print('-----------------------------')
+			#print('-----------------------------')
 			#print('-------------------------------')
 			#print('reward', reward)
 			#print(state['task_obs'].shape)
@@ -691,3 +697,4 @@ if __name__ == '__main__':
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	env.close()
+	

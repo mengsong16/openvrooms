@@ -26,6 +26,18 @@ class Collision(BaseRewardTerminationFunction):
         has_non_interactive_collision = float(len(env.non_interactive_collision_links) > 0)
         has_interactive_collision = float(len(env.interactive_collision_links) > 0)
 
+        '''
+        print("***********************************")
+        if has_interactive_collision:
+            print("interactive collision!")
+            print(env.interactive_collision_links)
+
+        if has_non_interactive_collision:
+            print("non-interactive collision!") 
+            print(env.non_interactive_collision_links)
+        print("***********************************")    
+        '''   
+        
         reward = has_non_interactive_collision * self.collision_penalty + has_interactive_collision * self.collision_reward
 
         # collide with non-interactive objects reach maximum times

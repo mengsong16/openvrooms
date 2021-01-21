@@ -124,10 +124,13 @@ class RoomScene(Scene):
             urdf_file_name = os.path.splitext(obj_file_name)[0] + '.urdf'
             urdf_file = os.path.join(self.scene_path, urdf_file_name)
             urdf_path = os.path.join(self.scene_path, urdf_file)
+
+            print(urdf_file)
             if os.path.exists(urdf_path):
                 # load from the object urdf file
                 urdf_id = p.loadURDF(fileName=urdf_path, flags=p.URDF_USE_MATERIAL_COLORS_FROM_MTL, useFixedBase=1)
                 self.static_object_ids.append(urdf_id)
+                print(urdf_id)
             else:
                 print('Error: File Not Exists: %s'%(urdf_path))    
 
