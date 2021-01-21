@@ -3,20 +3,18 @@ from gibson2.utils.utils import l2_distance
 import numpy as np
 
 
-class ObjectGoal(BaseRewardTerminationFunction):
+class PointGoal(BaseRewardTerminationFunction):
     """
-    ObjectGoal used for object relocation tasks
+    PointGoal used for navigation tasks
     Episode terminates if point goal is reached
     """
 
     def __init__(self, config):
-        super(ObjectGoal, self).__init__(config)
+        super(PointGoal, self).__init__(config)
         self.dist_tol = self.config.get('dist_tol', 0.1)
-        self.angle_tol = self.config.get('angle_tol', 0.2)
         self.success_reward = self.config.get('success_reward', 10.0)
 
         self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', True)
-        self.rot_dist_reward_weight = self.config.get('rot_dist_reward_weight', 0.2)
         self.goal_dist_reward_weight = self.config.get('goal_dist_reward_weight', 1.0)
 
     def reset(self, task, env):
@@ -27,15 +25,8 @@ class ObjectGoal(BaseRewardTerminationFunction):
         :param env: environment instance
         """
         if self.use_goal_dist_reward:
-            self.goal_dist = self.get_goal_dist(task)
+            self.goal_dist = task.goal_distance()
 
-    def get_goal_dist(self, task):
-        pos_distances, rot_distances = task.goal_distance()
-        return self.compute_weighted_distance(pos_distances, rot_distances)
-
-    def compute_weighted_distance(self, pos_distances, rot_distances):    
-        weighted_distance = np.mean(pos_distances) + self.rot_dist_reward_weight * np.mean(rot_distances)
-        return weighted_distance
 
     def get_reward_termination(self, task, env):
         """
@@ -46,19 +37,15 @@ class ObjectGoal(BaseRewardTerminationFunction):
         :param env: environment instance
         :return: done, info
         """
-        pos_distances, rot_distances = task.goal_distance()
+        new_goal_dist = task.goal_distance()
 
-        #print(pos_distances)
-        #print(rot_distances)
-
-        assert pos_distances.shape[0] == rot_distances.shape[0] == task.obj_num
+        #print(new_goal_dist)
 
         # check success / done
-        done = True
-        for i in list(range(task.obj_num)):
-            if pos_distances[i] > self.dist_tol or rot_distances[i] > self.angle_tol:
-                done = False
-                break
+        if new_goal_dist > self.dist_tol:
+            done = False
+        else:
+            done = True    
 
         success = done
 
@@ -70,7 +57,6 @@ class ObjectGoal(BaseRewardTerminationFunction):
         
         # get goal reward
         if self.use_goal_dist_reward:
-            new_goal_dist = self.compute_weighted_distance(pos_distances, rot_distances)
             goal_dist_reward = self.goal_dist_reward_weight * (self.goal_dist - new_goal_dist)
             self.goal_dist = new_goal_dist
 
@@ -80,4 +66,4 @@ class ObjectGoal(BaseRewardTerminationFunction):
         return reward, done, success
 
     def get_name(self):
-        return "object_goal"    
+        return "point_goal"    
