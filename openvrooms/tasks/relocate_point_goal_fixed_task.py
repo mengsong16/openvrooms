@@ -186,7 +186,7 @@ class RelocatePointGoalFixedTask(BaseTask):
 
 		if self.duplicated_objects == False or self.obj_num == 1:
 			# All the objects are different
-			relative_obj_pos = goal_pos - obj_pos
+			relative_obj_pos = goal_pos - current_pos
 			relative_obj_rot = self.rot_dist_func(goal_orn, current_orn, output_angle=output_angle)
 
 		else:
