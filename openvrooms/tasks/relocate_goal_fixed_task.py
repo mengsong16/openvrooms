@@ -3,7 +3,7 @@ import pybullet as p
 from gibson2.scenes.igibson_indoor_scene import InteractiveIndoorScene
 from gibson2.scenes.gibson_indoor_scene import StaticIndoorScene
 
-from openvrooms.reward_termination_functions.collision import Collision
+from openvrooms.reward_termination_functions.collision import PosNegCollision
 from openvrooms.reward_termination_functions.timeout import Timeout
 
 from openvrooms.reward_termination_functions.out_of_bound import OutOfBound
@@ -25,20 +25,18 @@ from openvrooms.utils.utils import *
 
 class RelocateGoalFixedTask(BaseTask):
 	"""
-	Relocate Point Goal Fixed Task
+	Relocate Object Goal Fixed Task
 	The goal is to push objects to fixed goal locations
 	"""
 
 	def __init__(self, env):
 		super(RelocateGoalFixedTask, self).__init__(env)
 
-		self.reward_type = self.config.get('reward_type', 'l2')
-
 		self.reward_termination_functions = [
 			Timeout(self.config),
 			OutOfBound(self.config, env),
 			ObjectGoal(self.config),
-			Collision(self.config)
+			PosNegCollision(self.config)
 		]
 
 
@@ -93,7 +91,7 @@ class RelocateGoalFixedTask(BaseTask):
 		# check validity of initial and target scene
 		print("--------------- Check validity of initial and target scene ------------")
 
-		self.check_inital_scene_collision(env)
+		self.check_initial_scene_collision(env)
 		self.check_target_scene_collision(env)
 		print("--------------------------------------------- ")
 		
@@ -220,7 +218,7 @@ class RelocateGoalFixedTask(BaseTask):
 		
 		return pos_distances, rot_distances
 
-	def check_inital_scene_collision(self, env):
+	def check_initial_scene_collision(self, env):
 		state_id = p.saveState()
 
 		success = env.test_valid_position(env.robots[0],  self.agent_initial_pos,  self.agent_initial_orn)
@@ -259,6 +257,7 @@ class RelocateGoalFixedTask(BaseTask):
 		# land robot at initial pose
 		env.land(env.robots[0], self.agent_initial_pos, self.agent_initial_orn)
 	
+		# robot x,y
 		self.robot_pos = self.agent_initial_pos[:2]
 
 		# reset reward functions

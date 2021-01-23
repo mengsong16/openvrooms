@@ -11,7 +11,7 @@ from presets.models import *
 from run_experiment import run_experiment
 from greedy_agent import GreedyAgent
 
-from openvrooms.envs.relocate_env_wrapper import OpenRelocateEnvironment
+from openvrooms.envs.openroom_env_wrapper import OpenRoomEnvironment
 
 from openvrooms.config import *
 
@@ -117,11 +117,21 @@ def run():
 						choices=['train', 'deploy'],
 						default='train',
 						help='train or deploy (train)')
+	parser.add_argument('--env',
+						'-e',
+						choices=['nav', 'rel'],
+						default='nav',
+						help='navigation or relocation')
 
 	args = parser.parse_args()
 
-	config_file = os.path.join(config_path,'turtlebot_relocate.yaml')
+	if args.env == "rel":
+		config_file = os.path.join(config_path,'turtlebot_relocate.yaml')
+	else:
+		config_file = os.path.join(config_path,'turtlebot_navigate.yaml')
+	
 	config = parse_config(config_file)
+	
 
 	# if vision-based, need to stack frames
 	output = config.get('output')
@@ -131,16 +141,24 @@ def run():
 		control_mode = 'vision'
 	else:
 		frame_stack = None	
-		control_mode = 'state'
-
-	env = OpenRelocateEnvironment(gym_id="openrelocate-v0", 
-		config_file=config_file, 
-		mode=args.render, 
-		action_timestep=config.get('action_timestep'), 
-		physics_timestep=config.get('physics_timestep'),
-		device=torch.device(args.device),
-		device_idx=0, frame_stack=frame_stack)
-
+		control_mode = 'state'	
+	
+	if args.env == "rel":
+		env = OpenRoomEnvironment(gym_id="openrelocate-v0", 
+			config_file=config_file, 
+			mode=args.render, 
+			action_timestep=config.get('action_timestep'), 
+			physics_timestep=config.get('physics_timestep'),
+			device=torch.device(args.device),
+			device_idx=0, frame_stack=frame_stack)
+	else:	
+		env = OpenRoomEnvironment(gym_id="opennavigate-v0", 
+			config_file=config_file, 
+			mode=args.render, 
+			action_timestep=config.get('action_timestep'), 
+			physics_timestep=config.get('physics_timestep'),
+			device=torch.device(args.device),
+			device_idx=0, frame_stack=frame_stack)
 
 	if args.mode == "train":
 		train(args, config, env, control_mode)

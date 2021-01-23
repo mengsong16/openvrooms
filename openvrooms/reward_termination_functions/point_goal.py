@@ -25,7 +25,7 @@ class PointGoal(BaseRewardTerminationFunction):
         :param env: environment instance
         """
         if self.use_goal_dist_reward:
-            self.goal_dist = task.goal_distance()
+            self.goal_dist = task.goal_distance(env)
 
 
     def get_reward_termination(self, task, env):
@@ -37,7 +37,7 @@ class PointGoal(BaseRewardTerminationFunction):
         :param env: environment instance
         :return: done, info
         """
-        new_goal_dist = task.goal_distance()
+        new_goal_dist = task.goal_distance(env)
 
         #print(new_goal_dist)
 

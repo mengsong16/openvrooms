@@ -25,11 +25,14 @@ import trimesh
 import copy
 
 import random
+import itertools
 
 import sys
 #sys.path.insert(0, "../")
 #from config import *
 from openvrooms.config import *
+from gibson2.utils.utils import quatToXYZW
+from transforms3d.euler import euler2quat
 
 
 class RoomScene(Scene):
@@ -318,4 +321,63 @@ class RoomScene(Scene):
         for obj in self.interative_objects:
             ids.append(obj.body_id) 
 
-        return ids       
+        return ids  
+
+    # set initial z as goal z for all interactive objects
+    def set_goal_z(self):
+        for obj in self.interative_objects:
+            obj_pos = obj.get_position()
+            obj.goal_z = obj_pos[2]
+            
+     # ensure no collision, set x,y position
+    def set_interative_object_initial_poses(self):
+        # divide x,y space into grid
+        self.x_cell_n = 4
+        self.y_cell_n = 2
+
+        self.x_cell_size = float(self.x_range[1] - self.x_range[0]) / float(self.x_cell_n)
+        self.y_cell_size = float(self.y_range[1] - self.y_range[0]) / float(self.y_cell_n)
+
+        #print(self.x_cell_size)
+        #print(self.y_cell_size)
+
+        full_cell_list = list(itertools.product(np.arange(self.x_cell_n).tolist(), np.arange(self.y_cell_n).tolist()))
+
+        assert self.n_interactive_objects <= self.x_cell_n * self.y_cell_n
+
+        # random sampling without replacement
+        sel_cell_list = random.sample(full_cell_list, self.n_interactive_objects)
+
+        #print(sel_cell_list)
+
+        s = ""
+
+        for i, obj in enumerate(self.interative_objects):
+            x_coord = self.x_range[0] + (sel_cell_list[i][0] + 0.5) * self.x_cell_size
+            y_coord = self.y_range[0] + (sel_cell_list[i][1] + 0.5) * self.y_cell_size
+
+            #print(x_coord)
+            #print(y_coord)
+
+            obj.set_xy_position(x_coord, y_coord)
+
+            s += "[%.1f,%.1f] "%(x_coord, y_coord)
+
+        
+        print("Object positions when initially loading the scene: "+s)
+
+    # reset the poses of interactive objects according to given values
+    # input pos: [x,y]
+    # input orn: eular angles
+    def reset_interactive_object_poses(self, obj_pos_list, obj_orn_list): 
+        ''' 
+        n_interactive_objs = len(self.interative_objects) 
+
+        for i in list(range(n_interactive_objs)):
+            #print(obj_orn_list[i])
+            p.resetBasePositionAndOrientation(bodyUniqueId=self.interative_objects[i].body_id, posObj=obj_pos_list[i], ornObj=quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2])))
+        '''
+        for i, obj in enumerate(self.interative_objects):    
+            obj.set_position_orientation([obj_pos_list[i][0], obj_pos_list[i][1], obj.goal_z], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            #obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
+            #print(obj_pos_list[i])     

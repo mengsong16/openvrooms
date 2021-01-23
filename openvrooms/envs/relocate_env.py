@@ -127,10 +127,15 @@ class RelocateEnv(iGibsonEnv):
 			n_interactive_objects = self.config.get('obj_num', 1)
 			scene = RelocateScene(scene_id=scene_id, fix_interactive_objects=False, n_interactive_objects=n_interactive_objects)
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
+			self.scene = scene
 		else:
 			raise Exception(
 				'unknown scene type: {}'.format(self.config['scene']))
 
+		self.load_robot()
+
+	
+	def load_robot(self):
 		# load robot
 		if self.config['robot'] == 'Turtlebot':
 			robot = Turtlebot(self.config)
@@ -154,12 +159,9 @@ class RelocateEnv(iGibsonEnv):
 			raise Exception(
 				'unknown robot type: {}'.format(self.config['robot']))
 
-		self.scene = scene
 		self.robots = [robot]
 		for robot in self.robots:
-			self.simulator.import_robot(robot)
-
-
+			self.simulator.import_robot(robot)	
 
 	def load_task_setup(self):
 		"""
@@ -181,7 +183,7 @@ class RelocateEnv(iGibsonEnv):
 			self.config.get('collision_ignore_link_a_ids', []))
 
 		# task
-		if self.config['task'] == 'relocate_point_goal_fixed':
+		if self.config['task'] == 'relocate_goal_fixed':
 			self.task = RelocateGoalFixedTask(self)
 		else:
 			self.task = None
@@ -226,11 +228,11 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		self.load_scene_robot()  # load robot and scene, use self load()
 		self.load_task_setup()
-		self.load_observation_space()
+		self.load_observation_space(self.task.task_obs_dim+self.task.obj_num*12)
 		self.load_action_space()
 		self.load_miscellaneous_variables()
 
-	def load_observation_space(self):
+	def load_observation_space(self, task_obs_dim):
 		"""
 		Load observation space
 		"""
@@ -249,7 +251,7 @@ class RelocateEnv(iGibsonEnv):
 		# task obs
 		if 'task_obs' in self.output:
 			observation_space['task_obs'] = self.build_obs_space(
-				shape=(self.task.task_obs_dim+self.task.obj_num*12,), low=-np.inf, high=-np.inf)
+				shape=(task_obs_dim,), low=-np.inf, high=-np.inf)
 		# vision modalities	
 		if 'rgb' in self.output:
 			observation_space['rgb'] = self.build_obs_space(
