@@ -14,6 +14,8 @@ assets_path = os.path.join(root_path, "assets")
 code_path = os.path.join(root_path, "openvrooms")
 config_path = os.path.join(code_path, "configs")	
 
+original_dataset_path = "/dataset/openrooms/original"
+
 turtlebot_urdf_file = os.path.join(assets_path, "models/turtlebot/turtlebot.urdf")
 
 

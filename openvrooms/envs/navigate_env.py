@@ -170,6 +170,9 @@ class NavigateEnv(RelocateEnv):
 			if item[2] in self.collision_ignore_body_b_ids:
 				continue
 			
+			#print('--------------------------------------------------------------')
+			#print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+
 			filtered_collision_links.append(item)
 
 		return filtered_collision_links
@@ -294,7 +297,8 @@ if __name__ == '__main__':
 			#print(info)
 			#print(state.shape)
 			#print(state)
-			#print('-----------------------------')
+			print('-----------------------------')
+			print(env.collision_step)
 			#print('-------------------------------')
 			#print('reward', reward)
 			#print(state['task_obs'].shape)

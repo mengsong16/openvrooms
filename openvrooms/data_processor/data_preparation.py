@@ -13,7 +13,7 @@ import argparse
 
 # parse and generate mtl for one scene
 def parse_generate_mtl_scene(scene_id):
-	original_dataset_path = os.path.join(dataset_path, 'original')
+	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		'scene_root': os.path.join(original_dataset_path, 'scenes'),
 		'brdf_root' : os.path.join(original_dataset_path, 'BRDFOriginDataset'),

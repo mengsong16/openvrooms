@@ -213,6 +213,18 @@ def navigation_demo():
     print("*---------------------------*")
     
 
+def layout_collision_detection(robot_id, layout_id):
+    collision_links = list(p.getContactPoints(bodyA=robot_id, bodyB=layout_id))
+    '''
+    if len(collision_links) > 0:
+        #print(collision_links)
+        print('True')
+    else:
+        print('False')  
+    '''
+    return len(collision_links) > 0     
+
+# collide with floor at every step even when the robot is not moving
 def navigation_demo_reset_positions(scene_id='scene0420_01'):
     time_step = 1./240. 
     p.connect(p.GUI)
@@ -222,88 +234,110 @@ def navigation_demo_reset_positions(scene_id='scene0420_01'):
    
     # load scene
     scene = RoomScene(scene_id=scene_id, load_from_xml=True, fix_interactive_objects=True)
-    scene.load()
+    layout_static = scene.load()
+    layout_id = layout_static[0]
     
     
     # load robot
     robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
     turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
-    turtlebot.load()
+    robot_ids = turtlebot.load()
+    robot_id = robot_ids[0]
     
     
     turtlebot.set_position([-1.5, 2, 0])
     turtlebot.robot_specific_reset()
     turtlebot.keep_still() 
-    
+
+    robot_pos, _ = p.getBasePositionAndOrientation(robot_id)
+    layout_pos, _  = p.getBasePositionAndOrientation(layout_id)
+    print('ground z: %f'%scene.ground_z)
+    print('layout position: %s'%str(layout_pos))
+    print('robot position: %s'%str(robot_pos))
+
+    '''
     # warm up
-    warm_up_steps = 1200
+    warm_up_steps = 100
     for _ in range(warm_up_steps):
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
+    #print('*******************start**********************')
     # ------------- experiment START ------------- 
     # move forward for 1.5m
     for _ in range(150):
         turtlebot.move_forward(0.01)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # turn right 90 degrees:
     for _ in range(10):
         turtlebot.turn_right(0.157)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # move forward for 3.4m
     for _ in range(170):
         turtlebot.move_forward(0.02)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # turn left 45 degrees：
     for _ in range(5):
         turtlebot.turn_left(0.157)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # move forward for 1m
     for _ in range(100):
         turtlebot.move_forward(0.01)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # turn left 45 degrees：
     for _ in range(5):
         turtlebot.turn_left(0.157)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
     # move forward for 0.8m
     for _ in range(80):
         turtlebot.move_forward(0.01)
         p.stepSimulation()
+        #layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
     
     # --------------- experiment END ----------------
     turtlebot.keep_still()
 
     # cool down
-    warm_up_steps = 2400
+    warm_up_steps = 100
+    # collide with floor for 100 steps
+    #collision_step = 0
     for _ in range(warm_up_steps):
         p.stepSimulation()
+        #collision_step += layout_collision_detection(robot_id, layout_id)
         time.sleep(time_step)
 
+    #print(collision_step)
     p.disconnect()
-
+    '''
 
 if __name__ == "__main__":
     aparser = argparse.ArgumentParser(description="Run run_demo.")
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    pushing_demo(args.id)
+    #pushing_demo(args.id)
     #navigation_demo()
-    #navigation_demo_reset_positions(args.id)
+    navigation_demo_reset_positions(args.id)
 
 
 

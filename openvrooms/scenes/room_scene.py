@@ -128,12 +128,12 @@ class RoomScene(Scene):
             urdf_file = os.path.join(self.scene_path, urdf_file_name)
             urdf_path = os.path.join(self.scene_path, urdf_file)
 
-            print(urdf_file)
+            #print(urdf_file)
             if os.path.exists(urdf_path):
                 # load from the object urdf file
                 urdf_id = p.loadURDF(fileName=urdf_path, flags=p.URDF_USE_MATERIAL_COLORS_FROM_MTL, useFixedBase=1)
                 self.static_object_ids.append(urdf_id)
-                print(urdf_id)
+                #print(urdf_id)
             else:
                 print('Error: File Not Exists: %s'%(urdf_path))    
 
@@ -144,9 +144,14 @@ class RoomScene(Scene):
         obj_file_name = self.layout.obj_path
         urdf_file_name = os.path.splitext(obj_file_name)[0] + '.urdf'
         layout_urdf_file = os.path.join(self.scene_path, urdf_file_name)
+        
         self.layout_id = p.loadURDF(fileName=layout_urdf_file, flags=p.URDF_USE_MATERIAL_COLORS_FROM_MTL, useFixedBase=1)
+    
+        #floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
+        #self.layout_id = p.loadMJCF(floor)
 
         print('Layout urdf loaded: %s'%(layout_urdf_file))
+        print('Layout id: %d'%(self.layout_id))
 
         # compute z coordinate, x and y range of the ground
         #filename, _ = os.path.splitext(obj_file_name)

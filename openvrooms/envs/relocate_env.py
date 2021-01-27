@@ -418,6 +418,7 @@ class RelocateEnv(iGibsonEnv):
 		self.simulator_step()
 		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
 		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
+
 		return self.filter_collision_links(collision_links)
 
 	# get collision links with robot base link, ignore some, return collisions with interactive and non-interactive links respectively
@@ -527,6 +528,8 @@ class RelocateEnv(iGibsonEnv):
 			for item in collisions:
 				logging.debug('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(
 					item[1], item[2], item[3], item[4]))
+		
+		
 
 		return len(collisions) == 0
 

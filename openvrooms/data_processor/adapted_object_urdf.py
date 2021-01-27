@@ -288,6 +288,7 @@ class ObjectUrdfBuilder:
             mass_center = None
 
         # If the user wants to run convex decomposition on concave objects, do it.
+        # Set decompose_concave=True, otherwise vhacd.obj file is .obj file in urdf
         if decompose_concave:
             if file_extension == '.stl':
                 obj_filename = self.save_to_obj(filename)
@@ -303,7 +304,9 @@ class ObjectUrdfBuilder:
             collision_file = visual_file.replace('.obj','_'+self.suffix+'.obj')
 
             # Only run a decomposition if one does not exist, or if the user forces an overwrite
-            if not os.path.exists(outfile) or force_decompose:
+            #if not os.path.exists(outfile) or force_decompose:
+            if force_decompose:
+                print('------------ Generate Vhacd --------------')
                 self.do_vhacd(obj_filename, outfile, **kwargs)
 
             urdf_out = self.update_urdf(visual_file, name, collision_file=collision_file, override=overrides, mass=mass, mass_center=mass_center)
