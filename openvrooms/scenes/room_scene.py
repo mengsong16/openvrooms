@@ -51,16 +51,23 @@ class RoomScene(Scene):
         self.scene_path = get_scene_path(self.scene_id)
         self.is_interactive = True 
 
+        # meta info
         self.static_object_list = []  # metainfo list of static objects except layout
         self.interative_object_list = [] # metainfo list of interactive objects
+        self.wall = None
         self.layout = None # metainfo of layout
 
         self.interative_objects = [] # a list of InteractiveObj
-        self.static_object_ids = [] # a list of urdf ids of non-layout static objects
-        self.layout_id = None # urdf id of layout
+        self.static_object_ids = [] # a list of urdf ids of static objects, including ceilings, window, door, ...
 
-        self.ground_z = None
+        self.floor_id = None # urdf id of floor
+        self.wall_id = None # urdf id of walls
+
+        # original z coordinate of wall bottom
+        self.wall_bottom_z = -1.296275
         self.room_height = None
+        self.x_range = []
+        self.y_range = []
 
         self.load_from_xml = load_from_xml
 
@@ -68,8 +75,7 @@ class RoomScene(Scene):
 
         self.empty_room = empty_room
 
-        self.x_range = []
-        self.y_range = []
+        
         
 
     def load(self):
@@ -79,7 +85,10 @@ class RoomScene(Scene):
         # load meta info
         self.load_scene_metainfo()
         # load layout
-        self.load_layout()
+        #self.load_layout()
+
+        # load floor
+        self.load_floor()
 
         # load static objects
         self.load_static_objects()
@@ -93,13 +102,13 @@ class RoomScene(Scene):
         self.reset_scene_object_positions_to_centroids()
 
         # align the bottom of layout to z = 0 in world frame
-        self.translate_scene([0, 0, -self.ground_z])
+        self.translate_scene([0, 0, -self.wall_bottom_z])
         
         # print object poses
         #self.print_scene_info(interactive_only=True)
 
-        # return static object ids including layout id 
-        return [self.layout_id] + self.static_object_ids
+         # return static object ids, floor id, wall_id 
+        return [self.floor_id] + self.static_object_ids
 
     # load interactive objects
     def load_interative_objects(self):
@@ -120,7 +129,7 @@ class RoomScene(Scene):
         print('Object urdf loaded: %d interactive objects'%(len(self.interative_objects)))
 
              
-    # load interactive objects
+    # load static objects
     def load_static_objects(self):
         for obj_meta in self.static_object_list:
             obj_file_name = obj_meta.obj_path
@@ -139,7 +148,9 @@ class RoomScene(Scene):
 
         print('Object urdf loaded: %d static objects'%(len(self.static_object_ids)))
 
-    # load layout
+    # load layout --> load walls
+    # compute room x,y range and height
+    # get wall bottom z to translate the scene
     def load_layout(self):
         obj_file_name = self.layout.obj_path
         urdf_file_name = os.path.splitext(obj_file_name)[0] + '.urdf'
@@ -161,7 +172,7 @@ class RoomScene(Scene):
         bounds = mesh.bounds
         # bounds - axis aligned bounds of mesh
         # 2*3 matrix, min, max, x, y, z
-        self.ground_z = bounds[0][2]
+        self.wall_bottom_z = bounds[0][2]
         self.room_height =  bounds[1][2] - bounds[0][2]
         self.x_range = [bounds[0][0], bounds[1][0]]
         self.y_range = [bounds[0][1], bounds[1][1]]
@@ -169,7 +180,18 @@ class RoomScene(Scene):
         print("Layout range: x=%s, y=%s"%(self.x_range, self.y_range))
         print("Room height: %f"%(self.room_height))
         
-    
+    # load generated floor
+    # upper surface of floor has z=0
+    def load_floor(self):
+        floor_urdf_file = os.path.join(self.scene_path, "floor.urdf")
+        self.floor_id = p.loadURDF(fileName=floor_urdf_file, useFixedBase=1)
+        # change floor color
+        p.changeVisualShape(objectUniqueId=self.floor_id, linkIndex=-1, rgbaColor=[0.86,0.86,0.86,1])
+
+        print('Floor urdf loaded: %s'%(floor_urdf_file))
+        print('Floor id: %d'%(self.floor_id))
+
+
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)
         pickle_path = os.path.join(metadata_path, str(self.scene_id)+'.pkl')
@@ -196,7 +218,7 @@ class RoomScene(Scene):
         print('Loaded meta info of %d static objects'%len(self.static_object_list))
         print('Loaded meta info of %d interactive objects'%len(self.interative_object_list))
 
-
+    # given object's urdf id, translate it
     def translate_object(self, urdf_id, translate):
         old_translate, old_orn = p.getBasePositionAndOrientation(urdf_id)
         new_translate = np.asarray(old_translate) + np.asarray(translate)
@@ -206,12 +228,14 @@ class RoomScene(Scene):
     def translate_scene(self, translate):
         print("Translate the entire scene by %s"%(translate))
 
-        # translate layout
-        self.translate_object(self.layout_id, translate)
+        # translate wall
+        if self.wall_id is not None:
+            self.translate_object(self.wall_id, translate)
 
         # translate static objects
         for urdf_id in self.static_object_ids:
             self.translate_object(urdf_id, translate)
+
         # translate interactive objects
         for obj in self.interative_objects:
             self.translate_object(obj.body_id, translate)
@@ -221,10 +245,14 @@ class RoomScene(Scene):
         for obj in self.interative_objects:
             p.changeDynamics(bodyUniqueId=obj.body_id, linkIndex=-1, mass=mass)
 
+    # print info of each object in the scene (com, pose, ...)
     def print_scene_info(self, interactive_only=False):
         if not interactive_only:
-            if self.layout_id is not None:
-                self.get_metric_centroid_physics_pose(obj_file_name=self.layout.obj_path, urdf_id=self.layout_id)
+            if self.floor_id is not None:
+                self.get_metric_centroid_physics_pose(obj_file_name="floor.obj", urdf_id=self.floor_id)
+
+            if self.wall_id is not None:
+                self.get_metric_centroid_physics_pose(obj_file_name=self.wall.obj_path, urdf_id=self.wall_id)    
 
             n_static_objs = len(self.static_object_ids)
             if n_static_objs > 0:
@@ -236,9 +264,13 @@ class RoomScene(Scene):
             for i in list(range(n_interactive_objs)):
                 self.get_metric_centroid_physics_pose(obj_file_name=self.interative_object_list[i].obj_path, urdf_id=self.interative_objects[i].body_id)   
 
+    # no need to move floors
     def reset_layout_static_object_positions_to_centroids(self):
-        if self.layout_id is not None:
-            self.set_mesh_centroid_as_position(obj_file_name=self.layout.obj_path, urdf_id=self.layout_id)
+        #if self.floor_id is not None:
+        #    self.set_mesh_centroid_as_position(obj_file_name="floor.obj", urdf_id=self.floor_id)
+
+        if self.wall_id is not None:
+            self.set_mesh_centroid_as_position(obj_file_name=self.wall.obj_path, urdf_id=self.wall_id)    
 
         n_static_objs = len(self.static_object_ids)
         if n_static_objs > 0:
@@ -248,16 +280,17 @@ class RoomScene(Scene):
     def reset_scene_object_positions_to_centroids(self):
         self.reset_layout_static_object_positions_to_centroids()
 
+        # reset interactive objects to com
         n_interactive_objs = len(self.interative_objects) 
         if n_interactive_objs > 0:
             for i in list(range(n_interactive_objs)):
                 self.set_mesh_centroid_as_position(obj_file_name=self.interative_object_list[i].obj_path, urdf_id=self.interative_objects[i].body_id)   
 
     def get_floor_friction_coefficient(self):
-        return p.getDynamicsInfo(self.layout_id, -1)[1] 
+        return p.getDynamicsInfo(self.floor_id, -1)[1] 
 
     def set_floor_friction_coefficient(self, mu):
-        return p.changeDynamics(bodyUniqueId=self.layout_id, linkIndex=-1, lateralFriction=mu)     
+        return p.changeDynamics(bodyUniqueId=self.floor_id, linkIndex=-1, lateralFriction=mu)     
 
     def get_metric_centroid_physics_pose(self, obj_file_name, urdf_id, center='geometric'):
         mesh = trimesh.load(os.path.join(self.scene_path, obj_file_name))
@@ -321,7 +354,7 @@ class RoomScene(Scene):
 
 
     def get_interative_object_pb_ids(self):
-         
+        # collect urdf ids of interactive objects
         ids = []
         for obj in self.interative_objects:
             ids.append(obj.body_id) 
@@ -385,4 +418,20 @@ class RoomScene(Scene):
         for i, obj in enumerate(self.interative_objects):    
             obj.set_position_orientation([obj_pos_list[i][0], obj_pos_list[i][1], obj.goal_z], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
             #obj.set_xy_position_orientation(obj_pos_list[i], quatToXYZW(euler2quat(obj_orn_list[i][0], obj_orn_list[i][1], obj_orn_list[i][2]), 'wxyz'))
-            #print(obj_pos_list[i])     
+            #print(obj_pos_list[i])   
+
+    # disable collision detection between walls, floor, static objects and fixed interactive objects
+    def disable_collision_group(self):
+        fixed_body_ids = self.static_object_ids + self.floor_id + self.wall_id
+
+        if self.fix_interactive_objects:
+            fixed_body_ids += self.get_interative_object_pb_ids()
+        # disable collision between the fixed links of the fixed objects
+        for i in range(len(fixed_body_ids)):
+            for j in range(i + 1, len(fixed_body_ids)):
+                # link_id = 0 is the base link that is connected to the world
+                # by a fixed link
+                p.setCollisionFilterPair(
+                    fixed_body_ids[i],
+                    fixed_body_ids[j],
+                    0, 0, enableCollision=0)          

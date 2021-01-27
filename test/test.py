@@ -265,7 +265,7 @@ if __name__ == "__main__":
 	
 	#test_relocate_scene(args.id, fix_interactive_objects=False, n_interactive_objects=2)
 	#test_navigate_scene(args.id, n_obstacles=2)
-	#test_scene(args.id, fix_interactive_objects=True)
+	test_scene(args.id, fix_interactive_objects=True)
 	#test_layout()
 	#test_robot()
 	#test_object()
@@ -274,4 +274,4 @@ if __name__ == "__main__":
 	demo.run_demo()
 	'''
 	#test_igibson_floor()
-	test_igibson_floor_robot_collision()
+	#test_igibson_floor_robot_collision()

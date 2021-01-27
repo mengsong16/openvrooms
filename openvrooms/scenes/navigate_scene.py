@@ -92,8 +92,8 @@ class NavigateScene(RoomScene):
         # print object poses
         #self.print_scene_info(interactive_only=True)
 
-        # return static object ids including layout id 
-        return [self.layout_id] + self.static_object_ids
+        # return static object ids, floor id, wall_id 
+        return [self.floor_id] + self.static_object_ids
 
 
     def load_scene_metainfo(self):

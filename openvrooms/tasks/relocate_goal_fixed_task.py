@@ -82,7 +82,7 @@ class RelocateGoalFixedTask(BaseTask):
 
 		self.get_loaded_interactive_objects(env)
 
-		# ignore collisions with these interactive objects
+		# ignore collisions with interactive objects
 		env.collision_ignore_body_b_ids |= set(
 			[obj.body_id for obj in self.interactive_objects])
 

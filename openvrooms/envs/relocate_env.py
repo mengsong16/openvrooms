@@ -125,7 +125,7 @@ class RelocateEnv(iGibsonEnv):
 		if self.config['scene'] == 'relocate':
 			scene_id = self.config['scene_id']
 			n_interactive_objects = self.config.get('obj_num', 1)
-			scene = RelocateScene(scene_id=scene_id, fix_interactive_objects=False, n_interactive_objects=n_interactive_objects)
+			scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects)
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
 			self.scene = scene
 		else:

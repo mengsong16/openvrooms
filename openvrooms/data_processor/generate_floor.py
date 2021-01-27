@@ -126,6 +126,8 @@ def generate_bbox_floor_obj(layout_mesh, scene_path):
 	layout_bounds = layout_mesh.bounds
 
 	floor_thickness = 0.2
+	#print(layout_bounds)
+	
 	floor_bbox = ComponentBBox(layout_bounds[0][0], layout_bounds[1][0], layout_bounds[0][1], layout_bounds[1][1], -floor_thickness, 0.0) 
 	#print(floor_bbox.x)
 	#print(floor_bbox.y)
@@ -140,6 +142,8 @@ def generate_bbox_floor_obj(layout_mesh, scene_path):
 	floor_vhacd_obj_path = os.path.join(scene_path, "floor_vhacd.obj")
 	shutil.copyfile(floor_obj_path, floor_vhacd_obj_path)	
 	print('Generated floor vhacd obj file')
+	'''
+	'''
 
 def generate_floor_urdf(scene_path):	
 	urdf_prototype_file = os.path.join(metadata_path, 'urdf_prototype.urdf') # urdf template
@@ -152,6 +156,8 @@ def generate_floor_urdf(scene_path):
 
 def floor_collision_detection(robot_id, floor_id):
 	collision_links = list(p.getContactPoints(bodyA=robot_id, bodyB=floor_id))
+	for item in collision_links:
+		print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
 	
 	return len(collision_links) > 0 
 

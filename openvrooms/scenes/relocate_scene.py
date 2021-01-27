@@ -43,10 +43,9 @@ class RelocateScene(RoomScene):
     """
     def __init__(self,
                  scene_id, 
-                 fix_interactive_objects=False,
                  n_interactive_objects=1
                  ):
-        super(RelocateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=fix_interactive_objects)
+        super(RelocateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=False)
 
         
         self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
@@ -83,8 +82,8 @@ class RelocateScene(RoomScene):
         # print object poses
         #self.print_scene_info(interactive_only=True)
 
-        # return static object ids including layout id 
-        return [self.layout_id] + self.static_object_ids
+         # return static object ids, floor id, wall_id 
+        return [self.floor_id] + self.static_object_ids
 
    
     
