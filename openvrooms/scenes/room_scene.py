@@ -66,8 +66,8 @@ class RoomScene(Scene):
         # original z coordinate of wall bottom
         self.wall_bottom_z = -1.296275
         self.room_height = None
-        self.x_range = []
-        self.y_range = []
+        self.x_range = [-3.4184, 3.5329]
+        self.y_range = [-2.8032, 2.7222]
 
         self.load_from_xml = load_from_xml
 
@@ -106,6 +106,9 @@ class RoomScene(Scene):
         
         # print object poses
         #self.print_scene_info(interactive_only=True)
+
+        # disable collision detection between fixed objects
+        self.disable_collision_group()
 
          # return static object ids, floor id, wall_id 
         return [self.floor_id] + self.static_object_ids
@@ -422,10 +425,17 @@ class RoomScene(Scene):
 
     # disable collision detection between walls, floor, static objects and fixed interactive objects
     def disable_collision_group(self):
-        fixed_body_ids = self.static_object_ids + self.floor_id + self.wall_id
+        fixed_body_ids = self.static_object_ids
+
+        if self.floor_id is not None:
+            fixed_body_ids.append(self.floor_id)
+
+        if self.wall_id is not None:
+            fixed_body_ids.append(self.wall_id)    
 
         if self.fix_interactive_objects:
             fixed_body_ids += self.get_interative_object_pb_ids()
+
         # disable collision between the fixed links of the fixed objects
         for i in range(len(fixed_body_ids)):
             for j in range(i + 1, len(fixed_body_ids)):
@@ -434,4 +444,7 @@ class RoomScene(Scene):
                 p.setCollisionFilterPair(
                     fixed_body_ids[i],
                     fixed_body_ids[j],
-                    0, 0, enableCollision=0)          
+                    0, 0, enableCollision=0)    
+
+        print("Disabled collision detection between %d objects"%(len(fixed_body_ids)))
+

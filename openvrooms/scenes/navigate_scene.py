@@ -66,8 +66,12 @@ class NavigateScene(RoomScene):
         """
         # load meta info
         self.load_scene_metainfo()
+
         # load layout
-        self.load_layout()
+        #self.load_layout()
+
+        # load floor
+        self.load_floor()
 
         # load static objects
         self.load_static_objects()
@@ -80,17 +84,21 @@ class NavigateScene(RoomScene):
         self.reset_scene_object_positions_to_centroids()
 
         # randomly reset the poses of obstacles without collisions
+        # later will place interactive objects according to tasks
         if self.empty_room == False:
             self.set_interative_object_initial_poses()
 
         # align the bottom of layout to z = 0 in world frame
-        self.translate_scene([0, 0, -self.ground_z])
+        self.translate_scene([0, 0, -self.wall_bottom_z])
 
         # set initial z as goal z for all interactive objects
         self.set_goal_z()
 
         # print object poses
         #self.print_scene_info(interactive_only=True)
+
+        # disable collision detection between fixed objects
+        self.disable_collision_group()
 
         # return static object ids, floor id, wall_id 
         return [self.floor_id] + self.static_object_ids

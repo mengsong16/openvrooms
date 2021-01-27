@@ -81,13 +81,13 @@ def test_layout():
 
 	p.disconnect()
 
-def test_relocate_scene(scene_id='scene0420_01', fix_interactive_objects=False, n_interactive_objects=1):
+def test_relocate_scene(scene_id='scene0420_01', n_interactive_objects=1):
 	time_step = 1./240. 
 	p.connect(p.GUI)
 	p.setGravity(0, 0, -9.8)
 	p.setTimeStep(time_step)
 	
-	scene = RelocateScene(scene_id=scene_id, fix_interactive_objects=fix_interactive_objects, n_interactive_objects=n_interactive_objects)
+	scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects)
 	scene.load()
 	
 	robot_config = parse_config(os.path.join(config_path, "turtlebot_relocate.yaml"))
@@ -263,9 +263,9 @@ if __name__ == "__main__":
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 	
-	#test_relocate_scene(args.id, fix_interactive_objects=False, n_interactive_objects=2)
-	#test_navigate_scene(args.id, n_obstacles=2)
-	test_scene(args.id, fix_interactive_objects=True)
+	test_relocate_scene(args.id, n_interactive_objects=1)
+	#test_navigate_scene(args.id, n_obstacles=0)
+	#test_scene(args.id, fix_interactive_objects=False)
 	#test_layout()
 	#test_robot()
 	#test_object()
