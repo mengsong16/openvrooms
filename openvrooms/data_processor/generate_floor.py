@@ -151,7 +151,7 @@ def generate_floor_urdf(scene_path):
 
 	builder = ObjectUrdfBuilder(scene_path, log_file=log_file, urdf_prototype=urdf_prototype_file)
 	floor_obj_path = os.path.join(scene_path, "floor.obj")
-	builder.build_urdf(filename=floor_obj_path, force_overwrite=True, decompose_concave=True, force_decompose=False, mass=100, center=None)	
+	builder.build_urdf(filename=floor_obj_path, force_overwrite=True, decompose_concave=True, force_decompose=False, mass=100, center=None)	 #'geometric'
 	print('Generated floor urdf file')
 
 def floor_collision_detection(robot_id, floor_id):
@@ -217,10 +217,11 @@ if __name__ == '__main__':
 	scene_id='scene0420_01'
 	scene_path = get_scene_path(scene_id)
 
-	'''
+	
 	layout_mesh = load_original_layout(scene_id, scene_path)
 	generate_bbox_floor_obj(layout_mesh, scene_path)
 	generate_floor_urdf(scene_path)
 	'''
-	test_floor_urdf(scene_path)
+	'''
+	#test_floor_urdf(scene_path)
 	

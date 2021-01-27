@@ -444,7 +444,7 @@ class RoomScene(Scene):
                 p.setCollisionFilterPair(
                     fixed_body_ids[i],
                     fixed_body_ids[j],
-                    0, 0, enableCollision=0)    
+                    -1, -1, enableCollision=0)    
 
         print("Disabled collision detection between %d objects"%(len(fixed_body_ids)))
 

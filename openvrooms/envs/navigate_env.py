@@ -171,7 +171,7 @@ class NavigateEnv(RelocateEnv):
 				continue
 			
 			#print('--------------------------------------------------------------')
-			#print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+			print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
 
 			filtered_collision_links.append(item)
 
@@ -297,8 +297,8 @@ if __name__ == '__main__':
 			#print(info)
 			#print(state.shape)
 			#print(state)
-			print('-----------------------------')
-			print(env.collision_step)
+			#print('-----------------------------')
+			#print(env.collision_step)
 			#print('-------------------------------')
 			#print('reward', reward)
 			#print(state['task_obs'].shape)
