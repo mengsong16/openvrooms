@@ -5,7 +5,11 @@ import os
 import pybullet_data
 from transforms3d.euler import euler2quat
 from openvrooms.objects.interactive_object import InteractiveObj
+
 from openvrooms.scenes.room_scene import RoomScene
+from openvrooms.scenes.relocate_scene import RelocateScene
+from openvrooms.scenes.navigate_scene import NavigateScene
+
 import numpy as np
 from PIL import Image
 import cv2
@@ -161,12 +165,7 @@ def floor_collision_detection(robot_id, floor_id):
 	
 	return len(collision_links) > 0 
 
-def test_floor_urdf(scene_path):
-	time_step = 1./240. 
-	p.connect(p.GUI) # load with pybullet GUI
-	p.setGravity(0, 0, -9.8)
-	p.setTimeStep(time_step)
-
+def load_floor(scene_path):
 	floor_urdf_file = os.path.join(scene_path, "floor.urdf")
 	floor_id = p.loadURDF(fileName=floor_urdf_file, useFixedBase=1)
 
@@ -181,31 +180,52 @@ def test_floor_urdf(scene_path):
 	print("Floor position: %s"%str(floor_pos))
 	print("Floor orientation: %s"%str(floor_orn))
 
+	return floor_id
+
+def test_floor_urdf(scene_path):
+	time_step = 1./240. 
+	p.connect(p.GUI) # load with pybullet GUI
+	p.setGravity(0, 0, -9.8)
+	p.setTimeStep(time_step)
+
+	# load floor or scene
+	floor_id = load_floor(scene_path)
+	'''
+	scene = NavigateScene(scene_id='scene0420_01', n_obstacles=0)
+	scene.load()
+	floor_id = scene.floor_id
+	'''
+
 	# load robot
 	robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
 	turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
 
 	robot_ids = turtlebot.load()
 	robot_id = robot_ids[0]
+
 	turtlebot.set_position([0, 0, 0])
 	turtlebot.robot_specific_reset()
 	turtlebot.keep_still() 
 
-	# start simulation
-
-	# keep still
 	collision_counter = 0
+	# start simulation
+	
+	# keep still
 	for _ in range(100):
 		p.stepSimulation()
 		#collision_counter += floor_collision_detection(robot_id, floor_id)
-		time.sleep(time_step)
-
+		time.sleep(time_step) # this is just for visualization, could be removed without affecting avoiding initial collisions
+	
 	
 	# move    
-	for _ in range(2000):  # at least 100 seconds
+	time_step_n = 0
+	for _ in range(50):  # at least 100 seconds
 		action = np.random.uniform(-1, 1, turtlebot.action_dim)
 		turtlebot.apply_action(action)
 		p.stepSimulation()
+		time_step_n += 1
+		print('----------------------------------------')
+		print('time step: %d'%(time_step_n))
 		collision_counter += floor_collision_detection(robot_id, floor_id)
 		time.sleep(time_step)
 
@@ -217,11 +237,10 @@ if __name__ == '__main__':
 	scene_id='scene0420_01'
 	scene_path = get_scene_path(scene_id)
 
-	
+	'''
 	layout_mesh = load_original_layout(scene_id, scene_path)
 	generate_bbox_floor_obj(layout_mesh, scene_path)
 	generate_floor_urdf(scene_path)
 	'''
-	'''
-	#test_floor_urdf(scene_path)
+	test_floor_urdf(scene_path)
 	

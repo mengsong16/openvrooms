@@ -560,6 +560,18 @@ class RelocateEnv(iGibsonEnv):
 		# in case the surface is not perfect smooth (has bumps)
 		obj.set_position([pos[0], pos[1], stable_z + offset])
 
+	# Reset position and orientation for the robot or the object without z offset
+	# orn: orientation (euler angles: rotatation around x,y,z axis)
+	def set_pos_orn(self, obj, pos, orn=None): 	
+		if orn is None:
+			orn = np.array([0, 0, np.random.uniform(0, np.pi * 2)])
+
+		is_robot = isinstance(obj, BaseRobot)
+		body_id = obj.robot_ids[0] if is_robot else obj.body_id
+
+		obj.set_position_orientation(pos, quatToXYZW(euler2quat(*orn), 'wxyz'))	
+
+
 	def test_valid_position(self, obj, pos, orn=None):
 		"""
 		Test if the robot or the object can be placed with no collision
@@ -572,6 +584,7 @@ class RelocateEnv(iGibsonEnv):
 		is_robot = isinstance(obj, BaseRobot)
 
 		self.set_pos_orn_with_z_offset(obj, pos, orn)
+		#self.set_pos_orn(obj, pos, orn)
 
 		if is_robot:
 			obj.robot_specific_reset()
@@ -592,6 +605,7 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		is_robot = isinstance(obj, BaseRobot)
 
+		#self.set_pos_orn(obj, pos, orn)
 		self.set_pos_orn_with_z_offset(obj, pos, orn)
 
 		if is_robot:
@@ -600,6 +614,7 @@ class RelocateEnv(iGibsonEnv):
 
 		body_id = obj.robot_ids[0] if is_robot else obj.body_id
 
+		
 		land_success = False
 		# land for maximum 1 second, should fall down ~5 meters
 		max_simulator_step = int(1.0 / self.action_timestep)
@@ -611,20 +626,25 @@ class RelocateEnv(iGibsonEnv):
 
 		if not land_success:
 			print("WARNING: Failed to land")
-
+		
 		if is_robot:
 			obj.robot_specific_reset()
 			obj.keep_still()
+
+		# kill still for some timesteps	
+		warm_up_step = 50
+		for _ in range(warm_up_step):
+			self.simulator_step()
+
 
 	def reset_variables(self):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
-
-		print("***********************************")
-		print("total step: %d"%(self.current_step))
-		print("non_interactive_collision_step: %d"%(self.non_interactive_collision_step))
-		print("interactive_collision_step: %d"%(self.interactive_collision_step))
+		if self.interactive_collision_step > 0:
+			print("total steps: %d"%(self.current_step))
+			print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
+			print("interactive collision steps: %d"%(self.interactive_collision_step))
 
 		self.current_episode += 1
 		self.current_step = 0
@@ -677,10 +697,11 @@ if __name__ == '__main__':
 	
 	step_time_list = []
 	for episode in range(100):
+		print("***********************************")
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(200):  # 10 seconds
+		for _ in range(500):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
