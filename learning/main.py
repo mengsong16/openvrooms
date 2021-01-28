@@ -18,15 +18,21 @@ from openvrooms.config import *
 import argparse
 from gibson2.utils.utils import parse_config
 import torch
+from learning_utils import set_seed_everywhere
 
-def deploy(agent_dir, env, fps=60):
+def deploy(agent_dir, env, record=False):
 	agent = GreedyAgent.load(agent_dir, env)
 
 	print('----------------- Deployment Start --------------------')
 	action = None
 	returns = 0
+
+	if record:
+		env.start_video_recorder()
+
 	env.reset()
-	while True:
+	episode = 0
+	while episode < 3:
 		# run policy
 		# env.reward is just a place holder
 		action = agent.act(env.state, env.reward)
@@ -37,11 +43,16 @@ def deploy(agent_dir, env, fps=60):
 			returns += env.reward
 		else:
 			# next episode
-			print('returns:', returns)
+			print('episode: %d, returns: %f'%(episode, returns))
+			episode += 1
+
 			env.reset()
 			returns = 0
 	
 	env.close()	
+
+	if record:
+		env.save()
 	print("-----------------Done!-----------------")	
 	
 def train(args, config, env, control_mode='state'):
@@ -122,6 +133,8 @@ def run():
 						choices=['nav', 'rel'],
 						default='nav',
 						help='navigation or relocation')
+	parser.add_argument("--record", help="record training or deploy process as video",
+                    action="store_true") # need to ensure that rgb is included in output
 
 	args = parser.parse_args()
 
@@ -143,6 +156,20 @@ def run():
 		frame_stack = None	
 		control_mode = 'state'	
 	
+	
+	if args.record:
+		save_path = "./runs/dqn_empty_room"
+		print("Will save recorded video at: %s"%(save_path))
+	else:
+		save_path = None	
+
+	# fix random seeds before creating the environment
+	use_seed = 1
+	set_seed_everywhere(seed=use_seed)
+	print('--------------------------------------------')
+	print('Random seed: %d'%(use_seed))
+	print('--------------------------------------------')
+
 	if args.env == "rel":
 		env = OpenRoomEnvironment(gym_id="openrelocate-v0", 
 			config_file=config_file, 
@@ -150,7 +177,7 @@ def run():
 			action_timestep=config.get('action_timestep'), 
 			physics_timestep=config.get('physics_timestep'),
 			device=torch.device(args.device),
-			device_idx=0, frame_stack=frame_stack)
+			device_idx=0, frame_stack=frame_stack, save_format='mp4', save_path=save_path)
 	else:	
 		env = OpenRoomEnvironment(gym_id="opennavigate-v0", 
 			config_file=config_file, 
@@ -158,13 +185,13 @@ def run():
 			action_timestep=config.get('action_timestep'), 
 			physics_timestep=config.get('physics_timestep'),
 			device=torch.device(args.device),
-			device_idx=0, frame_stack=frame_stack)
+			device_idx=0, frame_stack=frame_stack, save_format='mp4', save_path=save_path)
 
 	if args.mode == "train":
 		train(args, config, env, control_mode)
 	else:
-		agent_dir = "./runs/dqn"
-		deploy(agent_dir, env)
+		agent_dir = "./runs/dqn_empty_room"
+		deploy(agent_dir, env, record=args.record)
 
 if __name__ == "__main__":
 	run()

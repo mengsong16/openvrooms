@@ -231,8 +231,8 @@ class NavigateEnv(RelocateEnv):
 		Reset bookkeeping variables for the next new episode
 		"""
 
-		print("total steps: %d"%(self.current_step))
-		print("collision steps: %d"%(self.collision_step))
+		#print("total steps: %d"%(self.current_step))
+		#print("collision steps: %d"%(self.collision_step))
 
 		self.current_episode += 1
 		self.current_step = 0
