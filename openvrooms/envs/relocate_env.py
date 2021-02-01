@@ -251,7 +251,7 @@ class RelocateEnv(iGibsonEnv):
 		# task obs
 		if 'task_obs' in self.output:
 			observation_space['task_obs'] = self.build_obs_space(
-				shape=(task_obs_dim,), low=-np.inf, high=-np.inf)
+				shape=(task_obs_dim,), low=-np.inf, high=np.inf)
 		# vision modalities	
 		if 'rgb' in self.output:
 			observation_space['rgb'] = self.build_obs_space(

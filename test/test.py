@@ -263,8 +263,8 @@ if __name__ == "__main__":
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 	
-	test_relocate_scene(args.id, n_interactive_objects=1)
-	#test_navigate_scene(args.id, n_obstacles=0)
+	#test_relocate_scene(args.id, n_interactive_objects=1)
+	test_navigate_scene(args.id, n_obstacles=0)
 	#test_scene(args.id, fix_interactive_objects=False)
 	#test_layout()
 	#test_robot()

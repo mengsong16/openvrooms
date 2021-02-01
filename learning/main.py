@@ -11,7 +11,7 @@ from presets.models import *
 from run_experiment import run_experiment
 from greedy_agent import GreedyAgent
 
-from openvrooms.envs.openroom_env_wrapper import OpenRoomEnvironment
+from openvrooms.envs.openroom_env_wrapper import OpenRoomEnvironmentALL
 
 from openvrooms.config import *
 
@@ -32,7 +32,8 @@ def deploy(agent_dir, env, record=False):
 
 	env.reset()
 	episode = 0
-	while episode < 3:
+	#while episode < 3:
+	while True:
 		# run policy
 		# env.reward is just a place holder
 		action = agent.act(env.state, env.reward)
@@ -171,7 +172,7 @@ def run():
 	print('--------------------------------------------')
 
 	if args.env == "rel":
-		env = OpenRoomEnvironment(gym_id="openrelocate-v0", 
+		env = OpenRoomEnvironmentALL(gym_id="openrelocate-v0", 
 			config_file=config_file, 
 			mode=args.render, 
 			action_timestep=config.get('action_timestep'), 
@@ -179,7 +180,7 @@ def run():
 			device=torch.device(args.device),
 			device_idx=0, frame_stack=frame_stack, save_format='mp4', save_path=save_path)
 	else:	
-		env = OpenRoomEnvironment(gym_id="opennavigate-v0", 
+		env = OpenRoomEnvironmentALL(gym_id="opennavigate-v0", 
 			config_file=config_file, 
 			mode=args.render, 
 			action_timestep=config.get('action_timestep'), 
@@ -190,7 +191,7 @@ def run():
 	if args.mode == "train":
 		train(args, config, env, control_mode)
 	else:
-		agent_dir = "./runs/dqn_empty_room"
+		agent_dir = "./runs/dqn_1m"
 		deploy(agent_dir, env, record=args.record)
 
 if __name__ == "__main__":

@@ -17,6 +17,13 @@ class OutOfBound(BaseRewardTerminationFunction):
         self.y_bound[0] += self.safty_thresh
         self.y_bound[1] -= self.safty_thresh
 
+        '''
+        self.x_bound[0] = -1
+        self.x_bound[1] = 1
+        self.y_bound[0] = -1
+        self.y_bound[1] = 1
+        '''
+
         self.reward = self.config.get('out_of_bound_reward', -10.0)
 
     def get_reward_termination(self, task, env):

@@ -1,16 +1,20 @@
 import torch
 import numpy as np
 import os
-import gym
+import gym, ray
 from all.core.state import State
 from all.environments.gym import GymEnvironment
 from openvrooms.envs.relocate_env import RelocateEnv
+from openvrooms.envs.navigate_env import NavigateEnv
 from openvrooms.config import *
 from openvrooms.envs.vision_env_wrapper import FrameStack, VideoRecorder
+from ray.rllib.agents import ppo
+from ray.tune.registry import register_env
+
 
 
 # transform OpenRoom env to gym and ALL env
-class OpenRoomEnvironment(GymEnvironment):
+class OpenRoomEnvironmentALL(GymEnvironment):
     def __init__(self, gym_id, config_file,
         mode='headless',
         action_timestep=1 / 10.0,
@@ -59,6 +63,7 @@ class OpenRoomEnvironment(GymEnvironment):
         print("-----------------------------------")
         print("Observation (state) space: ")
         print(self.observation_space)
+        #print(self.state_space.shape[0])
         print("-----------------------------------")
 
     def duplicate(self, n):
@@ -132,24 +137,24 @@ class OpenRoomEnvironment(GymEnvironment):
     
 
 
-def test_env():
+def test_all_env():
     print("Start!") 
 
     #env = gym.make("openvrooms-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0) 
     save_path = "/home/meng/openvrooms/learning/runs"
-    env = OpenRoomEnvironment(gym_id="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0, frame_stack=4, save_path=save_path, save_format='mp4')
+    env = OpenRoomEnvironmentALL(gym_id="openrelocate-v0", config_file=os.path.join(config_path,'turtlebot_relocate.yaml'), mode="headless", action_timestep=1.0 / 10.0, physics_timestep=1.0 / 40.0, frame_stack=4, save_path=save_path, save_format='mp4')
     #print(env.state_space)
     #print(env.observation_space)
     #print(env.action_space)
     
     
-    env.start_video_recorder()
+    #env.start_video_recorder()
     i = 0
     env.reset()
     while i < 100:
         action = env.action_space.sample()
         env.step(torch.from_numpy(np.array([action])))
-        frame = env.render()
+        #frame = env.render()
         #print(frame.shape)
         
         i += 1
@@ -160,8 +165,67 @@ def test_env():
     env.close()
     print("Done!")
     
-    env.save()
+    #env.save()
+
+# transform OpenRoom env to RLLIB env
+class OpenRoomEnvironmentRLLIB(gym.Env): 
+    def __init__(self, env_config):
+        # make a gym environment
+        if env_config["env"] == 'navigate':
+            self.env = NavigateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
+            mode=env_config["mode"], device_idx=env_config["device_idx"])
+        else:
+            self.env = RelocateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
+            mode=env_config["mode"], device_idx=env_config["device_idx"])    
+
+        self.action_space = self.env.action_space
+        self.observation_space = self.env.observation_space
+
+    def reset(self):
+        return self.env.reset()
+
+    def step(self, action):
+        state, reward, done, info = self.env.step(action)
+        return state, float(reward), done, info  
+
+def env_creator(env_config):
+    return OpenRoomEnvironmentRLLIB(...)  # return an env instance
+
+register_env("openroom_env", env_creator)
+
+def test_rllib_env():
+    # training
+    config = {
+        "env": OpenRoomEnvironmentRLLIB,  
+        "env_config": {
+            "env": "navigate",
+            "config_file": 'turtlebot_navigate.yaml',
+            "mode": "gui",
+            "device_idx": 0
+        },
+        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        "num_gpus": 1,
+        "lr": 1e-4, # try different lrs
+        "num_workers": 1,  # parallelism
+        "framework": "torch"
+    }
+    '''
+    stop = {
+        "training_iteration": args.stop_iters,
+        "timesteps_total": args.stop_timesteps,
+        "episode_reward_mean": args.stop_reward,
+    }
+    '''
+    ray.init()
+    
+    trainer = ppo.PPOTrainer(env=OpenRoomEnvironmentRLLIB, config=config)
     
 
+    while True:
+        print(trainer.train())
+
+    #results = tune.run(args.run, config=config, stop=stop)
+
 if __name__ == "__main__":  
-    test_env()                              
+    #test_all_env()   
+    test_rllib_env()                           
