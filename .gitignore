@@ -3,4 +3,4 @@ assets
 openvrooms.egg-info
 .DS_Store
 .history
-learning/runs
+all_learning/runs
