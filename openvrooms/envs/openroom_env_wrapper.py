@@ -200,11 +200,11 @@ def test_rllib_env():
         "env_config": {
             "env": "navigate",
             "config_file": 'turtlebot_navigate.yaml',
-            "mode": "gui",
+            "mode": "headless",
             "device_idx": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        "num_gpus": 1,
+        "num_gpus": 2,
         "lr": 1e-4, # try different lrs
         "num_workers": 1,  # parallelism
         "framework": "torch"
