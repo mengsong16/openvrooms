@@ -147,7 +147,7 @@ def test_all_env():
     #print(env.observation_space)
     #print(env.action_space)
     
-    
+    '''
     #env.start_video_recorder()
     i = 0
     env.reset()
@@ -164,7 +164,7 @@ def test_all_env():
         
     env.close()
     print("Done!")
-    
+    '''
     #env.save()
 
 # transform OpenRoom env to RLLIB env
@@ -189,9 +189,9 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
         return state, float(reward), done, info  
 
 def env_creator(env_config):
-    return OpenRoomEnvironmentRLLIB(...)  # return an env instance
+    return OpenRoomEnvironmentRLLIB(env_config)  # return an env instance
 
-register_env("openroom_env", env_creator)
+register_env("openvroom-v0", env_creator)
 
 def test_rllib_env():
     # training

@@ -64,22 +64,23 @@ visual_object_visible_to_agent: false # visual target landmarks
 action_timestep: 0.1  # environment executes action per action_timestep second
 physics_timestep: 0.025 # physics timestep for pybullet
 
-# rl
+#-----------------------------------------------------------------------------------------
+# rl for ALL
 # general training settings
-training_timesteps: 40000
-discount_factor: 0.99
-learning_rate: 0.001
-minibatch_size: 64
-frame_stack: 4
+# training_timesteps: 40000
+# discount_factor: 0.99
+# learning_rate: 0.001
+# minibatch_size: 64
+# frame_stack: 4
 
-# dqn
-update_frequency: 1
-target_update_frequency: 100
-replay_start_size: 1000
-replay_buffer_size: 10000
-initial_exploration: 1.0
-final_exploration: 0.0
-final_exploration_frame: 10000
+# # dqn
+# update_frequency: 1
+# target_update_frequency: 100
+# replay_start_size: 1000
+# replay_buffer_size: 10000
+# initial_exploration: 1.0
+# final_exploration: 0.0
+# final_exploration_frame: 10000
 
 
 
