@@ -261,17 +261,18 @@ class NavigateGoalFixedTask(BaseTask):
 		robot_orientation = np.array(agent.get_orientation())
 		robot_orientation = quat2euler(quatFromXYZW(robot_orientation, 'wxyz'))
 
-		'''
-		# 3d in world frame if third person view is adopted
-		robot_linear_velocity = agent.get_linear_velocity()
 		
 		# 3d in world frame if third person view is adopted
-		robot_angular_velocity = agent.get_angular_velocity()
-		'''
+		#robot_linear_velocity = agent.get_linear_velocity()
+		
+		# 3d in world frame if third person view is adopted
+		#robot_angular_velocity = agent.get_angular_velocity()
 
-		# 6 d in total
+
+		# concatenated observations
 		#task_obs = np.concatenate((robot_position, robot_orientation, robot_linear_velocity, robot_angular_velocity), axis=None)
 		task_obs = np.concatenate((robot_position, robot_orientation), axis=None)
+		#task_obs = robot_position
 
 		#print(task_obs.shape)
 		return task_obs

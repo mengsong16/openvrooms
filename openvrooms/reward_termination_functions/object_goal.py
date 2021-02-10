@@ -56,7 +56,8 @@ class ObjectGoal(BaseRewardTerminationFunction):
         # check success / done
         done = True
         for i in list(range(task.obj_num)):
-            if pos_distances[i] > self.dist_tol or rot_distances[i] > self.angle_tol:
+            #if pos_distances[i] > self.dist_tol or rot_distances[i] > self.angle_tol:
+            if pos_distances[i] > self.dist_tol:
                 done = False
                 break
 

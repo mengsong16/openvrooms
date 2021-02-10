@@ -27,7 +27,7 @@ class PointGoal(BaseRewardTerminationFunction):
         if self.use_goal_dist_reward:
             self.goal_dist = task.goal_distance(env)
 
-
+    
     def get_reward_termination(self, task, env):
         """
         Return whether the episode should terminate.
@@ -61,9 +61,29 @@ class PointGoal(BaseRewardTerminationFunction):
             self.goal_dist = new_goal_dist
 
             reward += goal_dist_reward
+
    
-
         return reward, done, success
+    '''
+    def get_reward_termination(self, task, env): 
+        self.goal_dist = task.goal_distance(env) 
 
+        if self.goal_dist > self.dist_tol:
+            done = False
+        else:
+            done = True
+
+        success = done
+
+         # get success reward
+        if success:
+            reward = self.success_reward
+        else:
+            reward = 0.0
+
+        reward += -self.goal_dist
+
+        return reward, done, success    
+    '''
     def get_name(self):
         return "point_goal"    

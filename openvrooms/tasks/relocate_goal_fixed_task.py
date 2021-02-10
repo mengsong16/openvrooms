@@ -325,6 +325,7 @@ class RelocateGoalFixedTask(BaseTask):
 		robot_orientation = np.array(agent.get_orientation())
 		robot_orientation = quat2euler(quatFromXYZW(robot_orientation, 'wxyz'))
 
+		'''
 		# 3d in world frame if third person view is adopted
 		robot_linear_velocity = agent.get_linear_velocity()
 		
@@ -334,6 +335,8 @@ class RelocateGoalFixedTask(BaseTask):
 
 		# 12 d in total
 		task_obs = np.concatenate((robot_position, robot_orientation, robot_linear_velocity, robot_angular_velocity), axis=None)
+		'''
+		task_obs = np.concatenate((robot_position, robot_orientation), axis=None)
 		
 		
 		# object current pose: 6d each
@@ -346,7 +349,7 @@ class RelocateGoalFixedTask(BaseTask):
 			task_obs = np.append(task_obs, pos)
 			task_obs = np.append(task_obs, orn)
 
-		
+		'''
 		# object target pose: 6d each
 		for i, obj in enumerate(self.interactive_objects):
 			target_pos = [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z]
@@ -354,7 +357,8 @@ class RelocateGoalFixedTask(BaseTask):
 
 			orn = np.array(self.obj_target_orn[i])
 			task_obs = np.append(task_obs, orn)
-
+			
+		'''
 		#print(task_obs.shape)
 		return task_obs
 

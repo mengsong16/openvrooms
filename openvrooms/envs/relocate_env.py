@@ -228,7 +228,7 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		self.load_scene_robot()  # load robot and scene, use self load()
 		self.load_task_setup()
-		self.load_observation_space(self.task.task_obs_dim+self.task.obj_num*12)
+		self.load_observation_space(self.task.task_obs_dim+self.task.obj_num*6)
 		self.load_action_space()
 		self.load_miscellaneous_variables()
 
@@ -641,11 +641,12 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
+		'''
 		if self.interactive_collision_step > 0:
 			print("total steps: %d"%(self.current_step))
 			print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
 			print("interactive collision steps: %d"%(self.interactive_collision_step))
-
+		'''
 		self.current_episode += 1
 		self.current_step = 0
 		self.non_interactive_collision_step = 0

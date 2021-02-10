@@ -11,12 +11,14 @@ from ray.rllib.agents import ppo, dqn
 from ray import tune
 from ray.tune.logger import pretty_print
 
+env_option = 'relocate' # ‘navigate’
+
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
 dqn_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
-            "env": "navigate",
-            "config_file": 'turtlebot_navigate.yaml',
+            "env": env_option,
+            "config_file": 'turtlebot_%s.yaml'%(env_option),
             "mode": "headless",
             "device_idx": 0 # renderer use gpu 0
         },
@@ -46,8 +48,8 @@ ppo_train_config = ppo.DEFAULT_CONFIG.copy()
 ppo_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
-            "env": "navigate",
-            "config_file": 'turtlebot_navigate.yaml',
+            "env": env_option,
+            "config_file": 'turtlebot_%s.yaml'%(env_option),
             "mode": "headless",
             "device_idx": 0 # renderer use gpu 0
         },
@@ -56,13 +58,13 @@ ppo_train_config = {
         "num_workers": 1,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
-        "seed": 1
+        "seed": 2
 }
 
 
 stop = {
-        "timesteps_total": 100000,
-        #"episode_reward_mean": 10,
+        #"timesteps_total": 240000,
+        "episode_reward_mean": 100,
     }
 
 def train_ppo():
