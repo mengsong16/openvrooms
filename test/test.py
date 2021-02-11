@@ -264,7 +264,7 @@ if __name__ == "__main__":
 	args = aparser.parse_args()
 	
 	#test_relocate_scene(args.id, n_interactive_objects=1)
-	test_navigate_scene(args.id, n_obstacles=0)
+	test_navigate_scene(args.id, n_obstacles=1)
 	#test_scene(args.id, fix_interactive_objects=False)
 	#test_layout()
 	#test_robot()

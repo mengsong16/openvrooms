@@ -647,6 +647,9 @@ class RelocateEnv(iGibsonEnv):
 			print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
 			print("interactive collision steps: %d"%(self.interactive_collision_step))
 		'''
+		#print('------------------------------------')
+		#print(self.non_interactive_collision_step)
+
 		self.current_episode += 1
 		self.current_step = 0
 		self.non_interactive_collision_step = 0

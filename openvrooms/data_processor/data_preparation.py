@@ -10,6 +10,7 @@ from openvrooms.data_processor.xml_parser import SceneParser
 from openvrooms.data_processor.urdf_generator import generate_urdf
 
 import argparse
+import shutil
 
 # parse and generate mtl for one scene
 def parse_generate_mtl_scene(scene_id):
@@ -45,7 +46,18 @@ def generate_urdf_scene(scene_id):
 	for obj in parser.obj_list:
 		obj_file = os.path.join(scene_folder, obj.obj_path)	
 		print(obj_file)
-		generate_urdf(obj_file, scene_folder, urdf_prototype_file, force_decompose=True, center='geometric')
+		if 'floor' in obj_file:
+			# copy .obj to vhach.obj
+			floor_vhacd_obj_path = os.path.join(scene_folder, obj_file.replace('.obj', '_vhacd.obj'))
+			shutil.copyfile(obj_file, floor_vhacd_obj_path)	
+			print('Generated floor vhacd obj file.')
+
+			generate_urdf(obj_file, scene_folder, urdf_prototype_file, decompose_concave=True, force_decompose=False, mass=100, center=None)
+			#builder.build_urdf(filename=floor_obj_path, force_overwrite=True, decompose_concave=True, force_decompose=False, mass=100, center=None)
+			print('Generated floor urdf file.')
+		else:
+			#continue
+			generate_urdf(obj_file, scene_folder, urdf_prototype_file, decompose_concave=True, force_decompose=True, center='geometric')	
 
 	print('-------------------------------------')
 	print('URDF generation Done.')	

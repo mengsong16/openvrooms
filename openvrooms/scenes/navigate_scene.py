@@ -56,7 +56,8 @@ class NavigateScene(RoomScene):
         super(NavigateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=True, empty_room=empty_room)
 
         
-        self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
+        #self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
+        self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object.obj'
         self.n_interactive_objects = n_obstacles
         
 
@@ -68,10 +69,10 @@ class NavigateScene(RoomScene):
         self.load_scene_metainfo()
 
         # load layout
-        #self.load_layout()
+        self.load_layout()
 
         # load floor
-        self.load_floor()
+        #self.load_floor()
 
         # load static objects
         self.load_static_objects()
@@ -109,10 +110,10 @@ class NavigateScene(RoomScene):
         pickle_path = os.path.join(metadata_path, str(self.scene_id)+'.pkl')
         parser.load_param(pickle_path)
         #parser.print_param()
-        self.static_object_list, _, self.layout = parser.separate_static_interactive()
+        self.static_object_list, _, self.layout_list = parser.separate_static_interactive()
         
             
-        if self.layout is None:
+        if self.layout_list is None:
             print('Error: No layout is found!') 
         else:
             print('Loaded meta info of layout')    

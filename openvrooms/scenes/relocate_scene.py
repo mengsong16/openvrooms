@@ -48,7 +48,8 @@ class RelocateScene(RoomScene):
         super(RelocateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=False)
 
         
-        self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
+        #self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
+        self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object.obj'
         self.n_interactive_objects = n_interactive_objects
         
 
@@ -58,11 +59,12 @@ class RelocateScene(RoomScene):
         """
         # load meta info
         self.load_scene_metainfo()
+
         # load layout
-        #self.load_layout()
+        self.load_layout()
 
         # load floor
-        self.load_floor()
+        #self.load_floor()
 
         # load static objects
         self.load_static_objects()
@@ -100,7 +102,7 @@ class RelocateScene(RoomScene):
         pickle_path = os.path.join(metadata_path, str(self.scene_id)+'.pkl')
         parser.load_param(pickle_path)
         #parser.print_param()
-        self.static_object_list, _, self.layout = parser.separate_static_interactive()
+        self.static_object_list, _, self.layout_list = parser.separate_static_interactive()
         
         
         interative_object_obj_filenames = [self.interative_object_obj_filename] * self.n_interactive_objects 
@@ -109,7 +111,7 @@ class RelocateScene(RoomScene):
             obj.obj_path = obj_filename
             self.interative_object_list.append(obj)
             
-        if self.layout is None:
+        if self.layout_list is None:
             print('Error: No layout is found!') 
         else:
             print('Loaded meta info of layout')    

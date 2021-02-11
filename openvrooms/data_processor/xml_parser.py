@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import cv2
 from tqdm import tqdm
 from math import ceil, floor
+from openvrooms.data_processor.split import split_layout
+from openvrooms.data_processor.floor_bbox import FloorBBox
+
 
 class SceneObj(object):
     def __init__(self, **kwargs):
@@ -18,7 +21,7 @@ class SceneParser:
     static_objs = {'door', 'window', 'curtain', 'ceiling_lamp'}
     def __init__(self, scene_id: str, save_root=None, **kwargs):
         # add layout to static list whose name contains scene_id
-        self.static_objs.add(scene_id+'_object')
+        self.static_objs.add(scene_id)
         self.scene_id = scene_id
         self.obj_list = list()
         self.xml_root = None
@@ -31,10 +34,8 @@ class SceneParser:
             self.layoutMesh_root = kwargs['layoutMesh_root']
             self.save_root = os.path.join(save_root, scene_id)
 
-
     # get xml tree and save .xml to the output directory
-    def __get_scene_xml(self):
-        scene_xml_path = os.path.join(self.scene_root, 'xml', self.scene_id, 'main.xml')
+    def __get_scene_xml(self, scene_xml_path):
         
         assert os.path.isfile(scene_xml_path), f"Error: file '{scene_xml_path}' doesn't exit!"
         
@@ -46,19 +47,19 @@ class SceneParser:
     def separate_static_interactive(self):
         interative_object_list = list()
         static_object_list = list()
-        layout = None
+        layout_list = list()
 
         for obj in self.obj_list:
-            if "uv_mapped" in obj.obj_path:
-                layout = obj
-                continue
-
-            if obj.type == "static":
+            if self.scene_id in obj.id:
+                layout_list.append(obj)
+            elif obj.type == "static":
                 static_object_list.append(obj)
+            elif obj.type == "interactive":
+                interative_object_list.append(obj)  
             else:
-                interative_object_list.append(obj)    
+                print(f"[SceneParser.separate_static_interactive]Error: unknown object type:\nid={obj.id}\nobj_path={obj.obj_path}\ntype={obj.type}")  
         
-        return static_object_list, interative_object_list, layout
+        return static_object_list, interative_object_list, layout_list
 
     # get the transformation from obj reference frame to bullet reference frame
     def get_tranform_obj2bullet(self):
@@ -111,7 +112,8 @@ class SceneParser:
         elif mega_type == 'uv_mapped':
             obj_path = os.path.join(self.uvMapped_root, relative_path[len(mega_type)+1:])
         else:
-            raise NotImplementedError
+            obj_path = shape_block.find('string').get('value')
+            assert os.path.isfile(obj_path), f"[SceneParser.parse_shape_block]Error: non-exist obj file: {obj_path}!"
         
         # new file .obj & .mtl paths
         file_name = relative_path.split('/')[-1]
@@ -126,8 +128,8 @@ class SceneParser:
         obj_idx = len([prev_obj for prev_obj in self.obj_list if prev_obj.id == obj.id])
 
         # set absolute path
-        obj.obj_path = os.path.join(self.save_root, obj.id+'_'+file_name+('' if obj_idx==0 else str(obj_idx))+'.obj')
-        obj.mtl_path = os.path.join(self.save_root, obj.id+'_'+file_name+'.mtl')
+        obj.obj_path = os.path.join(self.save_root, obj.id+('' if obj_idx==0 else str(obj_idx))+'.obj')
+        obj.mtl_path = os.path.join(self.save_root, obj.id+'.mtl')
 
         # transform vertices & normals in .obj tile
         obj_trans  = ObjTransformBasic(obj_path)
@@ -241,7 +243,7 @@ class SceneParser:
             
             # write mtllib at the very beginning of the file
             f.seek(0, 0)
-            f.write('mtllib '+obj.id+'_'+file_name+'.mtl\n')
+            f.write('mtllib '+obj.id+'.mtl\n')
 
             # write old lines and remove mtllib lines already been there
             for line in old_lines:
@@ -320,23 +322,44 @@ class SceneParser:
     # each bsdf block corresponds to one material
     # each shape block corresponds to one object, and may inlcude multiple bsdf blocks (materials)
     # the same shape id could appear multiple times in the scene, each for one object instance
-    def parse(self):
-        # clear output directory and recreate an empty directory
+    def parse(self, is_split=True, is_floor_replaced=True):
+        ## clear output directory and recreate an empty directory
         if os.path.isdir(self.save_root): 
             rmtree(self.save_root)
-        
         os.mkdir(self.save_root)
-        cnt = 0
-        self.xml_root = self.__get_scene_xml()
+
+        ## get scene xml path
+        scene_xml_path = os.path.join(self.scene_root, 'xml', self.scene_id, 'main.xml')
+
+        ## split layout
+        if is_split:
+            # create a temporary folder in the save root
+            tmp_root = os.path.join(self.save_root, 'tmp')
+            os.mkdir(tmp_root)
+            # split layout elements
+            scene_xml_path = split_layout(self.scene_id, scene_xml_path, os.path.join(self.layoutMesh_root, self.scene_id), tmp_root)
+
+        ## get scene xml file
+        self.xml_root = self.__get_scene_xml(scene_xml_path)
+
+        ## parse scene xml
         for shape_block in tqdm(self.xml_root.findall('shape'), desc='shape block'):
-            if cnt < 10000:
-                obj = self.parse_shape_block(shape_block)
-                if obj == None: 
-                    continue
-                self.obj_list.append(obj)
-            else:
-                break
-            cnt += 1
+            obj = self.parse_shape_block(shape_block)
+            if obj == None: 
+                continue
+            self.obj_list.append(obj)
+        
+        ## replace floor with planar object
+        if is_floor_replaced:
+            floor = FloorBBox()
+            floor_cnt = 0
+            for obj in self.obj_list:
+                if obj.id.lower().find('floor') != -1:
+                    floor_obj_file_name = os.path.join(self.save_root, obj.obj_path)
+                    floor.parse_obj(floor_obj_file_name)
+                    floor.generate_floor(floor_obj_file_name, floor_thickness=0.05)
+                    floor_cnt += 1
+        print("%d floors replaced with planar objects!"%(floor_cnt))
         
         print('-------------------------------------')
         print('Parsing Done.')
@@ -348,7 +371,8 @@ class SceneParser:
     
     # save object list
     def save_param(self, pickle_path=None):
-        if pickle_path == None: pickle_path = os.path.join(self.save_root, 'SceneParser_param.pkl')
+        if pickle_path == None: 
+            pickle_path = os.path.join(self.save_root, 'SceneParser_param.pkl')
         with open(pickle_path, 'wb') as f:
             pickle.dump({
                 'scene_id': self.scene_id,

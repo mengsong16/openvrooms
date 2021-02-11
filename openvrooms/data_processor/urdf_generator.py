@@ -16,10 +16,10 @@ from openvrooms.config import *
 # reset the position x,y,z of geometry and collision in urdf
 # input: xyz.obj
 # output: xyz.urdf, xyz_vhacd.obj
-def generate_urdf(obj_file, object_folder, urdf_prototype_file, force_decompose=True, mass=None, center='geometric'):
+def generate_urdf(obj_file, object_folder, urdf_prototype_file, decompose_concave=True, force_decompose=True, mass=None, center='geometric'):
 	log_file = os.path.join(object_folder, "vhacd_log.txt")
 	builder = ObjectUrdfBuilder(object_folder, log_file=log_file, urdf_prototype=urdf_prototype_file)
-	builder.build_urdf(filename=obj_file, force_overwrite=True, decompose_concave=True, force_decompose=force_decompose, mass=mass, center=center)
+	builder.build_urdf(filename=obj_file, force_overwrite=True, decompose_concave=decompose_concave, force_decompose=force_decompose, mass=mass, center=center)
 
 def test_urdf(urdf_file):
 	p.connect(p.GUI)

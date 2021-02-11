@@ -54,14 +54,19 @@ class RoomScene(Scene):
         # meta info
         self.static_object_list = []  # metainfo list of static objects except layout
         self.interative_object_list = [] # metainfo list of interactive objects
-        self.wall = None
-        self.layout = None # metainfo of layout
+        self.layout_list = None # metainfo of layout
+
+        # obj file names
+        self.floor_obj_file_name = None
+        self.wall_obj_file_name = None
+        self.ceiling_obj_file_name = None
 
         self.interative_objects = [] # a list of InteractiveObj
         self.static_object_ids = [] # a list of urdf ids of static objects, including ceilings, window, door, ...
 
         self.floor_id = None # urdf id of floor
         self.wall_id = None # urdf id of walls
+        self.ceiling_id = None # urdf id of ceiling
 
         # original z coordinate of wall bottom
         self.wall_bottom_z = -1.296275
@@ -85,10 +90,10 @@ class RoomScene(Scene):
         # load meta info
         self.load_scene_metainfo()
         # load layout
-        #self.load_layout()
+        self.load_layout()
 
         # load floor
-        self.load_floor()
+        #self.load_floor()
 
         # load static objects
         self.load_static_objects()
@@ -154,24 +159,46 @@ class RoomScene(Scene):
     # load layout --> load walls
     # compute room x,y range and height
     # get wall bottom z to translate the scene
-    def load_layout(self):
-        obj_file_name = self.layout.obj_path
+    def split_name_floor_wall_ceiling(self):
+        for obj_meta in self.layout_list:
+            name = obj_meta.obj_path
+            if 'floor' in name:
+                self.floor_obj_file_name = name
+            elif 'wall' in name: 
+                self.wall_obj_file_name = name
+            elif 'ceiling' in name: 
+                self.ceiling_obj_file_name = name 
+
+        #return floor_obj_file_name, wall_obj_file_name, ceiling_obj_file_name              
+
+    def get_split_urdf(self, obj_file_name):
         urdf_file_name = os.path.splitext(obj_file_name)[0] + '.urdf'
         layout_urdf_file = os.path.join(self.scene_path, urdf_file_name)
         
-        self.layout_id = p.loadURDF(fileName=layout_urdf_file, flags=p.URDF_USE_MATERIAL_COLORS_FROM_MTL, useFixedBase=1)
-    
+        return p.loadURDF(fileName=layout_urdf_file, flags=p.URDF_USE_MATERIAL_COLORS_FROM_MTL, useFixedBase=1)
+
+    def load_layout(self):
+        self.split_name_floor_wall_ceiling()
+        
+        #obj_file_name = self.layout_list.obj_path
+        
         #floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
         #self.layout_id = p.loadMJCF(floor)
 
-        print('Layout urdf loaded: %s'%(layout_urdf_file))
-        print('Layout id: %d'%(self.layout_id))
+        self.floor_id = self.get_split_urdf(self.floor_obj_file_name)
+        self.wall_id = self.get_split_urdf(self.wall_obj_file_name)
+        self.ceiling_id = self.get_split_urdf(self.ceiling_obj_file_name)
+
+        #print('Layout urdf loaded: %s'%(layout_urdf_file))
+        #print('Layout id: %d'%(self.layout_id))
+        print('Layout urdf loaded')
+        print('Layout ids: floor: %d, wall: %d, ceiling: %d'%(self.floor_id, self.wall_id, self.ceiling_id))
 
         # compute z coordinate, x and y range of the ground
         #filename, _ = os.path.splitext(obj_file_name)
         #obj_file_name = filename + "_vhacd.obj"
         #print(obj_file_name)
-        mesh = trimesh.load(os.path.join(self.scene_path, obj_file_name))
+        mesh = trimesh.load(os.path.join(self.scene_path, self.wall_obj_file_name))
         bounds = mesh.bounds
         # bounds - axis aligned bounds of mesh
         # 2*3 matrix, min, max, x, y, z
@@ -200,7 +227,8 @@ class RoomScene(Scene):
         pickle_path = os.path.join(metadata_path, str(self.scene_id)+'.pkl')
         parser.load_param(pickle_path)
         #parser.print_param()
-        self.static_object_list, self.interative_object_list, self.layout = parser.separate_static_interactive()
+        self.static_object_list, self.interative_object_list, self.layout_list = parser.separate_static_interactive()
+        #print(self.layout_list)
 
         if not self.load_from_xml:
             self.interative_object_list = []
@@ -213,7 +241,7 @@ class RoomScene(Scene):
                     obj.obj_path = obj_filename
                     self.interative_object_list.append(obj)
             
-        if self.layout is None:
+        if self.layout_list is None:
             print('Error: No layout is found!') 
         else:
             print('Loaded meta info of layout')    
@@ -235,6 +263,10 @@ class RoomScene(Scene):
         if self.wall_id is not None:
             self.translate_object(self.wall_id, translate)
 
+        # translate ceiling
+        if self.ceiling_id is not None:
+            self.translate_object(self.ceiling_id, translate)    
+
         # translate static objects
         for urdf_id in self.static_object_ids:
             self.translate_object(urdf_id, translate)
@@ -252,10 +284,13 @@ class RoomScene(Scene):
     def print_scene_info(self, interactive_only=False):
         if not interactive_only:
             if self.floor_id is not None:
-                self.get_metric_centroid_physics_pose(obj_file_name="floor.obj", urdf_id=self.floor_id)
+                self.get_metric_centroid_physics_pose(obj_file_name=self.floor_obj_file_name, urdf_id=self.floor_id)
 
             if self.wall_id is not None:
-                self.get_metric_centroid_physics_pose(obj_file_name=self.wall.obj_path, urdf_id=self.wall_id)    
+                self.get_metric_centroid_physics_pose(obj_file_name=self.wall_obj_file_name, urdf_id=self.wall_id) 
+
+            if self.ceiling_id is not None:
+                self.get_metric_centroid_physics_pose(obj_file_name=self.ceiling_obj_file_name, urdf_id=self.ceiling_id)       
 
             n_static_objs = len(self.static_object_ids)
             if n_static_objs > 0:
@@ -273,7 +308,10 @@ class RoomScene(Scene):
         #    self.set_mesh_centroid_as_position(obj_file_name="floor.obj", urdf_id=self.floor_id)
 
         if self.wall_id is not None:
-            self.set_mesh_centroid_as_position(obj_file_name=self.wall.obj_path, urdf_id=self.wall_id)    
+            self.set_mesh_centroid_as_position(obj_file_name=self.wall_obj_file_name, urdf_id=self.wall_id)   
+
+        if self.ceiling_id is not None:
+            self.set_mesh_centroid_as_position(obj_file_name=self.ceiling_obj_file_name, urdf_id=self.ceiling_id)         
 
         n_static_objs = len(self.static_object_ids)
         if n_static_objs > 0:
