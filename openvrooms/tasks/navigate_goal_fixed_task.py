@@ -35,8 +35,8 @@ class NavigateGoalFixedTask(BaseTask):
 		self.reward_termination_functions = [
 			Timeout(self.config),
 			PointGoal(self.config),
-			#NegCollision(self.config),
-			OutOfBound(self.config, env),
+			NegCollision(self.config),
+			#OutOfBound(self.config, env),
 		]
 
 

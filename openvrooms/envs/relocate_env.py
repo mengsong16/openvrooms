@@ -94,6 +94,8 @@ class RelocateEnv(iGibsonEnv):
 		enable_pbr = self.config.get('enable_pbr', True)
 		texture_scale = self.config.get('texture_scale', 1.0)
 
+		self.image_shape = "HWC" #CHW, HWC
+
 		settings = MeshRendererSettings(enable_shadow=enable_shadow,
 										enable_pbr=enable_pbr,
 										msaa=False,
@@ -117,6 +119,8 @@ class RelocateEnv(iGibsonEnv):
 		self.load()								 
 
 		self.automatic_reset = automatic_reset
+
+		
 
 	def load_scene_robot(self):
 		"""
@@ -248,51 +252,101 @@ class RelocateEnv(iGibsonEnv):
 		vision_modalities = []
 		scan_modalities = []
 
+
 		# task obs
 		if 'task_obs' in self.output:
 			observation_space['task_obs'] = self.build_obs_space(
 				shape=(task_obs_dim,), low=-np.inf, high=np.inf)
 		# vision modalities	
 		if 'rgb' in self.output:
-			observation_space['rgb'] = self.build_obs_space(
-				shape=(3, self.image_height, self.image_width),
-				low=0.0, high=1.0)
+			if self.image_shape == "CHW":
+				observation_space['rgb'] = self.build_obs_space(
+					shape=(3, self.image_height, self.image_width),
+					low=0.0, high=1.0)
+			else:
+				observation_space['rgb'] = self.build_obs_space(
+					shape=(self.image_height, self.image_width, 3),
+					low=0.0, high=1.0)
+
 			vision_modalities.append('rgb')
 		if 'depth' in self.output:
-			observation_space['depth'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['depth'] = self.build_obs_space(
 				shape=(1, self.image_height, self.image_width),
 				low=0.0, high=1.0)
+			else:
+				observation_space['depth'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 1),
+				low=0.0, high=1.0)	
+
 			vision_modalities.append('depth')
 		if 'pc' in self.output:
-			observation_space['pc'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['pc'] = self.build_obs_space(
 				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
+			else:
+				observation_space['pc'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)	
+
 			vision_modalities.append('pc')
 		if 'optical_flow' in self.output:
-			observation_space['optical_flow'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['optical_flow'] = self.build_obs_space(
 				shape=(2, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
+			else:
+				observation_space['optical_flow'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 2),
+				low=-np.inf, high=np.inf)	
+
 			vision_modalities.append('optical_flow')
 		if 'scene_flow' in self.output:
-			observation_space['scene_flow'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['scene_flow'] = self.build_obs_space(
 				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
+			else:
+				observation_space['scene_flow'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)	
+
 			vision_modalities.append('scene_flow')
 		if 'normal' in self.output:
-			observation_space['normal'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['normal'] = self.build_obs_space(
 				shape=(3, self.image_height, self.image_width),
 				low=-np.inf, high=np.inf)
+			else:
+				observation_space['normal'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=-np.inf, high=np.inf)
+
 			vision_modalities.append('normal')
 		if 'seg' in self.output:
-			observation_space['seg'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['seg'] = self.build_obs_space(
 				shape=(1, self.image_height, self.image_width),
 				low=0.0, high=1.0)
+			else:
+				observation_space['seg'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 1),
+				low=0.0, high=1.0)	
+
 			vision_modalities.append('seg')
 		if 'rgb_filled' in self.output:  # use filler
-			observation_space['rgb_filled'] = self.build_obs_space(
+			if self.image_shape == "CHW":
+				observation_space['rgb_filled'] = self.build_obs_space(
 				shape=(3, self.image_height, self.image_width),
 				low=0.0, high=1.0)
+			else:
+				observation_space['rgb_filled'] = self.build_obs_space(
+				shape=(self.image_height, self.image_width, 3),
+				low=0.0, high=1.0)	
+
 			vision_modalities.append('rgb_filled')
+		
 		# scan modalities		
 		if 'scan' in self.output:
 			self.n_horizontal_rays = self.config.get('n_horizontal_rays', 128)
@@ -304,10 +358,18 @@ class RelocateEnv(iGibsonEnv):
 			scan_modalities.append('scan')
 		if 'occupancy_grid' in self.output:
 			self.grid_resolution = self.config.get('grid_resolution', 128)
-			self.occupancy_grid_space = gym.spaces.Box(low=0.0,
+
+			if self.image_shape == "CHW":
+				self.occupancy_grid_space = gym.spaces.Box(low=0.0,
 													   high=1.0,
 													   shape=(1, self.grid_resolution,
 															  self.grid_resolution))
+			else:
+				self.occupancy_grid_space = gym.spaces.Box(low=0.0,
+													   high=1.0,
+													   shape=(self.grid_resolution,
+															  self.grid_resolution, 1))
+
 			observation_space['occupancy_grid'] = self.occupancy_grid_space
 			scan_modalities.append('occupancy_grid')
 
@@ -357,8 +419,14 @@ class RelocateEnv(iGibsonEnv):
 			if cur_high > high:
 				high = cur_high	
 
-		# [C,H,W]
-		return self.build_obs_space(
+		# [H,W,C]
+		if self.image_shape == "HWC":
+			return self.build_obs_space(
+				shape=(self.image_height, self.image_width, channel_num),
+				low=low, high=high)
+		# [C,H,W]	
+		else:	
+			return self.build_obs_space(
 				shape=(channel_num, self.image_height, self.image_width),
 				low=low, high=high)
 	# to use all and make it gym compatible, ensure that the output is np.array
@@ -380,12 +448,20 @@ class RelocateEnv(iGibsonEnv):
 		if 'vision' in self.sensors:
 			vision_obs = self.sensors['vision'].get_obs(self)
 			for modality in vision_obs:
-				state[modality] = np.transpose(vision_obs[modality], (2,0,1))
+				if self.image_shape == "CHW":
+					state[modality] = np.transpose(vision_obs[modality], (2,0,1))
+				else:
+					state[modality] = vision_obs[modality]	
+
 		if 'scan_occ' in self.sensors:
 			scan_obs = self.sensors['scan_occ'].get_obs(self)
+
 			for modality in scan_obs:
 				if modality == 'occupancy_grid':
-					state[modality] = np.transpose(scan_obs[modality], (2,0,1))
+					if self.image_shape == "CHW":
+						state[modality] = np.transpose(scan_obs[modality], (2,0,1))
+					else:
+						state[modality]	= scan_obs[modality]
 				else:	
 					state[modality] = scan_obs[modality]
 		
@@ -402,9 +478,14 @@ class RelocateEnv(iGibsonEnv):
 	def combine_vision_observation(self, vision_modalities, state):
 		combined_state = state[vision_modalities[0]]
 		
-		# [C,H,W]
+		
 		for modal in vision_modalities[1:]:
-			combined_state = np.concatenate((combined_state, state[modal]), axis=0)
+			# [H,W,C]
+			if self.image_shape == "HWC":
+				combined_state = np.concatenate((combined_state, state[modal]), axis=2)
+			# [C,H,W]	
+			else:	
+				combined_state = np.concatenate((combined_state, state[modal]), axis=0)
 
 		#print(combined_state.shape)
 		return combined_state	
@@ -449,6 +530,11 @@ class RelocateEnv(iGibsonEnv):
 			else:
 				#print("***********************************")
 				#print("non-interactive collision: %d"%(item[2]))
+				'''
+				print('--------------------------------------------------------------')
+				print('step: %d'%self.current_step)
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+				'''
 				non_interactive_collision_links.append(item)
 
 		return non_interactive_collision_links, interactive_collision_links
@@ -650,6 +736,12 @@ class RelocateEnv(iGibsonEnv):
 		#print('------------------------------------')
 		#print(self.non_interactive_collision_step)
 
+		'''
+		if self.non_interactive_collision_step > 0:
+			print("total steps: %d"%(self.current_step))
+			print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
+			print("-------------------------------------------------")
+		'''
 		self.current_episode += 1
 		self.current_step = 0
 		self.non_interactive_collision_step = 0

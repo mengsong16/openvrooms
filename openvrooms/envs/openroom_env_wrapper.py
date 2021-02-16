@@ -10,7 +10,7 @@ from openvrooms.config import *
 from openvrooms.envs.vision_env_wrapper import FrameStack, VideoRecorder
 from ray.rllib.agents import ppo
 from ray.tune.registry import register_env
-
+from gym.utils import seeding
 
 
 # transform OpenRoom env to gym and ALL env
@@ -174,9 +174,19 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
         if env_config["env"] == 'navigate':
             self.env = NavigateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
             mode=env_config["mode"], device_idx=env_config["device_idx"])
+
+            if env_config["frame_stack"] is not None:
+                self.env = FrameStack(self.env, env_config["frame_stack"])
+            else:
+                print('------------------ No frame stack ------------------')    
         else:
             self.env = RelocateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
-            mode=env_config["mode"], device_idx=env_config["device_idx"])    
+            mode=env_config["mode"], device_idx=env_config["device_idx"])
+
+            if env_config["frame_stack"] is not None:
+                self.env = FrameStack(self.env, env_config["frame_stack"])
+            else:
+                print('------------------ No frame stack ------------------')            
 
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -186,7 +196,11 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
 
     def step(self, action):
         state, reward, done, info = self.env.step(action)
-        return state, float(reward), done, info  
+        return state, float(reward), done, info 
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]     
 
 def env_creator(env_config):
     return OpenRoomEnvironmentRLLIB(env_config)  # return an env instance

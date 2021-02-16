@@ -52,8 +52,8 @@ time_elapse_reward: 0.0
 out_of_bound_reward: -1000.0
 
 # episode termination condition
-max_step: 400
-max_collisions_allowed: 400
+max_step: 200
+max_collisions_allowed: 200
 
 # misc config
 initial_pos_z_offset: 0.1

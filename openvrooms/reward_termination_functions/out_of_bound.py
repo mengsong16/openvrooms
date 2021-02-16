@@ -8,7 +8,10 @@ class OutOfBound(BaseRewardTerminationFunction):
 
     def __init__(self, config, env):
         super(OutOfBound, self).__init__(config)
-        self.safty_thresh = float(self.config.get('body_width', 0.36)) / 2.0 + 0.1
+        #self.safty_thresh = float(self.config.get('body_width', 0.36)) / 2.0 + 0.1
+        #self.safty_thresh = float(self.config.get('body_width', 0.36))
+        self.safty_thresh = 0.5
+
         self.x_bound = np.array(env.scene.x_range)  
         self.y_bound = np.array(env.scene.y_range)
 

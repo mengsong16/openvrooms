@@ -27,12 +27,12 @@ obs_pos: [[0.5,0.5]] #[[1, 1], [2, 2]]
 obs_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
 
 # observation space: sensor spec
-output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb
+output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
 third_person_view: true
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
-image_width: 128
-image_height: 128
+image_width: 84
+image_height: 84
 
 # task
 task: navigate_goal_fixed
@@ -46,12 +46,12 @@ goal_dist_reward_weight: 1.0 # should > 0
 success_reward: 10.0
 dist_tol: 0.1 # l2 distance in meter
 
-collision_penalty: -0.1 #-1000.0
+collision_penalty: -1.0 #-1000.0
 time_elapse_reward: 0.0 #-1.0
 out_of_bound_reward: -1000.0
 
 # episode termination condition
-max_step: 400
+max_step: 200
 max_collisions_allowed: 200
 
 # misc config

@@ -34,7 +34,7 @@ class RelocateGoalFixedTask(BaseTask):
 
 		self.reward_termination_functions = [
 			Timeout(self.config),
-			OutOfBound(self.config, env),
+			#OutOfBound(self.config, env),
 			ObjectGoal(self.config),
 			PosNegCollision(self.config)
 		]

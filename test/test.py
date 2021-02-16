@@ -185,6 +185,35 @@ def test_robot():
 	
 	p.disconnect()
 
+def test_various_robot():
+	p.connect(p.GUI)
+	p.setGravity(0,0,-9.8)
+	p.setTimeStep(1./240.)
+
+	floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
+	p.loadMJCF(floor)
+
+	robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
+	turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
+
+	turtlebot.load()
+	turtlebot.set_position([0, 0, 0])
+	turtlebot.robot_specific_reset()
+	turtlebot.keep_still() 
+
+	print(turtlebot.get_position())
+	print(turtlebot.get_orientation())
+
+	
+	for _ in range(24000):  # move with small random actions for 10 seconds
+		action = np.random.uniform(-1, 1, turtlebot.action_dim)
+		turtlebot.apply_action(action)
+		p.stepSimulation()
+		time.sleep(1./240.0)
+	
+	p.disconnect()	
+
+
 class DemoInteractive(object):
 	def __init__(self):
 		return
@@ -264,8 +293,8 @@ if __name__ == "__main__":
 	args = aparser.parse_args()
 	
 	#test_relocate_scene(args.id, n_interactive_objects=1)
-	test_navigate_scene(args.id, n_obstacles=1)
-	#test_scene(args.id, fix_interactive_objects=False)
+	#test_navigate_scene(args.id, n_obstacles=1)
+	test_scene(args.id, fix_interactive_objects=False)
 	#test_layout()
 	#test_robot()
 	#test_object()

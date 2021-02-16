@@ -3,15 +3,29 @@ import numpy as np
 import os
 import gym, ray
 
+import random
+
 from openvrooms.envs.openroom_env_wrapper import OpenRoomEnvironmentRLLIB
 from openvrooms.config import *
+
 
 from ray.rllib.agents import ppo, dqn
 
 from ray import tune
 from ray.tune.logger import pretty_print
 
-env_option = 'relocate' # ‘navigate’
+# def set_seed_everywhere(seed):
+#     torch.manual_seed(seed)
+#     if torch.cuda.is_available():
+#         torch.cuda.manual_seed_all(seed)
+#     np.random.seed(seed)
+#     random.seed(seed)
+
+
+#-------------------- config -------------------
+env_option =  'navigate' 
+#env_option = 'relocate'
+
 
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
 dqn_train_config = {
@@ -20,7 +34,8 @@ dqn_train_config = {
             "env": env_option,
             "config_file": 'turtlebot_%s.yaml'%(env_option),
             "mode": "headless",
-            "device_idx": 0 # renderer use gpu 0
+            "device_idx": 0, # renderer use gpu 0
+            "frame_stack": None
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -46,29 +61,51 @@ dqn_train_config = {
 
 ppo_train_config = ppo.DEFAULT_CONFIG.copy()
 ppo_train_config = {
+        #"env": "Breakout-v0",
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
-            "env": env_option,
-            "config_file": 'turtlebot_%s.yaml'%(env_option),
-            "mode": "headless",
-            "device_idx": 0 # renderer use gpu 0
+           "env": env_option,
+           "config_file": 'turtlebot_%s.yaml'%(env_option),
+           "mode": "headless",
+           "device_idx": 0, # renderer use gpu 0
+           "frame_stack": 4
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
-        "num_workers": 1,
+        "num_workers": 10,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
-        "seed": 2
+        "seed": 1,
+        "train_batch_size": 512,
+        #"model": {
+        #"dim": 128, 
+        #"conv_filters":[[16, [4, 4], 2], [32, [4, 4], 2], [512, [11, 11], 1]],
+        #"num_framestacks": 4
+        #}
 }
 
 
 stop = {
-        #"timesteps_total": 240000,
-        "episode_reward_mean": 100,
+        "timesteps_total": 250000,
+        #"episode_reward_mean": 10,
     }
 
-def train_ppo():
+def print_model():
     ray.init()
+
+    agent = ppo.PPOTrainer(config=ppo_train_config)
+    policy = agent.get_policy()
+
+    print(policy.model)
+
+def train_ppo():
+    #torch.backends.cudnn.enabled = False 
+    #torch.backends.cudnn.benchmark = False
+    #torch.backends.cudnn.deterministic = True
+
+    ray.init()
+    #set_seed_everywhere(seed=1)
+
     results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_at_end=True)
 
 def train_dqn():
@@ -94,3 +131,4 @@ def train_dqn():
 if __name__ == "__main__":    
     #train_dqn()
     train_ppo() 
+    #print_model()

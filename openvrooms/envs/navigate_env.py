@@ -169,6 +169,7 @@ class NavigateEnv(RelocateEnv):
 			# ignore collision with body b - interactive objects
 			if item[2] in self.collision_ignore_body_b_ids:
 				continue
+			
 			'''
 			print('--------------------------------------------------------------')
 			print('step: %d'%self.current_step)
@@ -230,10 +231,12 @@ class NavigateEnv(RelocateEnv):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
-
-		#print("total steps: %d"%(self.current_step))
-		#print("collision steps: %d"%(self.collision_step))
-
+		'''
+		if self.collision_step > 0:
+			print("total steps: %d"%(self.current_step))
+			print("collision steps: %d"%(self.collision_step))
+			print("-------------------------------------------------")
+		'''
 		self.current_episode += 1
 		self.current_step = 0
 		self.collision_step = 0
@@ -279,7 +282,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-
+	'''
 	step_time_list = []
 	for episode in range(10):
 		print("***********************************")
@@ -308,4 +311,5 @@ if __name__ == '__main__':
 	
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
+	'''		
 	env.close()

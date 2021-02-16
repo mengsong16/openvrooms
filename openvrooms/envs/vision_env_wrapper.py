@@ -16,17 +16,27 @@ class FrameStack(gym.Wrapper):
 	# C,H,W
 	def __init__(self, env, k):
 		gym.Wrapper.__init__(self, env)
+
 		self._k = k
 		self._frames = deque([], maxlen=k)
-		shp = env.observation_space.shape
-		low = np.amin(env.observation_space.low)
-		high = np.amax(env.observation_space.high)
-		self.observation_space = gym.spaces.Box(
-			low=low,
-			high=high,
-			shape=((shp[0] * k,) + shp[1:]),
-			dtype=env.observation_space.dtype
-		)
+		shp = self.env.observation_space.shape
+		low = np.amin(self.env.observation_space.low)
+		high = np.amax(self.env.observation_space.high)
+
+		if self.env.image_shape == "HWC":
+			self.observation_space = gym.spaces.Box(
+				low=low,
+				high=high,
+				shape=(shp[0], shp[1], shp[2]*k),
+				dtype=self.env.observation_space.dtype
+			)
+		else: #CHW
+			self.observation_space = gym.spaces.Box(
+				low=low,
+				high=high,
+				shape=((shp[0] * k,) + shp[1:]),
+				dtype=self.env.observation_space.dtype
+			)	
 		#self._max_episode_steps = env._max_episode_steps
 
 	def reset(self):
@@ -44,7 +54,10 @@ class FrameStack(gym.Wrapper):
 	# return numpy array
 	def _get_obs(self):
 		assert len(self._frames) == self._k
-		return np.concatenate(list(self._frames), axis=0)
+		if self.env.image_shape == "HWC":
+			return np.concatenate(list(self._frames), axis=2)
+		else:
+			return np.concatenate(list(self._frames), axis=0)	
 	
 
 class VideoRecorder(gym.Wrapper):
