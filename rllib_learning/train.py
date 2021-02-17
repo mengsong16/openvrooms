@@ -86,7 +86,7 @@ ppo_train_config = {
 
 
 stop = {
-        "timesteps_total": 250000,
+        "timesteps_total": 50000,
         #"episode_reward_mean": 10,
     }
 

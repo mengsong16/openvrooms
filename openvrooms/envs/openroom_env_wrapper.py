@@ -11,6 +11,7 @@ from openvrooms.envs.vision_env_wrapper import FrameStack, VideoRecorder
 from ray.rllib.agents import ppo
 from ray.tune.registry import register_env
 from gym.utils import seeding
+import random
 
 
 # transform OpenRoom env to gym and ALL env
@@ -199,8 +200,26 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
         return state, float(reward), done, info 
 
     def seed(self, seed=None):
+        '''
         self.np_random, seed = seeding.np_random(seed)
         return [seed]     
+        '''
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+            try:
+                assert torch is not None
+                torch.manual_seed(seed)
+                '''
+                if torch.cuda.is_available():
+                    torch.cuda.manual_seed(seed)
+                    torch.cuda.manual_seed_all(seed)
+                '''
+                #torch.backends.cudnn.enabled = False 
+                torch.backends.cudnn.benchmark = False
+                torch.backends.cudnn.deterministic = True
+            except AssertionError:
+                print("Could not seed torch")     
 
 def env_creator(env_config):
     return OpenRoomEnvironmentRLLIB(env_config)  # return an env instance
