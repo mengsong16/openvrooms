@@ -8,6 +8,16 @@ from gibson2.render.profiler import Profiler
 from gibson2.scenes.igibson_indoor_scene import InteractiveIndoorScene
 from gibson2.scenes.scene_base import Scene
 
+#from gibson2.robots.husky_robot import Husky
+#from gibson2.robots.ant_robot import Ant
+#from gibson2.robots.humanoid_robot import Humanoid
+from gibson2.robots.jr2_robot import JR2
+from gibson2.robots.jr2_kinova_robot import JR2_Kinova
+#from gibson2.robots.quadrotor_robot import Quadrotor
+from gibson2.robots.fetch_robot import Fetch
+from gibson2.robots.freight_robot import Freight
+from gibson2.robots.locobot_robot import Locobot
+
 import pytest
 import pybullet as p
 import numpy as np
@@ -185,33 +195,54 @@ def test_robot():
 	
 	p.disconnect()
 
-def test_various_robot():
+def load_still_robot(robot, pos=[0,0,0]):
+	robot.load()
+	robot.set_position(pos)
+	robot.robot_specific_reset()
+	robot.keep_still()
+
+def test_various_robot(scene_id):
+	time_step = 1./240. 
 	p.connect(p.GUI)
-	p.setGravity(0,0,-9.8)
-	p.setTimeStep(1./240.)
-
-	floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
-	p.loadMJCF(floor)
-
-	robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
-	turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
-
-	turtlebot.load()
-	turtlebot.set_position([0, 0, 0])
-	turtlebot.robot_specific_reset()
-	turtlebot.keep_still() 
-
-	print(turtlebot.get_position())
-	print(turtlebot.get_orientation())
-
+	p.setGravity(0, 0, -9.8)
+	p.setTimeStep(time_step)
 	
-	for _ in range(24000):  # move with small random actions for 10 seconds
-		action = np.random.uniform(-1, 1, turtlebot.action_dim)
-		turtlebot.apply_action(action)
-		p.stepSimulation()
-		time.sleep(1./240.0)
+	scene = NavigateScene(scene_id=scene_id, n_obstacles=1)
+	scene.load()
 	
-	p.disconnect()	
+	robot_config = parse_config(os.path.join(config_path, "seudo_config.yaml"))
+
+	# turtlebot
+	turtlebot = Turtlebot(config=robot_config) 
+	load_still_robot(turtlebot, pos=[0, 0, 0])
+
+	# JR2
+	jr2 = JR2(config=robot_config)
+	#load_still_robot(jr2, pos=[1, 0, 0])
+
+	# Kinova
+	kinova = JR2_Kinova(config=robot_config)
+	#load_still_robot(kinova, pos=[0, -1, 0])
+
+	# Fetch
+	fetch = Fetch(config=robot_config)
+	load_still_robot(fetch, pos=[0, -1, 0])
+
+	# Freight
+	freight = Freight(config=robot_config)
+	#load_still_robot(freight, pos=[0, 1, 0])
+
+	# Locobot
+	locobot = Locobot(config=robot_config)
+	load_still_robot(locobot, pos=[0, 1, 0])
+
+
+	# simulation	
+	for _ in range(2400000):  # at least 100 seconds
+		 p.stepSimulation()
+		 time.sleep(1./240.)
+
+	p.disconnect()
 
 
 class DemoInteractive(object):
@@ -294,10 +325,11 @@ if __name__ == "__main__":
 	
 	#test_relocate_scene(args.id, n_interactive_objects=1)
 	#test_navigate_scene(args.id, n_obstacles=1)
-	test_scene(args.id, fix_interactive_objects=False)
+	#test_scene(args.id, fix_interactive_objects=False)
 	#test_layout()
 	#test_robot()
 	#test_object()
+	test_various_robot(args.id)
 	'''
 	demo = DemoInteractive()
 	demo.run_demo()

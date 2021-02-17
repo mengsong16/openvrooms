@@ -86,8 +86,8 @@ ppo_train_config = {
 
 
 stop = {
-        "timesteps_total": 350000,
-        #"episode_reward_mean": 100,
+        #"timesteps_total": 350000,
+        "episode_reward_mean": 520,
     }
 
 def print_model():
