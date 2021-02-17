@@ -23,8 +23,8 @@ from ray.tune.logger import pretty_print
 
 
 #-------------------- config -------------------
-env_option =  'navigate' 
-#env_option = 'relocate'
+#env_option =  'navigate' 
+env_option = 'relocate'
 
 
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
@@ -86,8 +86,8 @@ ppo_train_config = {
 
 
 stop = {
-        "timesteps_total": 50000,
-        #"episode_reward_mean": 10,
+        "timesteps_total": 350000,
+        #"episode_reward_mean": 100,
     }
 
 def print_model():

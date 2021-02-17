@@ -179,6 +179,18 @@ class NavigateEnv(RelocateEnv):
 
 		return filtered_collision_links
 
+	def run_simulation(self):
+		"""
+		Run simulation for one action timestep (same as one render timestep in Simulator class)
+
+		:return: collision_links: collisions from last physics timestep
+		"""
+		self.simulator_step()
+		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
+		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
+
+		return self.filter_collision_links(collision_links)	
+
 	# populate information into info
 	def populate_info(self, info):
 		"""

@@ -500,9 +500,61 @@ class RelocateEnv(iGibsonEnv):
 		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
 		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 
-		return self.filter_collision_links(collision_links)
+		non_interactive_collision_links, interactive_collision_links = self.filter_collision_links(collision_links)
 
-	# get collision links with robot base link, ignore some, return collisions with interactive and non-interactive links respectively
+		'''
+		bodyB_robot = list(p.getContactPoints(bodyB=self.robots[0].robot_ids[0]))
+		if len(bodyB_robot) > 0:
+			print("step %d: Robot is bodyB"%(self.current_step))
+			for item in bodyB_robot:
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+			print("----------------------------------")
+
+		if len(collision_links) > 0:
+			print("step %d: Robot is bodyA"%(self.current_step))
+			for item in collision_links:
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+			print("----------------------------------")		
+		'''	
+
+		negative_collisions = self.filter_interactive_collision_links()
+
+		non_interactive_collision_links.extend(negative_collisions)
+
+		return non_interactive_collision_links, interactive_collision_links
+
+	def filter_interactive_collision_links(self):
+		negative_collisions = []
+		collision_ignore_body_b_ids_list = list(self.collision_ignore_body_b_ids)
+
+		for i, object_id in enumerate(collision_ignore_body_b_ids_list):
+			collision_links = list(p.getContactPoints(bodyA=object_id))
+			for item in collision_links:
+				# ignore collision between interactive objects and robot
+				if item[2] == self.robots[0].robot_ids[0]:
+					continue
+
+				# ignore collision between interactive objects and floor
+				if item[2] == self.scene.floor_id:
+					continue
+
+				# collide with another interactive objects
+				if item[2] in collision_ignore_body_b_ids_list[i+1:]:
+					negative_collisions.append(item)
+
+				# collide with static objects except floor
+				negative_collisions.append(item)
+
+				'''
+				print('--------------------------------------------------------------')
+				print('step: %d'%self.current_step)
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+				'''
+		return negative_collisions
+
+
+	# get collision links with robot base link
+	# ignore some, return collisions with interactive and non-interactive links respectively
 	def filter_collision_links(self, collision_links):
 		"""
 		Filter out collisions that should be ignored
@@ -516,7 +568,7 @@ class RelocateEnv(iGibsonEnv):
 		interactive_collision_links = []
 
 		for item in collision_links:
-			# ignore collision with robot link a
+			# ignore collision with robot link a (wheels)
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
 
@@ -524,7 +576,7 @@ class RelocateEnv(iGibsonEnv):
 			if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
 				continue
 
-			# ignore collision with body b - interactive objects
+			# ignore collision between robot and body b - interactive objects
 			if item[2] in self.collision_ignore_body_b_ids:
 				interactive_collision_links.append(item)
 			else:
