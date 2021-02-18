@@ -176,7 +176,7 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
             self.env = NavigateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
             mode=env_config["mode"], device_idx=env_config["device_idx"])
 
-            if env_config["frame_stack"] is not None:
+            if env_config["frame_stack"] > 0:
                 self.env = FrameStack(self.env, env_config["frame_stack"])
             else:
                 print('------------------ No frame stack ------------------')    
@@ -184,7 +184,7 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
             self.env = RelocateEnv(config_file=os.path.join(config_path, env_config["config_file"]), 
             mode=env_config["mode"], device_idx=env_config["device_idx"])
 
-            if env_config["frame_stack"] is not None:
+            if env_config["frame_stack"] > 0:
                 self.env = FrameStack(self.env, env_config["frame_stack"])
             else:
                 print('------------------ No frame stack ------------------')            
@@ -249,7 +249,10 @@ def test_rllib_env():
         "episode_reward_mean": args.stop_reward,
     }
     '''
+
+    
     ray.init()
+   
     
     trainer = ppo.PPOTrainer(env=OpenRoomEnvironmentRLLIB, config=config)
     
@@ -257,7 +260,10 @@ def test_rllib_env():
     while True:
         print(trainer.train())
 
+
     #results = tune.run(args.run, config=config, stop=stop)
+    
+    #print(config["frame_stack"])
 
 if __name__ == "__main__":  
     #test_all_env()   

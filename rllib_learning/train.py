@@ -14,17 +14,11 @@ from ray.rllib.agents import ppo, dqn
 from ray import tune
 from ray.tune.logger import pretty_print
 
-# def set_seed_everywhere(seed):
-#     torch.manual_seed(seed)
-#     if torch.cuda.is_available():
-#         torch.cuda.manual_seed_all(seed)
-#     np.random.seed(seed)
-#     random.seed(seed)
 
 
 #-------------------- config -------------------
-#env_option =  'navigate' 
-env_option = 'relocate'
+env_option =  'navigate' 
+#env_option = 'relocate'
 
 
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
@@ -35,7 +29,7 @@ dqn_train_config = {
             "config_file": 'turtlebot_%s.yaml'%(env_option),
             "mode": "headless",
             "device_idx": 0, # renderer use gpu 0
-            "frame_stack": None
+            "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -68,7 +62,7 @@ ppo_train_config = {
            "config_file": 'turtlebot_%s.yaml'%(env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 4
+           "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -87,7 +81,7 @@ ppo_train_config = {
 
 stop = {
         #"timesteps_total": 350000,
-        "episode_reward_mean": 520,
+        "episode_reward_mean": 10,
     }
 
 def print_model():
@@ -104,7 +98,6 @@ def train_ppo():
     #torch.backends.cudnn.deterministic = True
 
     ray.init()
-    #set_seed_everywhere(seed=1)
 
     results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_at_end=True)
 
