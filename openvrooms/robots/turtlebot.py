@@ -99,19 +99,31 @@ class Turtlebot(LocomotorRobot):
     def set_velocity(self, velocity):
         self.velocity = velocity
 
+    def get_mass(self):
+        return self.robot_mass
     # get normalized joint velocity and torque
     # range: [-1,1]
     def get_joint_info(self):
-        j = np.array([j.get_joint_relative_state() for j in self.ordered_joints]).astype(np.float32).flatten()
-        joint_position = j[0::3]
-        joint_velocity = j[1::3]
-        joint_torque = j[2::3]
+        # [n,3]: n joints
+        joint_info = np.array([j.get_relative_state() for j in self.ordered_joints]).astype(np.float32)
 
-        '''
-        print("---------------------------")
-        print("Joint velocity: %s"%(joint_velocity))
-        print("Joint torque: %s"%(joint_torque))
-        print("---------------------------")
-        '''
+        joint_position = joint_info[:,0]
+        joint_velocity = joint_info[:,1]
+        joint_torque = joint_info[:,2]
 
-        return joint_velocity, joint_torque     
+    
+        #print("---------------------------")
+        #print("Joint velocity: %s"%(joint_velocity))
+        #print("Joint torque: %s"%(joint_torque))
+
+
+        return joint_velocity, joint_torque
+
+    def get_energy(self):
+        joint_velocity, joint_torque = self.get_joint_info()
+        raw_energy = np.abs(joint_velocity * joint_torque).mean()
+
+        #print("Raw energy cost: %f"%raw_energy)
+
+        return raw_energy
+

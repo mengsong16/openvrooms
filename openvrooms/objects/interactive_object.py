@@ -31,7 +31,11 @@ class InteractiveObj(Object):
 
     def set_xy_position(self, x, y):
         old_pos, old_orn = p.getBasePositionAndOrientation(self.body_id)
-        p.resetBasePositionAndOrientation(self.body_id, [x, y, old_pos[2]], old_orn)  
+        p.resetBasePositionAndOrientation(self.body_id, [x, y, old_pos[2]], old_orn)
+
+    def get_xy_position(self):
+        pos, _ = p.getBasePositionAndOrientation(self.body_id)
+        return [pos[0], pos[1]]       
 
     def get_mesh(self):           
         obj_file = self.filename.replace(".urdf", ".obj")
