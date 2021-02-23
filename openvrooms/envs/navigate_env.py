@@ -243,6 +243,7 @@ class NavigateEnv(RelocateEnv):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
+		
 		'''
 		if self.collision_step > 0:
 			print("total steps: %d"%(self.current_step))
@@ -279,7 +280,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--config',
 		'-c',
-		help='which config file to use [default: use yaml files in examples/configs]', default=os.path.join(config_path,'turtlebot_navigate.yaml'))
+		help='which config file to use [default: use yaml files in examples/configs]', default='turtlebot_navigate.yaml')
 	parser.add_argument('--mode',
 						'-m',
 						choices=['headless', 'gui', 'iggui'],
@@ -289,12 +290,12 @@ if __name__ == '__main__':
 
 
 
-	env = NavigateEnv(config_file=args.config,
+	env = NavigateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode,
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-	'''
+	
 	step_time_list = []
 	for episode in range(10):
 		print("***********************************")
@@ -323,5 +324,5 @@ if __name__ == '__main__':
 	
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
-	'''		
+			
 	env.close()

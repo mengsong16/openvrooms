@@ -369,7 +369,7 @@ def robot_move_forward(desired_distance, robot, max_steps):
 
     return robot_distance, n_timestep, total_energy
 
-def push_forward(robot, obj, scene, target_position):
+def push_forward(robot, obj, scene, target_position, unit_distance=0.1):
     robot_start_position = robot.get_position()
     object_start_position = obj.get_xy_position()
 
@@ -377,7 +377,7 @@ def push_forward(robot, obj, scene, target_position):
     step = 0
     while True:
     #for _ in range(30):
-        robot_distance, n_timestep, step_energy = robot_move_forward(0.1, robot, 1000)
+        robot_distance, n_timestep, step_energy = robot_move_forward(unit_distance, robot, 1000)
 
         totol_energy += step_energy
         step += n_timestep
@@ -425,39 +425,58 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
     scene.load()
 
     obj = scene.interative_objects[0]
-    obj.set_xy_position(-1.5, 0)
-    #scene.set_floor_friction_coefficient(mu=0.314287)
-    #scene.set_floor_friction_coefficient(mu=0.764784) 
-    obj.set_mass(0.5)
+ 
     
-    robot_config = parse_config(os.path.join(config_path, "turtlebot_relocate.yaml"))
-    turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
-
-    turtlebot.load()
     
-    turtlebot.set_position([-2, 0, 0])
-    turtlebot.robot_specific_reset()
-    turtlebot.keep_still()
+    #robot_name = 'turtlebot'
+    robot_name = 'fetch'
+    if robot_name == 'turtlebot':
+        #scene.set_floor_friction_coefficient(mu=0.314287)
+        #scene.set_floor_friction_coefficient(mu=0.764784) 
+        obj.set_xy_position(-1.5, 0)
+        #obj.set_mass(0.5)
+        robot_config = parse_config(os.path.join(config_path, "turtlebot_relocate.yaml"))
+        robot = Turtlebot(config=robot_config) 
+    else:
+        obj.set_xy_position(-1.4, 0)
+        obj.set_mass(10)
+        #scene.set_floor_friction_coefficient(mu=0.4)
+        scene.set_floor_friction_coefficient(mu=0.764784)
 
-    push_forward(turtlebot, obj, scene, target_position=[2.5, 0])
+        robot_config = parse_config(os.path.join(config_path, "fetch_relocate.yaml"))
+        robot = Fetch(config=robot_config)    
+
+    robot.load()
+    
+    robot.set_position([-2, 0, 0])
+    robot.robot_specific_reset()
+    robot.keep_still()
+
+    '''
+    if robot_name == 'turtlebot':
+        push_forward(robot, obj, scene, target_position=[2.5, 0], unit_distance = 0.1)
+    else:
+        push_forward(robot, obj, scene, target_position=[1, 0], unit_distance = 0.05)
+    '''
+
     '''
     for _ in range(2400000):  # at least 100 seconds
-        action = random.randint(0, turtlebot.action_space.n-1)
-        turtlebot.apply_action(action)
+        action = random.randint(0, robot.action_space.n-1)
+        robot.apply_action(action)
         p.stepSimulation()
 
         #print()
-        turtlebot.get_energy()
+        robot.get_energy()
         #print('--------------------------------')
 
         #time.sleep(time_step)
     '''
 
-    #robot_move_forward(desired_distance=2, robot=turtlebot, max_steps=2000)
-    #robot_move_forward(desired_distance=2, robot=turtlebot, max_steps=1000)
+    #robot_move_forward(desired_distance=2, robot=robot, max_steps=2000)
+    #robot_move_forward(desired_distance=2, robot=robot, max_steps=1000)
 
     # cool down
-    turtlebot.keep_still()
+    robot.keep_still()
     for _ in range(2400000):
         p.stepSimulation()
         time.sleep(time_step)
@@ -470,13 +489,13 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    #test_robot_energy_cost()
+    test_robot_energy_cost()
     
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
     #test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
-    test_robot(robot_name='fetch')
+    #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')
     #test_object()
     #test_various_robot(args.id)

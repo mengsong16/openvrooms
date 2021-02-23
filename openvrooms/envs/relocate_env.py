@@ -522,6 +522,20 @@ class RelocateEnv(iGibsonEnv):
 
 		non_interactive_collision_links.extend(negative_collisions)
 
+		'''
+		if len(non_interactive_collision_links) > 0:
+			for item in non_interactive_collision_links:
+				print('--------------------------------------------------------------')
+				print('step: %d'%self.current_step)
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
+		'''
+		'''
+		if len(interactive_collision_links) > 0:
+			for item in interactive_collision_links:
+				print('--------------------------------------------------------------')
+				print('step: %d'%self.current_step)
+				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))		
+		'''
 		return non_interactive_collision_links, interactive_collision_links
 
 	def filter_interactive_collision_links(self):
@@ -551,6 +565,7 @@ class RelocateEnv(iGibsonEnv):
 				print('step: %d'%self.current_step)
 				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
 				'''
+				
 		return negative_collisions
 
 
@@ -780,12 +795,12 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Reset bookkeeping variables for the next new episode
 		"""
-		'''
-		if self.interactive_collision_step > 0:
-			print("total steps: %d"%(self.current_step))
-			print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
-			print("interactive collision steps: %d"%(self.interactive_collision_step))
-		'''
+		
+		#if self.interactive_collision_step > 0:
+		#	print("total steps: %d"%(self.current_step))
+		#	print("non interactive collision steps: %d"%(self.non_interactive_collision_step))
+		#	print("interactive collision steps: %d"%(self.interactive_collision_step))
+		
 		#print('------------------------------------')
 		#print(self.non_interactive_collision_step)
 
@@ -873,4 +888,5 @@ if __name__ == '__main__':
 			env.current_step, time.time() - start))
 			
 	env.close()
+	
 	

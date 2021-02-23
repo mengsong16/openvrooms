@@ -9,11 +9,11 @@ duplicated_objects: true
 robot: Fetch
 agent_initial_pos: [0, 0, 0]
 agent_initial_orn: [0, 0, 0]
-body_width: 0.36  # diameter of base link
+body_width: 0.5  # diameter of base link
 
 # action space
 is_discrete: true
-wheel_velocity: 1.0 # normalized wheel velocity
+wheel_velocity: 0.8 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
