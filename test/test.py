@@ -1,5 +1,7 @@
 import yaml
 from openvrooms.robots.turtlebot import Turtlebot
+from openvrooms.robots.fetch_robot import Fetch
+
 from gibson2.simulator import Simulator
 from gibson2.utils.utils import parse_config
 from gibson2.utils.utils import l2_distance
@@ -14,7 +16,7 @@ from gibson2.scenes.scene_base import Scene
 from gibson2.robots.jr2_robot import JR2
 from gibson2.robots.jr2_kinova_robot import JR2_Kinova
 #from gibson2.robots.quadrotor_robot import Quadrotor
-from gibson2.robots.fetch_robot import Fetch
+#from gibson2.robots.fetch_robot import Fetch
 from gibson2.robots.freight_robot import Freight
 from gibson2.robots.locobot_robot import Locobot
 
@@ -168,31 +170,42 @@ def test_scene(scene_id='scene0420_01', fix_interactive_objects=True):
 
     p.disconnect()
 
-def test_robot():
+def test_robot(robot_name='turtlebot'):
     p.connect(p.GUI)
+    #p.connect(p.DIRECT)
     p.setGravity(0,0,-9.8)
     p.setTimeStep(1./240.)
 
     floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
     p.loadMJCF(floor)
 
-    robot_config = parse_config(os.path.join(config_path, "turtlebot_interactive_demo.yaml"))
-    turtlebot = Turtlebot(config=robot_config, robot_urdf=turtlebot_urdf_file) 
+    if robot_name == 'turtlebot':
+        config = parse_config(os.path.join(config_path, "turtlebot_navigate.yaml"))
+        robot = Turtlebot(config=config) 
+    else:
+        config = parse_config(os.path.join(config_path, "fetch_navigate.yaml"))
+        robot = Fetch(config=config)    
 
-    turtlebot.load()
-    turtlebot.set_position([0, 0, 0])
-    turtlebot.robot_specific_reset()
-    turtlebot.keep_still() 
+    robot.load()
+    robot.set_position([0, 0, 0])
+    robot.robot_specific_reset()
+    robot.keep_still() 
 
-    print(turtlebot.get_position())
-    print(turtlebot.get_orientation())
+    #print(turtlebot.get_position())
+    #print(turtlebot.get_orientation())
+
+    #print(len(robot.ordered_joints))
+    #print(robot.control)
+    #for n, j in enumerate(robot.ordered_joints):
+    #    print(j.joint_name)
 
     
-    for _ in range(24000):  # move with small random actions for 10 seconds
-        action = np.random.uniform(-1, 1, turtlebot.action_dim)
-        turtlebot.apply_action(action)
+    for _ in range(2400000):  # move with small random actions for 10 seconds
+        #action = np.random.uniform(-1, 1, robot.action_dim)
+        action = random.randint(0, robot.action_space.n-1)
+        robot.apply_action(action)
         p.stepSimulation()
-        time.sleep(1./240.0)
+        #time.sleep(1./240.0)
     
     p.disconnect()
 
@@ -457,13 +470,14 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    test_robot_energy_cost()
+    #test_robot_energy_cost()
     
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
     #test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
-    #test_robot()
+    test_robot(robot_name='fetch')
+    #test_robot(robot_name='turtlebot')
     #test_object()
     #test_various_robot(args.id)
 

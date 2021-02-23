@@ -15,6 +15,7 @@ from gibson2.envs.env_base import BaseEnv
 
 #from gibson2.robots.turtlebot_robot import Turtlebot
 from openvrooms.robots.turtlebot import Turtlebot
+from openvrooms.robots.fetch_robot import Fetch
 
 from gibson2.robots.husky_robot import Husky
 from gibson2.robots.ant_robot import Ant
@@ -22,7 +23,7 @@ from gibson2.robots.humanoid_robot import Humanoid
 from gibson2.robots.jr2_robot import JR2
 from gibson2.robots.jr2_kinova_robot import JR2_Kinova
 from gibson2.robots.freight_robot import Freight
-from gibson2.robots.fetch_robot import Fetch
+#from gibson2.robots.fetch_robot import Fetch
 from gibson2.robots.locobot_robot import Locobot
 
 
@@ -827,7 +828,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--config',
 		'-c',
-		help='which config file to use [default: use yaml files in examples/configs]', default=os.path.join(config_path,'turtlebot_relocate.yaml'))
+		help='which config file to use [default: use yaml files in examples/configs]', default='turtlebot_relocate.yaml')
 	parser.add_argument('--mode',
 						'-m',
 						choices=['headless', 'gui', 'iggui'],
@@ -837,7 +838,7 @@ if __name__ == '__main__':
 
 
 
-	env = RelocateEnv(config_file=args.config,
+	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode,
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
@@ -870,5 +871,6 @@ if __name__ == '__main__':
 		
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
+			
 	env.close()
 	

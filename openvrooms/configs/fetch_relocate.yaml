@@ -6,15 +6,14 @@ obj_num: 1 #2
 duplicated_objects: true
 
 # robot
-robot: Turtlebot
+robot: Fetch
 agent_initial_pos: [0, 0, 0]
 agent_initial_orn: [0, 0, 0]
 body_width: 0.36  # diameter of base link
-robot_scale: 1
 
 # action space
 is_discrete: true
-velocity: 1.0 # normalized wheel velocity
+wheel_velocity: 1.0 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
@@ -58,7 +57,7 @@ max_collisions_allowed: 200
 
 # misc config
 initial_pos_z_offset: 0.1
-collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
+collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot links
 visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
