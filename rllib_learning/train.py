@@ -17,16 +17,18 @@ from ray.tune.logger import pretty_print
 
 
 #-------------------- config -------------------
-env_option =  'navigate' 
-#env_option = 'relocate'
+#env_option =  'navigate' 
+env_option = 'relocate'
 
+robot_option = 'fetch'
+#robot_option = 'turtlebot'
 
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
 dqn_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
             "env": env_option,
-            "config_file": 'turtlebot_%s.yaml'%(env_option),
+            "config_file": '%s_%s.yaml'%(robot_option, env_option),
             "mode": "headless",
             "device_idx": 0, # renderer use gpu 0
             "frame_stack": 0
@@ -59,7 +61,7 @@ ppo_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
            "env": env_option,
-           "config_file": 'turtlebot_%s.yaml'%(env_option),
+           "config_file": '%s_%s.yaml'%(robot_option, env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
            "frame_stack": 0
@@ -75,13 +77,16 @@ ppo_train_config = {
         #"dim": 128, 
         #"conv_filters":[[16, [4, 4], 2], [32, [4, 4], 2], [512, [11, 11], 1]],
         #"num_framestacks": 4
-        #}
+        #},
+        "lambda": 0.98,
+        "clip_param": 0.2,
+        "entropy_coeff": 0.01
 }
 
 
 stop = {
-        #"timesteps_total": 350000,
-        "episode_reward_mean": 10,
+        "timesteps_total": 120000,
+        #"episode_reward_mean": 800,
     }
 
 def print_model():

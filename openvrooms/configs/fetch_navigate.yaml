@@ -14,8 +14,7 @@ body_width: 0.5  # diameter of base link
 
 # action space
 is_discrete: true
-wheel_velocity: 0.8 # normalized wheel velocity
-
+wheel_velocity: 0.5 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.174 # 10 degree #0.03
 joint_control: true

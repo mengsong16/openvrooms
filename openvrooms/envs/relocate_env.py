@@ -139,6 +139,28 @@ class RelocateEnv(iGibsonEnv):
 
 		self.load_robot()
 
+	def set_interactive_obj_mass(self):
+		obj_mass = np.array(self.config.get('obj_mass', [10]), dtype="float32")
+		assert obj_mass.shape[0] == len(self.scene.interative_objects)
+
+		for i, obj in enumerate(self.scene.interative_objects):
+			obj.set_mass(obj_mass[i])
+
+			
+
+	def set_physics(self):
+		# set interactive objects weights
+		self.set_interactive_obj_mass()
+
+		print('-------------- object mass ------------------')
+		for obj in self.scene.interative_objects:
+			print(obj.get_mass())
+
+		print('--------------------------------')
+		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
+		print('--------------------------------')
+
+
 	
 	def load_robot(self):
 		# load robot
@@ -236,6 +258,7 @@ class RelocateEnv(iGibsonEnv):
 		self.load_observation_space(self.task.task_obs_dim+self.task.obj_num*6)
 		self.load_action_space()
 		self.load_miscellaneous_variables()
+		self.set_physics()
 
 	def load_observation_space(self, task_obs_dim):
 		"""
@@ -883,10 +906,11 @@ if __name__ == '__main__':
 			#print(state['task_obs'].shape)
 			if done:
 				break
+			#print('...')
 		
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
-			
+	
 	env.close()
 	
 	

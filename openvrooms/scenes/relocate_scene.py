@@ -90,10 +90,11 @@ class RelocateScene(RoomScene):
         # disable collision detection between fixed objects
         self.disable_collision_group()
 
+        
+
          # return static object ids, floor id, wall_id 
         return [self.floor_id] + self.static_object_ids
 
-   
     
 
 

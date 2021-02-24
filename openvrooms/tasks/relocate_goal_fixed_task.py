@@ -414,12 +414,19 @@ class RelocateGoalFixedTask(BaseTask):
 
 		:param env: environment instance
 		"""
+
+		#print('-------------------------')
+		#print(self.obj_num)
+
 		if env.mode != 'gui':
 			return
+
 
 		for i in list(np.arange(self.obj_num)):
 			self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
 			self.target_pos_vis_objs[i].set_position([self.obj_target_pos[i][0], self.obj_target_pos[i][1], 0])
+
+			#print(self.initial_pos_vis_objs[i].get_position())
 
 
 	def step(self, env):

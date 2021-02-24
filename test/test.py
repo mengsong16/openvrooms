@@ -369,7 +369,7 @@ def robot_move_forward(desired_distance, robot, max_steps):
 
     return robot_distance, n_timestep, total_energy
 
-def push_forward(robot, obj, scene, target_position, unit_distance=0.1):
+def push_forward(robot, obj, scene, target_position, unit_distance, time_step):
     robot_start_position = robot.get_position()
     object_start_position = obj.get_xy_position()
 
@@ -377,7 +377,7 @@ def push_forward(robot, obj, scene, target_position, unit_distance=0.1):
     step = 0
     while True:
     #for _ in range(30):
-        robot_distance, n_timestep, step_energy = robot_move_forward(unit_distance, robot, 1000)
+        robot_distance, n_timestep, step_energy = robot_move_forward(unit_distance, robot, 200)
 
         totol_energy += step_energy
         step += n_timestep
@@ -387,6 +387,7 @@ def push_forward(robot, obj, scene, target_position, unit_distance=0.1):
         #dist = l2_distance(current_position, target_position)
 
         print('Steps: %d'%(step))
+        print('Steps taken: %d'%(n_timestep))
         print('Robot traveled distance: %f'%(robot_distance))
         print('Energy cost: %f'%(step_energy))
         print("---------------------------")
@@ -411,10 +412,16 @@ def push_forward(robot, obj, scene, target_position, unit_distance=0.1):
     print('Robot start position: %s'%(robot_start_position))
     print('Robot end position: %s'%(robot_end_position))
     print('Total energy: %f'%totol_energy)   
-    print("---------------------------")   
+    print("---------------------------")  
+    print("Robot wheel velocity (normalized): %f"%(robot.wheel_velocity))
+    print("Physics timesteps: %f"%(time_step))
+    print("Total steps: %d"%(step))
+    print("---------------------------") 
+
 
 def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
-    time_step = 1./240. 
+    #time_step = 1./240. 
+    time_step = 1./40.
     p.connect(p.GUI)
     #p.connect(p.DIRECT)
     p.setGravity(0, 0, -9.8)
@@ -430,6 +437,7 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
     
     #robot_name = 'turtlebot'
     robot_name = 'fetch'
+
     if robot_name == 'turtlebot':
         #scene.set_floor_friction_coefficient(mu=0.314287)
         #scene.set_floor_friction_coefficient(mu=0.764784) 
@@ -441,7 +449,7 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
         obj.set_xy_position(-1.4, 0)
         obj.set_mass(10)
         #scene.set_floor_friction_coefficient(mu=0.4)
-        scene.set_floor_friction_coefficient(mu=0.764784)
+        #scene.set_floor_friction_coefficient(mu=0.764784)
 
         robot_config = parse_config(os.path.join(config_path, "fetch_relocate.yaml"))
         robot = Fetch(config=robot_config)    
@@ -452,12 +460,12 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
     robot.robot_specific_reset()
     robot.keep_still()
 
-    '''
+    
     if robot_name == 'turtlebot':
-        push_forward(robot, obj, scene, target_position=[2.5, 0], unit_distance = 0.1)
+        push_forward(robot, obj, scene, target_position=[2.5, 0], unit_distance = 0.1, time_step=time_step)
     else:
-        push_forward(robot, obj, scene, target_position=[1, 0], unit_distance = 0.05)
-    '''
+        push_forward(robot, obj, scene, target_position=[1, 0], unit_distance = 0.1, time_step=time_step)
+
 
     '''
     for _ in range(2400000):  # at least 100 seconds

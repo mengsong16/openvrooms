@@ -7,25 +7,26 @@ duplicated_objects: true
 
 # robot
 robot: Fetch
-agent_initial_pos: [0, 0, 0]
+agent_initial_pos: [-1.6, -1, 0]
 agent_initial_orn: [0, 0, 0]
 body_width: 0.5  # diameter of base link
 
 # action space
 is_discrete: true
-wheel_velocity: 0.8 # normalized wheel velocity
+wheel_velocity: 0.5 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[0.5,1]] #[[1, 1], [2, 2]]
-obj_initial_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
-obj_target_pos: [[1,1]] #[[-1, -1], [-2, -2]]
-obj_target_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
+obj_initial_pos: [[-1, -1]] #[[1, 1], [2, 2]], [[-1, -1]]
+obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
+obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
+obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
+obj_mass: [10]
 
 # observation space: sensor spec
-output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
+output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb
 third_person_view: true
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
@@ -42,7 +43,7 @@ use_goal_dist_reward: false
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
 goal_dist_reward_weight: 1.0 # should > 0
 
-success_reward: 500.0
+success_reward: 800.0
 dist_tol: 0.1 # l2 distance in meter
 angle_tol: 0.2 # eular angle distance ?
 
@@ -52,7 +53,7 @@ time_elapse_reward: 0.0
 out_of_bound_reward: -1000.0
 
 # episode termination condition
-max_step: 200
+max_step: 400
 max_collisions_allowed: 200
 
 # misc config
@@ -61,8 +62,8 @@ collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot lin
 visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
-action_timestep: 0.1  # environment executes action per action_timestep second
-physics_timestep: 0.025 # physics timestep for pybullet
+action_timestep: 0.1  # environment executes action per action_timestep second, 1/10
+physics_timestep: 0.025 # physics timestep for pybullet, 1/40
 
 #-----------------------------------------------------------------------------------------
 # rl for ALL
