@@ -9,7 +9,7 @@ from openvrooms.envs.openroom_env_wrapper import OpenRoomEnvironmentRLLIB
 from openvrooms.config import *
 
 
-from ray.rllib.agents import ppo, dqn
+from ray.rllib.agents import ppo, dqn, sac
 
 from ray import tune
 from ray.tune.logger import pretty_print
@@ -83,10 +83,35 @@ ppo_train_config = {
         "entropy_coeff": 0.01
 }
 
+sac_train_config = sac.DEFAULT_CONFIG.copy()
+sac_train_config = {
+        #"env": "Breakout-v0",
+        "env": OpenRoomEnvironmentRLLIB,  
+        "env_config": {
+           "env": env_option,
+           "config_file": '%s_%s.yaml'%(robot_option, env_option),
+           "mode": "headless",
+           "device_idx": 0, # renderer use gpu 0
+           "frame_stack": 0
+        },
+        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        "num_gpus": 2,
+        "num_workers": 10,
+        "lr": 1e-4, # try different lrs
+        "framework": "torch",
+        "seed": 1,
+        "train_batch_size": 512,
+        #"model": {
+        #"dim": 128, 
+        #"conv_filters":[[16, [4, 4], 2], [32, [4, 4], 2], [512, [11, 11], 1]],
+        #"num_framestacks": 4
+        #},
+}
+
 
 stop = {
-        "timesteps_total": 120000,
-        #"episode_reward_mean": 800,
+        #"timesteps_total": 120000,
+        "episode_reward_mean": 800,
     }
 
 def print_model():
@@ -105,6 +130,15 @@ def train_ppo():
     ray.init()
 
     results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_at_end=True)
+
+def train_sac():
+    #torch.backends.cudnn.enabled = False 
+    #torch.backends.cudnn.benchmark = False
+    #torch.backends.cudnn.deterministic = True
+
+    ray.init()
+
+    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_at_end=True)    
 
 def train_dqn():
     ray.init()
@@ -128,5 +162,6 @@ def train_dqn():
 
 if __name__ == "__main__":    
     #train_dqn()
-    train_ppo() 
+    #train_ppo()
+    train_sac() 
     #print_model()

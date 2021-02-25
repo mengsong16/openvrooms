@@ -73,6 +73,22 @@ class Fetch(LocomotorRobot):
         assert False, "Fetch does not support discrete actions"
     '''
     # joint level or agent level
+    
+    def set_up_discrete_action_space(self):
+        """
+        Set up discrete action space
+        """
+        if self.joint_control:
+            self.action_list = [[self.wheel_velocity, self.wheel_velocity], 
+                            [self.wheel_velocity * 0.5, -self.wheel_velocity * 0.5],
+                            [-self.wheel_velocity * 0.5, self.wheel_velocity * 0.5], [0, 0]]
+        else:
+            self.action_list = list(range(4))
+
+        self.action_space = gym.spaces.Discrete(len(self.action_list))
+        self.setup_keys_to_action() 
+
+    '''
     def set_up_discrete_action_space(self):
         """
         Set up discrete action space
@@ -85,8 +101,8 @@ class Fetch(LocomotorRobot):
             self.action_list = list(range(5))
 
         self.action_space = gym.spaces.Discrete(len(self.action_list))
-        self.setup_keys_to_action() 
-
+        self.setup_keys_to_action()
+    '''
     def setup_keys_to_action(self):
         self.keys_to_action = {
             (ord('w'),): 0,  # forward
@@ -94,7 +110,7 @@ class Fetch(LocomotorRobot):
             (ord('d'),): 2,  # turn right
             (ord('a'),): 3,  # turn left
             (): 4  # stay still
-        }           
+        }                
 
     def robot_specific_reset(self):
         """

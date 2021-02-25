@@ -12,14 +12,14 @@ agent_initial_orn: [0, 0, 0]
 body_width: 0.5  # diameter of base link
 
 # action space
-is_discrete: true
+is_discrete: false
 wheel_velocity: 0.5 # normalized wheel velocity
 move_distance: 0.1  #0.05
 turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[-1, -1]] #[[1, 1], [2, 2]], [[-1, -1]]
+obj_initial_pos: [[-0.5, -0.5]] #[[1, 1], [2, 2]], [[-1, -1]]
 obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
