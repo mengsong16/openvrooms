@@ -72,7 +72,9 @@ ppo_train_config = {
         "lr": 1e-4, # try different lrs
         "framework": "torch",
         "seed": 1,
-        "train_batch_size": 512,
+        
+        "train_batch_size": 4000,
+        "sgd_minibatch_size": 512,
         #"model": {
         #"dim": 128, 
         #"conv_filters":[[16, [4, 4], 2], [32, [4, 4], 2], [512, [11, 11], 1]],
@@ -80,7 +82,9 @@ ppo_train_config = {
         #},
         "lambda": 0.98,
         "clip_param": 0.2,
-        "entropy_coeff": 0.01
+        "entropy_coeff": 0,
+        "kl_coeff": 0.3,
+        "kl_target": 0.01
 }
 
 sac_train_config = sac.DEFAULT_CONFIG.copy()
@@ -162,6 +166,6 @@ def train_dqn():
 
 if __name__ == "__main__":    
     #train_dqn()
-    #train_ppo()
-    train_sac() 
+    train_ppo()
+    #train_sac() 
     #print_model()
