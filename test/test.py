@@ -347,7 +347,7 @@ def robot_move_forward(desired_distance, robot, max_steps):
         p.stepSimulation()
 
         # get normalized joint velocity and torque
-        total_energy += robot.get_energy()
+        total_energy += robot.get_energy(normalized=True)
 
         # update cumulated distance
         current_position = robot.get_position()
@@ -474,7 +474,7 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
         p.stepSimulation()
 
         #print()
-        robot.get_energy()
+        robot.get_energy(normalized=True)
         #print('--------------------------------')
 
         #time.sleep(time_step)

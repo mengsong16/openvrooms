@@ -40,6 +40,7 @@ import numpy as np
 import pybullet as p
 import time
 import logging
+import sys
 
 #from gibson2.simulator import Simulator
 from openvrooms.simulator.simulator import Simulator
@@ -115,12 +116,17 @@ class RelocateEnv(iGibsonEnv):
 								   render_to_tensor=render_to_tensor,
 								   rendering_settings=settings,
 								   external_camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
-								   external_camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]))
+								   external_camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]),
+								   normalized_energy=self.config.get('normalized_energy', True),
+								   discrete_action_space=self.config.get('is_discrete', False), 
+                 				   wheel_velocity=self.config.get('wheel_velocity', 1.0))
 
 		self.load()								 
 
 		self.automatic_reset = automatic_reset
 
+		self.robot_energy_cost = 0.0
+		self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
 		
 
 	def load_scene_robot(self):
@@ -520,6 +526,7 @@ class RelocateEnv(iGibsonEnv):
 
 		:return: collision_links: collisions from last physics timestep
 		"""
+		# call simulator.step()
 		self.simulator_step()
 		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
 		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
@@ -559,6 +566,10 @@ class RelocateEnv(iGibsonEnv):
 				print('step: %d'%self.current_step)
 				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))		
 		'''
+
+		# get robot energy
+		self.robot_energy_cost = self.simulator.robot_energy_cost
+
 		return non_interactive_collision_links, interactive_collision_links
 
 	def filter_interactive_collision_links(self):
@@ -656,13 +667,21 @@ class RelocateEnv(iGibsonEnv):
 		if action is not None:
 			self.robots[0].apply_action(action)
 
-		# check collisions
+		# step simulator and check collisions
 		non_interactive_collision_links, interactive_collision_links = self.run_simulation()
 		self.non_interactive_collision_links = non_interactive_collision_links
 		self.interactive_collision_links = interactive_collision_links
 
 		self.non_interactive_collision_step += int(len(non_interactive_collision_links) > 0)
 		self.interactive_collision_step += int(len(interactive_collision_links) > 0)
+
+
+		# print robot_energy_cost at this step
+		print('Energy cost: %f'%(self.robot_energy_cost * self.energy_cost_scale))
+		print('Action: %s'%(action))
+		if len(interactive_collision_links) > 0:
+			print('Push')
+		print('--------------------------')
 
 		state = self.get_state()
 		info = {}
@@ -875,6 +894,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 
+	sys.stdout = open('/home/meng/ray_results/output.txt', 'w')
 
 	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode,
@@ -883,7 +903,7 @@ if __name__ == '__main__':
 
 	
 	step_time_list = []
-	for episode in range(100):
+	for episode in range(20):
 		print("***********************************")
 		print('Episode: {}'.format(episode))
 		start = time.time()
@@ -912,5 +932,7 @@ if __name__ == '__main__':
 			env.current_step, time.time() - start))
 	
 	env.close()
+
+	sys.stdout.close()
 	
 	

@@ -42,7 +42,10 @@ class Simulator:
                  render_to_tensor=False,
                  rendering_settings=MeshRendererSettings(),
                  external_camera_pos=[0, 0, 1.2],
-                 external_camera_view_direction=[1, 0, 0]):
+                 external_camera_view_direction=[1, 0, 0],
+                 normalized_energy=True,
+                 discrete_action_space=False,
+                 wheel_velocity=1.0):
         """
         :param gravity: gravity on z direction.
         :param physics_timestep: timestep of physical simulation, p.stepSimulation()
@@ -98,6 +101,10 @@ class Simulator:
         self.class_name_to_class_id = get_class_name_to_class_id()
         self.body_links_awake = 0
 
+        self.robot_energy_cost = 0.0
+        self.normalized_energy = normalized_energy
+        self.discrete_action_space = discrete_action_space
+        self.wheel_velocity = wheel_velocity
 
     def set_timestep(self, physics_timestep, render_timestep):
         """
@@ -579,6 +586,7 @@ class Simulator:
 
         return ids
 
+    # not found where to call this function
     def _step_simulation(self):
         """
         Step the simulation for one step and update positions in renderer
@@ -588,12 +596,23 @@ class Simulator:
             if instance.dynamic:
                 self.update_position(instance)
 
+    # called by envs
     def step(self):
         """
         Step the simulation at self.render_timestep and update positions in renderer
         """
-        for _ in range(int(self.render_timestep / self.physics_timestep)):
+        self.robot_energy_cost = 0.0
+
+        n = int(self.render_timestep / self.physics_timestep)
+        
+        for _ in range(n):
             p.stepSimulation()
+            self.robot_energy_cost += self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
+
+        # ensure [-1,1]
+        #if self.normalized_energy:
+        self.robot_energy_cost /= float(n)
+
         self.sync()
 
     def sync(self):

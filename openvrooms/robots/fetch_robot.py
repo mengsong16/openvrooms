@@ -210,11 +210,15 @@ class Fetch(LocomotorRobot):
 
     def get_mass(self):
         return self.robot_mass
+
     # get normalized joint velocity and torque
     # range: [-1,1]
-    def get_joint_info(self):
+    def get_joint_info(self, normalized):
         # [n,3]: n joints
-        joint_info = np.array([j.get_relative_state() for j in self.ordered_joints]).astype(np.float32)
+        if normalized:
+            joint_info = np.array([j.get_relative_state() for j in self.ordered_joints]).astype(np.float32)
+        else:
+            joint_info = np.array([j.get_state() for j in self.ordered_joints]).astype(np.float32)    
 
         joint_position = joint_info[:,0]
         joint_velocity = joint_info[:,1]
@@ -228,11 +232,16 @@ class Fetch(LocomotorRobot):
 
         return joint_velocity, joint_torque
 
-    def get_energy(self):
-        joint_velocity, joint_torque = self.get_joint_info()
-        raw_energy = np.abs(joint_velocity * joint_torque).mean()
+    def get_energy(self, normalized=True, discrete_action_space=False, wheel_velocity=1.0):
+        joint_velocity, joint_torque = self.get_joint_info(normalized)
+        #print("joint velocity: %s"%(joint_velocity))
+        #print("joint torque: %s"%(joint_torque))
+        energy = np.abs(joint_velocity * joint_torque).mean()
 
-        #print("Raw energy cost: %f"%raw_energy)
 
-        return raw_energy
+        if discrete_action_space:
+            energy /= abs(float(wheel_velocity))
+        #print("Energy cost: %f"%energy)
+
+        return energy
           
