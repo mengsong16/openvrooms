@@ -11,13 +11,15 @@ class ObjectGoal(BaseRewardTerminationFunction):
 
     def __init__(self, config):
         super(ObjectGoal, self).__init__(config)
-        self.dist_tol = self.config.get('dist_tol', 0.1)
-        self.angle_tol = self.config.get('angle_tol', 0.2)
-        self.success_reward = self.config.get('success_reward', 10.0)
+        self.dist_tol = float(self.config.get('dist_tol', 0.1))
+        self.angle_tol = float(self.config.get('angle_tol', 0.2))
+        self.success_reward = float(self.config.get('success_reward', 10.0))
 
         self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', True)
-        self.rot_dist_reward_weight = self.config.get('rot_dist_reward_weight', 0.2)
-        self.goal_dist_reward_weight = self.config.get('goal_dist_reward_weight', 1.0)
+        self.rot_dist_reward_weight = float(self.config.get('rot_dist_reward_weight', 0.2))
+        self.goal_dist_reward_weight = float(self.config.get('goal_dist_reward_weight', 1.0))
+
+        self.success = False
 
     def reset(self, task, env):
         """
@@ -61,10 +63,10 @@ class ObjectGoal(BaseRewardTerminationFunction):
                 done = False
                 break
 
-        success = done
+        self.success = done
 
         # get success reward
-        if success:
+        if self.success:
             reward = self.success_reward
         else:
             reward = 0.0    
@@ -78,7 +80,10 @@ class ObjectGoal(BaseRewardTerminationFunction):
             reward += goal_dist_reward
    
 
-        return reward, done, success
+        return reward, done, self.success
 
     def get_name(self):
-        return "object_goal"    
+        return "object_goal"
+
+    def goal_reached(self):
+        return self.success        

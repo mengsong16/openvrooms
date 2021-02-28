@@ -27,7 +27,9 @@ class OutOfBound(BaseRewardTerminationFunction):
         self.y_bound[1] = 1
         '''
 
-        self.reward = self.config.get('out_of_bound_reward', -10.0)
+        self.reward = float(self.config.get('out_of_bound_reward', -10.0))
+
+        self.is_out_of_bound = False
 
     def get_reward_termination(self, task, env):
         """
@@ -44,9 +46,11 @@ class OutOfBound(BaseRewardTerminationFunction):
         if robot_x <= self.x_bound[0] or robot_x >= self.x_bound[1] or robot_y <= self.y_bound[0] or robot_y >= self.y_bound[1]:
             reward = self.reward
             done = True
+            self.is_out_of_bound = True
         else:
             reward = 0
             done = False 
+            self.is_out_of_bound = False
 
         success = False   
         
@@ -54,3 +58,6 @@ class OutOfBound(BaseRewardTerminationFunction):
 
     def get_name(self):
         return "out_of_bound"        
+
+    def is_out_of_bound(self):
+        return self.is_out_of_bound

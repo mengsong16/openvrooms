@@ -677,11 +677,13 @@ class RelocateEnv(iGibsonEnv):
 
 
 		# print robot_energy_cost at this step
+		'''
 		print('Energy cost: %f'%(self.robot_energy_cost * self.energy_cost_scale))
 		print('Action: %s'%(action))
 		if len(interactive_collision_links) > 0:
 			print('Push')
-		print('--------------------------')
+		#print('--------------------------')
+		'''
 
 		state = self.get_state()
 		info = {}
@@ -908,7 +910,7 @@ if __name__ == '__main__':
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(500):  # 10 seconds
+		for _ in range(400):  # 10 seconds
 			action = env.action_space.sample()
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
@@ -921,8 +923,8 @@ if __name__ == '__main__':
 			#print(state.shape)
 			#print(state)
 			#print('-----------------------------')
-			#print('-------------------------------')
-			#print('reward', reward)
+			print('reward', reward)
+			print('-------------------------------')
 			#print(state['task_obs'].shape)
 			if done:
 				break

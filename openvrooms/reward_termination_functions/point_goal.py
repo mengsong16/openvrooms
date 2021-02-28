@@ -11,11 +11,13 @@ class PointGoal(BaseRewardTerminationFunction):
 
     def __init__(self, config):
         super(PointGoal, self).__init__(config)
-        self.dist_tol = self.config.get('dist_tol', 0.1)
-        self.success_reward = self.config.get('success_reward', 10.0)
+        self.dist_tol = float(self.config.get('dist_tol', 0.1))
+        self.success_reward = float(self.config.get('success_reward', 10.0))
 
         self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', True)
-        self.goal_dist_reward_weight = self.config.get('goal_dist_reward_weight', 1.0)
+        self.goal_dist_reward_weight = float(self.config.get('goal_dist_reward_weight', 1.0))
+
+        self.success = False
 
     def reset(self, task, env):
         """
@@ -47,10 +49,10 @@ class PointGoal(BaseRewardTerminationFunction):
         else:
             done = True    
 
-        success = done
+        self.success = done
 
         # get success reward
-        if success:
+        if self.success:
             reward = self.success_reward
         else:
             reward = 0.0    
@@ -63,7 +65,7 @@ class PointGoal(BaseRewardTerminationFunction):
             reward += goal_dist_reward
 
    
-        return reward, done, success
+        return reward, done, self.success
     '''
     def get_reward_termination(self, task, env): 
         self.goal_dist = task.goal_distance(env) 
@@ -86,4 +88,7 @@ class PointGoal(BaseRewardTerminationFunction):
         return reward, done, success    
     '''
     def get_name(self):
-        return "point_goal"    
+        return "point_goal"  
+
+    def goal_reached(self):
+        return self.success       

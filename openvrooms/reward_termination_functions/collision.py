@@ -10,9 +10,13 @@ class PosNegCollision(BaseRewardTerminationFunction):
     def __init__(self, config):
         super(PosNegCollision, self).__init__(config)
 
-        self.collision_penalty = self.config.get('collision_penalty', -1)
-        self.collision_reward = self.config.get('collision_reward', 0.1)
-        self.max_collisions_allowed = self.config.get('max_collisions_allowed', 500)
+        self.collision_penalty = float(self.config.get('collision_penalty', -1))
+        self.collision_reward = float(self.config.get('collision_reward', 0.1))
+        self.max_collisions_allowed = int(self.config.get('max_collisions_allowed', 500))
+
+        self.has_interactive_collision = False
+        self.has_non_interactive_collision = False
+
 
     def get_reward_termination(self, task, env):
         """
@@ -23,8 +27,8 @@ class PosNegCollision(BaseRewardTerminationFunction):
         :param env: environment instance
         :return: reward
         """
-        has_non_interactive_collision = float(len(env.non_interactive_collision_links) > 0)
-        has_interactive_collision = float(len(env.interactive_collision_links) > 0)
+        self.has_non_interactive_collision = (len(env.non_interactive_collision_links) > 0)
+        self.has_interactive_collision = (len(env.interactive_collision_links) > 0)
 
         '''
         print("***********************************")
@@ -38,7 +42,7 @@ class PosNegCollision(BaseRewardTerminationFunction):
         print("***********************************")    
         '''   
         
-        reward = has_non_interactive_collision * self.collision_penalty + has_interactive_collision * self.collision_reward
+        reward = float(self.has_non_interactive_collision) * self.collision_penalty + float(self.has_interactive_collision) * self.collision_reward
 
         # collide with non-interactive objects reach maximum times
         done = env.non_interactive_collision_step > self.max_collisions_allowed
@@ -47,7 +51,13 @@ class PosNegCollision(BaseRewardTerminationFunction):
         return reward, done, success
 
     def get_name(self):
-        return "collision"    
+        return "negative_and_positive_collision"  
+
+    def has_positive_collision(self):
+        return self.has_interactive_collision
+
+    def has_negative_collision(self):
+        return self.has_non_interactive_collision          
 
 class NegCollision(BaseRewardTerminationFunction):
     """
@@ -61,6 +71,8 @@ class NegCollision(BaseRewardTerminationFunction):
         self.collision_penalty = self.config.get('collision_penalty', -1)
         self.max_collisions_allowed = self.config.get('max_collisions_allowed', 500)
 
+        self.has_collision = False
+
     def get_reward_termination(self, task, env):
         """
         Reward is self.collision_reward_weight if there is collision
@@ -70,7 +82,7 @@ class NegCollision(BaseRewardTerminationFunction):
         :param env: environment instance
         :return: reward
         """
-        collision = float(len(env.collision_links) > 0)
+        self.has_collision = (len(env.collision_links) > 0) 
         
         '''
         print("***********************************")
@@ -84,7 +96,7 @@ class NegCollision(BaseRewardTerminationFunction):
         print("***********************************")    
         '''   
         
-        reward = collision * self.collision_penalty
+        reward = float(self.has_collision) * self.collision_penalty
 
         # collide with non-interactive objects reach maximum times
         done = env.collision_step > self.max_collisions_allowed
@@ -93,4 +105,7 @@ class NegCollision(BaseRewardTerminationFunction):
         return reward, done, success
 
     def get_name(self):
-        return "collision"         
+        return "negative_collision" 
+
+    def has_negative_collision(self):
+        return self.has_collision            

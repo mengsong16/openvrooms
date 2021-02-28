@@ -609,7 +609,7 @@ class Simulator:
             p.stepSimulation()
             self.robot_energy_cost += self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
 
-        # ensure [-1,1]
+        # ensure [0,1]
         #if self.normalized_energy:
         self.robot_energy_cost /= float(n)
 

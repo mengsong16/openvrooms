@@ -10,7 +10,7 @@ class Timeout(BaseRewardTerminationFunction):
     def __init__(self, config):
         super(Timeout, self).__init__(config)
         self.max_step = self.config.get('max_step', 500)
-        self.reward = self.config.get('time_elapse_reward', -0.01)
+        self.reward = float(self.config.get('time_elapse_reward', -0.01))
 
     def get_reward_termination(self, task, env):
         """
