@@ -115,7 +115,7 @@ sac_train_config = {
 
 stop = {
         #"timesteps_total": 120000,
-        "episode_reward_mean": 800,
+        "episode_reward_mean": 0,
     }
 
 def print_model():

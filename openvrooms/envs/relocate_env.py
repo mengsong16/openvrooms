@@ -896,7 +896,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 
-	sys.stdout = open('/home/meng/ray_results/output.txt', 'w')
+	#sys.stdout = open('/home/meng/ray_results/output.txt', 'w')
 
 	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode,
@@ -935,6 +935,6 @@ if __name__ == '__main__':
 	
 	env.close()
 
-	sys.stdout.close()
+	#sys.stdout.close()
 	
 	
