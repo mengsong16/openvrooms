@@ -116,9 +116,9 @@ class NavigateGoalFixedTask(BaseTask):
 		if env.mode != 'gui':
 			return
 
-		cyl_length = 0.2
+		cyl_length = 1.0
 
-		vis_radius = 0.2
+		vis_radius = self.config.get('body_width', 0.4) / 2.0
 
 		self.initial_pos_vis_obj = VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,

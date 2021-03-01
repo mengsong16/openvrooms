@@ -126,9 +126,10 @@ class RelocateGoalFixedTask(BaseTask):
 		if env.mode != 'gui':
 			return
 
-		cyl_length = 0.2
 
-		vis_radius = 0.2
+		cyl_length = env.scene.box_height + 0.2 #0.1
+
+		vis_radius = min(env.scene.box_x_width, env.scene.box_y_width) / 2.0 #0.2
 
 		self.initial_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):

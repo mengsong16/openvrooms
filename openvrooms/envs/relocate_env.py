@@ -923,8 +923,8 @@ if __name__ == '__main__':
 			#print(state.shape)
 			#print(state)
 			#print('-----------------------------')
-			print('reward', reward)
-			print('-------------------------------')
+			#print('reward', reward)
+			#print('-------------------------------')
 			#print(state['task_obs'].shape)
 			if done:
 				break
@@ -934,7 +934,7 @@ if __name__ == '__main__':
 			env.current_step, time.time() - start))
 	
 	env.close()
-
+	
 	#sys.stdout.close()
 	
 	

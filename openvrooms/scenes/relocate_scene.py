@@ -37,6 +37,7 @@ from openvrooms.config import *
 from gibson2.utils.utils import quatToXYZW
 
 
+
 class RelocateScene(RoomScene):
     """
     Room Environment relocate tasks
@@ -90,14 +91,13 @@ class RelocateScene(RoomScene):
         # disable collision detection between fixed objects
         self.disable_collision_group()
 
-        
+        # print box dimension
+        self.get_interactive_obj_dimension()
 
          # return static object ids, floor id, wall_id 
         return [self.floor_id] + self.static_object_ids
 
     
-
-
     def load_scene_metainfo(self):
         parser = SceneParser(scene_id=self.scene_id)
         pickle_path = os.path.join(metadata_path, str(self.scene_id)+'.pkl')
@@ -121,5 +121,16 @@ class RelocateScene(RoomScene):
         print('Loaded meta info of %d interactive objects'%len(self.interative_object_list))
 
             
-
+    def get_interactive_obj_dimension(self):
+        mesh = trimesh.load(os.path.join(self.scene_path, self.interative_object_obj_filename))
+        bounds = mesh.bounds
+        # bounds - axis aligned bounds of mesh
+        # 2*3 matrix, min, max, x, y, z
+        self.box_x_width = bounds[1][0] - bounds[0][0]
+        self.box_y_width = bounds[1][1] - bounds[0][1]
+        self.box_height =  bounds[1][2] - bounds[0][2]
+        
+        print("Box x width: %f"%(self.box_x_width))
+        print("Box y width: %f"%(self.box_y_width))
+        print("Box height: %f"%(self.box_height))
     

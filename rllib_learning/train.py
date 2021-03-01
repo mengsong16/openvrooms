@@ -64,7 +64,7 @@ ppo_train_config = {
            "config_file": '%s_%s.yaml'%(robot_option, env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 0
+           "frame_stack": 4
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -114,8 +114,8 @@ sac_train_config = {
 
 
 stop = {
-        #"timesteps_total": 120000,
-        "episode_reward_mean": 0,
+        "timesteps_total": 740000,
+        #"episode_reward_mean": 0,
     }
 
 def print_model():
@@ -134,6 +134,8 @@ def train_ppo():
     ray.init()
 
     results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_at_end=True)
+
+
 
 def train_sac():
     #torch.backends.cudnn.enabled = False 
@@ -169,3 +171,4 @@ if __name__ == "__main__":
     train_ppo()
     #train_sac() 
     #print_model()
+    
