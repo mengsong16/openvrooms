@@ -26,7 +26,7 @@ obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_mass: [10]
 
 # observation space: sensor spec
-output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
+output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb
 third_person_view: true
 external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
 external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
@@ -44,7 +44,7 @@ rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
 goal_dist_reward_weight: 1.0 # should > 0
 
 success_reward: 0.0 #800.0
-dist_tol: 0.25 # l2 distance in meter
+dist_tol: 0.25 #0.1 # l2 distance in meter
 angle_tol: 0.2 # eular angle distance ?
 
 collision_penalty: -10.0
@@ -52,7 +52,7 @@ collision_reward: -0.1 #1.0 #0.2
 time_elapse_reward: -1.0 #0.0
 out_of_bound_reward: -1000.0
 
-energy_cost_scale: 1.0
+energy_cost: 1.0
 normalized_energy: true #false
 
 # episode termination condition

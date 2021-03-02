@@ -118,7 +118,8 @@ class NavigateGoalFixedTask(BaseTask):
 
 		cyl_length = 1.0
 
-		vis_radius = self.config.get('body_width', 0.4) / 2.0
+		#vis_radius = self.config.get('body_width', 0.4) / 2.0
+		vis_radius = float(self.config.get('dist_tol'))
 
 		self.initial_pos_vis_obj = VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,

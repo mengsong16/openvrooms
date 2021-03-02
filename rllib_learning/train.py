@@ -64,7 +64,7 @@ ppo_train_config = {
            "config_file": '%s_%s.yaml'%(robot_option, env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 4
+           "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -73,7 +73,7 @@ ppo_train_config = {
         "framework": "torch",
         "seed": 1,
         
-        "train_batch_size": 4000,
+        "train_batch_size": 4000,#8192, #4000,
         "sgd_minibatch_size": 512,
         #"model": {
         #"dim": 128, 
@@ -81,8 +81,8 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.2,
-        "entropy_coeff": 0,
+        "clip_param": 0.3,
+        "entropy_coeff": 0.0,
         "kl_coeff": 0.3,
         "kl_target": 0.01
 }
@@ -114,7 +114,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 740000,
+        "timesteps_total": 700000,
         #"episode_reward_mean": 0,
     }
 
@@ -133,7 +133,7 @@ def train_ppo():
 
     ray.init()
 
-    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_at_end=True)
+    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)
 
 
 
@@ -144,7 +144,7 @@ def train_sac():
 
     ray.init()
 
-    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_at_end=True)    
+    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)    
 
 def train_dqn():
     ray.init()
@@ -164,7 +164,7 @@ def train_dqn():
            print("checkpoint saved at", checkpoint)
     '''
 
-    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_at_end=True)
+    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)
 
 if __name__ == "__main__":    
     #train_dqn()

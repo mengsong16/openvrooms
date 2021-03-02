@@ -125,7 +125,7 @@ class RelocateEnv(iGibsonEnv):
 
 		self.automatic_reset = automatic_reset
 
-		self.robot_energy_cost = 0.0
+
 		self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
 		
 
@@ -567,8 +567,8 @@ class RelocateEnv(iGibsonEnv):
 				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))		
 		'''
 
-		# get robot energy
-		self.robot_energy_cost = self.simulator.robot_energy_cost
+		# get robot energy of current step
+		self.current_step_robot_energy_cost = self.simulator.robot_energy_cost
 
 		return non_interactive_collision_links, interactive_collision_links
 
@@ -676,9 +676,10 @@ class RelocateEnv(iGibsonEnv):
 		self.interactive_collision_step += int(len(interactive_collision_links) > 0)
 
 
-		# print robot_energy_cost at this step
+		# accumulate robot_energy_cost at this step
+		self.current_episode_robot_energy_cost += self.current_step_robot_energy_cost
 		'''
-		print('Energy cost: %f'%(self.robot_energy_cost * self.energy_cost_scale))
+		print('Energy cost: %f'%(self.robot_energy_cost_cur_step * self.energy_cost_scale))
 		print('Action: %s'%(action))
 		if len(interactive_collision_links) > 0:
 			print('Push')
@@ -690,6 +691,13 @@ class RelocateEnv(iGibsonEnv):
 
 		reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
 
+		# consider energy cost when succeed
+		'''
+		assert self.config.get('normalized_energy') == True
+		if info['success']:
+			ratio = self.current_episode_robot_energy_cost / float(self.config.get('max_step'))
+			reward = reward * (1 - ratio)
+		'''
 		#print(sub_reward)
 
 		# step task related variables
@@ -861,6 +869,9 @@ class RelocateEnv(iGibsonEnv):
 		self.non_interactive_collision_links = []
 		self.interactive_collision_links = []
 
+		self.current_step_robot_energy_cost = 0.0
+		self.current_episode_robot_energy_cost = 0.0
+
 
 	def reset(self):
 		"""
@@ -929,7 +940,7 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		
+		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	
