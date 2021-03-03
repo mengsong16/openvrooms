@@ -133,4 +133,5 @@ class RelocateScene(RoomScene):
         print("Box x width: %f"%(self.box_x_width))
         print("Box y width: %f"%(self.box_y_width))
         print("Box height: %f"%(self.box_height))
+        print("-------------------------------------")
     

@@ -48,6 +48,7 @@ import random
 from openvrooms.scenes.room_scene import RoomScene
 from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.scenes.navigate_scene import NavigateScene
+from openvrooms.scenes.relocate_scene_different_objects import RelocateSceneDifferentObjects
 from openvrooms.objects.interactive_object import InteractiveObj
 
 def test_object():
@@ -93,6 +94,29 @@ def test_layout():
         time.sleep(1./240.)
 
     p.disconnect()
+
+def test_relocate_scene_different_objects(scene_id='scene0420_01'):
+    time_step = 1./40. 
+    p.connect(p.GUI)
+    p.setGravity(0, 0, -9.8)
+    p.setTimeStep(time_step)
+
+    
+    scene = RelocateSceneDifferentObjects(scene_id=scene_id, n_interactive_objects=2, material_names=['Material__wood_hemlock', 'Material__steel_oxydized_bright'])
+    scene.load()
+    
+    robot_config = parse_config(os.path.join(config_path, "fetch_relocate.yaml"))
+    robot = Fetch(config=robot_config) 
+
+    robot.load()
+    
+    robot.set_position([0, 0, 0])
+    robot.robot_specific_reset()
+    robot.keep_still()
+    
+    for _ in range(2400000):  # at least 100 seconds
+         p.stepSimulation()
+         #time.sleep(1./240.)
 
 def test_relocate_scene(scene_id='scene0420_01', n_interactive_objects=1):
     time_step = 1./240. 
@@ -497,13 +521,14 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
+    test_relocate_scene_different_objects()
     #test_robot_energy_cost()
     
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
     #test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
-    test_robot(robot_name='fetch')
+    #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')
     #test_object()
     #test_various_robot(args.id)

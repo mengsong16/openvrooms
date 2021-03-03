@@ -116,7 +116,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 700000,
+        "timesteps_total": 3000000,
         #"episode_reward_mean": 0,
     }
 
@@ -170,7 +170,7 @@ def train_dqn():
 
 if __name__ == "__main__":    
     #train_dqn()
-    train_ppo()
-    #train_sac() 
+    #train_ppo()
+    train_sac() 
     #print_model()
     
