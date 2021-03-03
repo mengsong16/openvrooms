@@ -16,8 +16,12 @@ class InteractiveObj(Object):
         self.filename = filename
         self.body_id = None
         self.fix_base = fix_base
-        self.volume = 0
-        self.bbox = None
+        self.volume = 0.0
+        #self.bbox = None
+        self.material = 'Not known'
+        self.box_x_width = 0.0
+        self.box_y_width = 0.0
+        self.box_height = 0.0
     
     # load from urdf and use material and colors from mtl
     def _load(self):
@@ -62,5 +66,11 @@ class InteractiveObj(Object):
         return p.changeDynamics(bodyUniqueId=self.body_id, linkIndex=-1, lateralFriction=mu)   
 
     def set_mass(self, mass):
-        return p.changeDynamics(bodyUniqueId=self.body_id, linkIndex=-1, mass=mass)            
+        return p.changeDynamics(bodyUniqueId=self.body_id, linkIndex=-1, mass=mass) 
+
+    def set_material(self, m): 
+        self.material = m
+
+    def get_material(self): 
+        return self.material            
 

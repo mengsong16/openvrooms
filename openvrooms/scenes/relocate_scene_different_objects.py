@@ -56,8 +56,9 @@ class RelocateSceneDifferentObjects(RelocateScene):
         #self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
         self.base_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object'
         self.n_interactive_objects = n_interactive_objects
+        self.material_names = material_names
 
-        assert self.n_interactive_objects == len(material_names)
+        assert self.n_interactive_objects == len(self.material_names)
 
         self.interative_object_obj_filenames = []
         for i in list(range(self.n_interactive_objects)):
@@ -69,7 +70,7 @@ class RelocateSceneDifferentObjects(RelocateScene):
             self.interative_object_obj_filenames.append(target_obj_filename)
 
             #if not os.path.exists(os.path.join(self.scene_path, target_urdf_filename)):
-            self.create_urdf_obj_mtl(target_urdf_filename, target_obj_filename, target_mtl_filename, target_diffuse_png_filename, target_rough_png_filename, material_names[i])
+            self.create_urdf_obj_mtl(target_urdf_filename, target_obj_filename, target_mtl_filename, target_diffuse_png_filename, target_rough_png_filename, self.material_names[i])
 
             print('Create new urdf file: %s'%(target_urdf_filename))
             print('Create new obj file: %s'%(target_obj_filename))
@@ -147,7 +148,8 @@ class RelocateSceneDifferentObjects(RelocateScene):
         print('Loaded meta info of %d static objects'%len(self.static_object_list))
         print('Loaded meta info of %d interactive objects'%len(self.interative_object_list))
 
-            
+    
+    # set dimension, volume and material of the interactive objects
     def get_interactive_obj_dimension(self):
         for i, obj_filename in enumerate(self.interative_object_obj_filenames):
             #print(obj_filename)
@@ -156,13 +158,15 @@ class RelocateSceneDifferentObjects(RelocateScene):
             bounds = mesh.bounds
             # bounds - axis aligned bounds of mesh
             # 2*3 matrix, min, max, x, y, z
-            self.box_x_width = bounds[1][0] - bounds[0][0]
-            self.box_y_width = bounds[1][1] - bounds[0][1]
-            self.box_height =  bounds[1][2] - bounds[0][2]
-            
+            self.interative_objects[i].box_x_width = bounds[1][0] - bounds[0][0]
+            self.interative_objects[i].box_y_width = bounds[1][1] - bounds[0][1]
+            self.interative_objects[i].box_height =  bounds[1][2] - bounds[0][2]
+            self.interative_objects[i].volume = self.interative_objects[i].box_x_width * self.interative_objects[i].box_y_width * self.interative_objects[i].box_height
+            self.interative_objects[i].material = self.material_names[i]
+
             print("Object %d:"%(i))
-            print("Box x width: %f"%(self.box_x_width))
-            print("Box y width: %f"%(self.box_y_width))
-            print("Box height: %f"%(self.box_height))
+            print("Box x width: %f"%(self.interative_objects[i].box_x_width))
+            print("Box y width: %f"%(self.interative_objects[i].box_y_width))
+            print("Box height: %f"%(self.interative_objects[i].box_height))
             print("-------------------------------------")
     

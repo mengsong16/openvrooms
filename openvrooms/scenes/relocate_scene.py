@@ -91,7 +91,7 @@ class RelocateScene(RoomScene):
         # disable collision detection between fixed objects
         self.disable_collision_group()
 
-        # print box dimension
+        # print box dimension (and material)
         self.get_interactive_obj_dimension()
 
          # return static object ids, floor id, wall_id 
@@ -120,18 +120,26 @@ class RelocateScene(RoomScene):
         print('Loaded meta info of %d static objects'%len(self.static_object_list))
         print('Loaded meta info of %d interactive objects'%len(self.interative_object_list))
 
-            
+    # set dimension, volume and material of the interactive objects
     def get_interactive_obj_dimension(self):
         mesh = trimesh.load(os.path.join(self.scene_path, self.interative_object_obj_filename))
         bounds = mesh.bounds
         # bounds - axis aligned bounds of mesh
         # 2*3 matrix, min, max, x, y, z
-        self.box_x_width = bounds[1][0] - bounds[0][0]
-        self.box_y_width = bounds[1][1] - bounds[0][1]
-        self.box_height =  bounds[1][2] - bounds[0][2]
+        box_x_width = bounds[1][0] - bounds[0][0]
+        box_y_width = bounds[1][1] - bounds[0][1]
+        box_height =  bounds[1][2] - bounds[0][2]
         
-        print("Box x width: %f"%(self.box_x_width))
-        print("Box y width: %f"%(self.box_y_width))
-        print("Box height: %f"%(self.box_height))
+        print("Box x width: %f"%(box_x_width))
+        print("Box y width: %f"%(box_y_width))
+        print("Box height: %f"%(box_height))
         print("-------------------------------------")
+
+        for obj in self.interative_objects:
+            obj.box_x_width = box_x_width
+            obj.box_y_width = box_y_width
+            obj.box_height = box_height
+            obj.volume = obj.box_x_width * obj.box_y_width * obj.box_height
+
+
     

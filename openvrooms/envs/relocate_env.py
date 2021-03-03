@@ -29,6 +29,7 @@ from gibson2.robots.locobot_robot import Locobot
 
 from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
 from openvrooms.scenes.relocate_scene import RelocateScene
+from openvrooms.scenes.relocate_scene_different_objects import RelocateSceneDifferentObjects
 from openvrooms.sensors.external_vision_sensor import ExternalVisionSensor
 from openvrooms.config import *
 
@@ -146,6 +147,12 @@ class RelocateEnv(iGibsonEnv):
 			scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects)
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
 			self.scene = scene
+		elif self.config['scene'] == 'relocate_different_objects':
+			scene_id = self.config['scene_id']
+			n_interactive_objects = self.config.get('obj_num', 2)
+			scene = RelocateSceneDifferentObjects(scene_id=scene_id, n_interactive_objects=n_interactive_objects, material_names=['Material__wood_hemlock', 'Material__steel_oxydized_bright'])
+			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
+			self.scene = scene
 		else:
 			raise Exception(
 				'unknown scene type: {}'.format(self.config['scene']))
@@ -168,7 +175,9 @@ class RelocateEnv(iGibsonEnv):
 		print('-------------- object mass ------------------')
 		for obj in self.scene.interative_objects:
 			print(obj.get_mass())
-
+		print('-------------- object material ------------------')
+		for obj in self.scene.interative_objects:
+			print(obj.get_material())
 		print('--------------------------------')
 		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
 		print('--------------------------------')
@@ -920,7 +929,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-	'''
+	
 	step_time_list = []
 	for episode in range(20):
 		print("***********************************")
@@ -949,7 +958,7 @@ if __name__ == '__main__':
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
-	'''
+	
 	env.close()
 
 	#sys.stdout.close()

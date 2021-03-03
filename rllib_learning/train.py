@@ -66,7 +66,7 @@ ppo_train_config = {
            "config_file": '%s_%s.yaml'%(robot_option, env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 0
+           "frame_stack": 4
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -116,7 +116,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 3000000,
+        "timesteps_total": 1500000,
         #"episode_reward_mean": 0,
     }
 
@@ -170,7 +170,7 @@ def train_dqn():
 
 if __name__ == "__main__":    
     #train_dqn()
-    #train_ppo()
-    train_sac() 
+    train_ppo()
+    #train_sac() 
     #print_model()
     

@@ -127,13 +127,15 @@ class RelocateGoalFixedTask(BaseTask):
 			return
 
 
-		cyl_length = env.scene.box_height + 0.2 #0.1
+		#cyl_length = env.scene.box_height + 0.2 #0.1
 
 		#vis_radius = min(env.scene.box_x_width, env.scene.box_y_width) / 2.0 #0.2
 		vis_radius = float(self.config.get('dist_tol'))
 
 		self.initial_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):
+			cyl_length = env.scene.interative_objects[i].box_height + 0.2
+
 			self.initial_pos_vis_objs.append(VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,
 				rgba_color=[1, 0, 0, 0.3],
@@ -143,6 +145,8 @@ class RelocateGoalFixedTask(BaseTask):
 
 		self.target_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):
+			cyl_length = env.scene.interative_objects[i].box_height + 0.2
+			
 			self.target_pos_vis_objs.append(VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,
 				rgba_color=[0, 0, 1, 0.3],
