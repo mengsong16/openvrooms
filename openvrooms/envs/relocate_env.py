@@ -150,7 +150,8 @@ class RelocateEnv(iGibsonEnv):
 		elif self.config['scene'] == 'relocate_different_objects':
 			scene_id = self.config['scene_id']
 			n_interactive_objects = self.config.get('obj_num', 2)
-			scene = RelocateSceneDifferentObjects(scene_id=scene_id, n_interactive_objects=n_interactive_objects, material_names=['Material__wood_hemlock', 'Material__steel_oxydized_bright'])
+			scene = RelocateSceneDifferentObjects(scene_id=scene_id, n_interactive_objects=n_interactive_objects, 
+				material_names=self.config.get('obj_material', ['Material__wood_hemlock', 'Material__steel_oxydized_bright']))
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
 			self.scene = scene
 		else:
