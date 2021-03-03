@@ -203,7 +203,7 @@ def test_robot(robot_name='turtlebot'):
     for _ in range(2400000):  # move with small random actions for 10 seconds
         #action = np.random.uniform(-1, 1, robot.action_dim)
         action = random.randint(0, robot.action_space.n-1)
-        robot.apply_action(action)
+        #robot.apply_action(action)
         p.stepSimulation()
         #time.sleep(1./240.0)
     
@@ -497,13 +497,13 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    test_robot_energy_cost()
+    #test_robot_energy_cost()
     
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
     #test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
-    #test_robot(robot_name='fetch')
+    test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')
     #test_object()
     #test_various_robot(args.id)

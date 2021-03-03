@@ -332,6 +332,7 @@ class RelocateGoalFixedTask(BaseTask):
 		# get reward
 		# goal reached
 		if self.reward_termination_functions[1].goal_reached():
+			assert info['success'] == True
 			reward = float(self.config["success_reward"])
 		# not succeed	
 		else:	

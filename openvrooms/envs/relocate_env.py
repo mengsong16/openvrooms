@@ -127,6 +127,13 @@ class RelocateEnv(iGibsonEnv):
 
 
 		self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
+		self.use_energy_cost = self.config.get('use_energy_cost')
+
+		if self.use_energy_cost:
+			print("Consider energy cost in reward function")
+		else:
+			print("DO NOT consider energy cost in reward function")	
+		print('--------------------------------')	
 		
 
 	def load_scene_robot(self):
@@ -692,12 +699,11 @@ class RelocateEnv(iGibsonEnv):
 		reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
 
 		# consider energy cost when succeed
-		'''
 		assert self.config.get('normalized_energy') == True
-		if info['success']:
+		if info['success'] and self.use_energy_cost:
 			ratio = self.current_episode_robot_energy_cost / float(self.config.get('max_step'))
 			reward = reward * (1 - ratio)
-		'''
+		
 		#print(sub_reward)
 
 		# step task related variables
@@ -914,7 +920,7 @@ if __name__ == '__main__':
 					 action_timestep=1.0 / 10.0,
 					 physics_timestep=1.0 / 40.0)
 
-	
+	'''
 	step_time_list = []
 	for episode in range(20):
 		print("***********************************")
@@ -943,9 +949,9 @@ if __name__ == '__main__':
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
-	
+	'''
 	env.close()
-	
+
 	#sys.stdout.close()
 	
 	

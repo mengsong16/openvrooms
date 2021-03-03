@@ -52,6 +52,7 @@ collision_reward: 1.0 #0.2
 time_elapse_reward: 0.0
 out_of_bound_reward: -1000.0
 
+use_energy_cost: false
 energy_cost_scale: 1.0
 normalized_energy: true
 

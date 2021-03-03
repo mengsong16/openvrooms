@@ -40,6 +40,7 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state
 
 # reward
+use_energy_cost: false
 use_goal_dist_reward: false
 goal_dist_reward_weight: 1.0 # should > 0
 

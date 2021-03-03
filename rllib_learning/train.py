@@ -38,15 +38,17 @@ dqn_train_config = {
         "lr": 1e-4, # try different lrs
         "framework": "torch",
         "seed": 1,
-        "train_batch_size": 64,
+        "train_batch_size": 512, # Size of a batch sampled from replay buffer for training.
+        "buffer_size": 50000,
         "exploration_config": {
             # The Exploration class to use.
             "type": "EpsilonGreedy",
             # Config for the Exploration class' constructor:
             "initial_epsilon": 1.0,
             "final_epsilon": 0.02,
-            "epsilon_timesteps": 10000,  # Timesteps over which to anneal epsilon.
-
+            "epsilon_timesteps": 500000,  # Timesteps over which to anneal epsilon.
+            #"epsilon_schedule": {"value": 0.1},
+            
             # For soft_q, use:
             # "exploration_config" = {
             #   "type": "SoftQ"
