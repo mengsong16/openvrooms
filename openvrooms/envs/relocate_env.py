@@ -960,7 +960,7 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
+		print('Episode energy cost (normalized): %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(env.current_step)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))

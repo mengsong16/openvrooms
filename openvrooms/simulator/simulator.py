@@ -620,7 +620,7 @@ class Simulator:
         #if self.normalized_energy:
         self.robot_energy_cost /= float(n)
 
-        #print(self.robot_energy_cost) [0.1,0.2]
+        #print(self.robot_energy_cost) [0.1,0.2, navigate without pushing]
 
         self.sync()
 
