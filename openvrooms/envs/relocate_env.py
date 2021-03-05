@@ -857,7 +857,7 @@ class RelocateEnv(iGibsonEnv):
 			obj.robot_specific_reset()
 			obj.keep_still()
 
-		# kill still for some timesteps	
+		# keep still for some timesteps	
 		warm_up_step = 50
 		for _ in range(warm_up_step):
 			self.simulator_step()
