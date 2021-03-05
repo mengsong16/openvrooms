@@ -695,18 +695,22 @@ class RelocateEnv(iGibsonEnv):
 
 		# accumulate robot_energy_cost at this step
 		self.current_episode_robot_energy_cost += self.current_step_robot_energy_cost
-		'''
-		print('Energy cost: %f'%(self.robot_energy_cost_cur_step * self.energy_cost_scale))
-		print('Action: %s'%(action))
-		if len(interactive_collision_links) > 0:
-			print('Push')
+		
+		#print('Energy cost: %f'%(self.robot_energy_cost_cur_step * self.energy_cost_scale))
+		#print('Action: %s'%(action))
+		#if len(interactive_collision_links) > 0:
+		#	print('Push')
 		#print('--------------------------')
-		'''
+		
 
 		state = self.get_state()
 		info = {}
 
-		reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
+		if self.config['scene'] == 'relocate':
+			reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
+		else:	
+			assert self.config['scene'] == 'relocate_different_objects'
+			reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
 
 		# consider energy cost when succeed
 		assert self.config.get('normalized_energy') == True
@@ -956,7 +960,8 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
+		print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(400.0)))
+		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(env.current_step)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
 	

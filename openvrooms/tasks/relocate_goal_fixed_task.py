@@ -146,7 +146,7 @@ class RelocateGoalFixedTask(BaseTask):
 		self.target_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):
 			cyl_length = env.scene.interative_objects[i].box_height + 0.2
-			
+
 			self.target_pos_vis_objs.append(VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,
 				rgba_color=[0, 0, 1, 0.3],
@@ -188,11 +188,12 @@ class RelocateGoalFixedTask(BaseTask):
 		current_orn = quatFromXYZW_array(current_orn, 'wxyz')
 		#print(quatFromXYZW_array(quatToXYZW_array(goal_orn, 'wxyz'), 'wxyz'))
 
+		# 1-1 mapping between objects and goals
 		if self.duplicated_objects == False or self.obj_num == 1:
 			# All the objects are different
 			relative_obj_pos = goal_pos - current_pos
 			relative_obj_rot = self.rot_dist_func(goal_orn, current_orn, output_angle=output_angle)
-
+		# need to assign objects to closest goals
 		else:
 			assert current_pos.shape == goal_pos.shape
 			assert current_orn.shape[0] == goal_orn.shape[0]
@@ -301,6 +302,8 @@ class RelocateGoalFixedTask(BaseTask):
 
 		return reward, done, info, sub_reward
 	'''
+
+	# for single object
 	def get_reward_termination(self, env, info):
 		"""
 		Aggreate reward functions and episode termination conditions
@@ -350,7 +353,63 @@ class RelocateGoalFixedTask(BaseTask):
 			else:
 				reward = float(self.config["time_elapse_reward"])	
 
-		return reward, done, info, sub_reward	
+		return reward, done, info, sub_reward
+
+	# for different objects
+	def get_reward_termination_different_objects(self, env, info):
+		"""
+		Aggreate reward functions and episode termination conditions
+
+		:param env: environment instance
+		:return reward: total reward of the current timestep
+		:return done: whether the episode is done
+		:return info: additional info
+		"""
+
+		assert self.reward_termination_functions[0].get_name() == "timeout" 
+		assert self.reward_termination_functions[1].get_name() == "object_goal" 
+		assert self.reward_termination_functions[2].get_name() == "negative_and_positive_collision" 
+
+		# get done, success, and sub reward
+		done = False
+		success = False
+
+		sub_reward = {}
+
+		for reward_termination in self.reward_termination_functions:
+			r, d, s = reward_termination.get_reward_termination(self, env)
+
+			#reward += r
+			done = done or d
+			success = success or s
+
+			sub_reward[reward_termination.get_name()] = r
+
+		#info['done'] = done
+		info['success'] = success
+
+		# get tier 
+		reward_tier = self.reward_termination_functions[1].get_reward_tier()
+
+		# compute reward
+		# succeed
+		if self.reward_termination_functions[1].goal_reached():
+			assert info['success'] == True
+			reward = float(self.config["success_reward"])
+		# not succeed	
+		else:	
+			# negative collision
+			if self.reward_termination_functions[2].has_negative_collision():
+				reward = float(self.config["collision_penalty"])
+			# two tiers:	
+			# positive collision	
+			elif self.reward_termination_functions[2].has_positive_collision():	
+				reward = float(self.config["collision_reward"]) + float(self.config["tier_cost"]) * reward_tier
+			# time elapse
+			else:
+				reward = float(self.config["time_elapse_reward"]) + float(self.config["tier_cost"])* reward_tier	
+
+		return reward, done, info, sub_reward		
 	
 	
 

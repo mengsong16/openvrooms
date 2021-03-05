@@ -371,7 +371,9 @@ def robot_move_forward(desired_distance, robot, max_steps):
         p.stepSimulation()
 
         # get normalized joint velocity and torque
-        total_energy += robot.get_energy(normalized=True)
+        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, wheel_velocity=0.5)
+
+        #print(robot.get_energy(normalized=True, discrete_action_space=True, wheel_velocity=0.5))
 
         # update cumulated distance
         current_position = robot.get_position()
@@ -388,7 +390,9 @@ def robot_move_forward(desired_distance, robot, max_steps):
     print('Desired distance: %f'%(desired_distance))
     print('Real distance: %f'%(robot_distance))
     print('Time steps: %d'%(n_timestep))
-    print('Total total_energy: %f'%(total_energy))
+    print('Total total energy: %f'%(total_energy))
+    print('Total total energy (normalized): %f'%(total_energy/float(n_timestep)))
+    
     '''
 
     return robot_distance, n_timestep, total_energy
@@ -397,13 +401,13 @@ def push_forward(robot, obj, scene, target_position, unit_distance, time_step):
     robot_start_position = robot.get_position()
     object_start_position = obj.get_xy_position()
 
-    totol_energy = 0.0
+    total_energy = 0.0
     step = 0
     while True:
     #for _ in range(30):
         robot_distance, n_timestep, step_energy = robot_move_forward(unit_distance, robot, 200)
 
-        totol_energy += step_energy
+        total_energy += step_energy
         step += n_timestep
 
         # reach goal?    
@@ -414,6 +418,7 @@ def push_forward(robot, obj, scene, target_position, unit_distance, time_step):
         print('Steps taken: %d'%(n_timestep))
         print('Robot traveled distance: %f'%(robot_distance))
         print('Energy cost: %f'%(step_energy))
+        print('Energy cost (normalized): %f'%(step_energy / float(n_timestep)))
         print("---------------------------")
         
 
@@ -423,6 +428,9 @@ def push_forward(robot, obj, scene, target_position, unit_distance, time_step):
 
     robot_end_position = robot.get_position()
     object_end_position = obj.get_xy_position()
+
+    # normalize total energy by steps
+    normalized_total_energy = total_energy / step
     
     print("---------------------------")
     print("Object mass: %f"%(obj.get_mass()))
@@ -435,7 +443,8 @@ def push_forward(robot, obj, scene, target_position, unit_distance, time_step):
     print('Object target position: %s'%(target_position))
     print('Robot start position: %s'%(robot_start_position))
     print('Robot end position: %s'%(robot_end_position))
-    print('Total energy: %f'%totol_energy)   
+    print('Total energy: %f'%total_energy)
+    print('Total energy (normalized): %f'%normalized_total_energy)   
     print("---------------------------")  
     print("Robot wheel velocity (normalized): %f"%(robot.wheel_velocity))
     print("Physics timesteps: %f"%(time_step))
@@ -521,8 +530,8 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    test_relocate_scene_different_objects()
-    #test_robot_energy_cost()
+    #test_relocate_scene_different_objects()
+    test_robot_energy_cost()
     
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)

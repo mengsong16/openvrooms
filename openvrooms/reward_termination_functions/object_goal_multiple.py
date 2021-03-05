@@ -3,7 +3,7 @@ from gibson2.utils.utils import l2_distance
 import numpy as np
 
 
-class ObjectGoal(BaseRewardTerminationFunction):
+class ObjectGoalMultiple(BaseRewardTerminationFunction):
     """
     ObjectGoal used for object relocation tasks
     Episode terminates if point goal is reached
@@ -21,7 +21,6 @@ class ObjectGoal(BaseRewardTerminationFunction):
 
         self.success = False
         self.goal_object = 0
-        self.obj_num = None
 
     def reset(self, task, env):
         """
@@ -32,10 +31,6 @@ class ObjectGoal(BaseRewardTerminationFunction):
         """
         if self.use_goal_dist_reward:
             self.goal_dist = self.get_goal_dist(task)
-
-        self.success = False
-        self.goal_object = 0 
-        self.obj_num = task.obj_num    
 
     def get_goal_dist(self, task):
         pos_distances, rot_distances = task.goal_distance()
@@ -61,15 +56,6 @@ class ObjectGoal(BaseRewardTerminationFunction):
 
         assert pos_distances.shape[0] == rot_distances.shape[0] == task.obj_num
 
-        '''
-        # check success / done
-        done = True
-        for i in list(range(task.obj_num)):
-            #if pos_distances[i] > self.dist_tol or rot_distances[i] > self.angle_tol:
-            if pos_distances[i] > self.dist_tol:
-                done = False
-                break
-        '''
         # count how many objects are in the goal position
         self.goal_object = 0
 
@@ -108,10 +94,4 @@ class ObjectGoal(BaseRewardTerminationFunction):
         return "object_goal"
 
     def goal_reached(self):
-        return self.success 
-
-    def count_goal_object(self):
-        return self.goal_object  
-
-    def get_reward_tier(self):
-        return self.obj_num - 1 - self.goal_object             
+        return self.success        

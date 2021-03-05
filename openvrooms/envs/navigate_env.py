@@ -79,7 +79,8 @@ class NavigateEnv(RelocateEnv):
 										 action_timestep=action_timestep,
 										 physics_timestep=physics_timestep,
 										 device_idx=device_idx,
-										 render_to_tensor=render_to_tensor)
+										 render_to_tensor=render_to_tensor,
+										 automatic_reset=automatic_reset)
 		
 
 	def load_scene_robot(self):
