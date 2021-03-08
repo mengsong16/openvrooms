@@ -149,7 +149,7 @@ def move_forward(distance, robot, max_steps, time_step=1./240.):
         time.sleep(time_step)
 
         # get normalized joint velocity and torque
-        joint_velocity, joint_torque = robot.get_joint_info()
+        joint_velocity, joint_torque = robot.get_joint_state()
         electricity_cost = float(np.abs(np.array(joint_velocity)*np.array(joint_torque)).mean())
         stall_torque_cost = float(np.square(joint_torque).mean())
         total_energy += (electricity_cost+stall_torque_cost)

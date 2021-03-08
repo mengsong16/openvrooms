@@ -23,6 +23,7 @@ env_option = 'relocate'
 robot_option = 'fetch'
 #robot_option = 'turtlebot'
 
+
 dqn_train_config = dqn.DEFAULT_CONFIG.copy()
 dqn_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
@@ -66,7 +67,7 @@ ppo_train_config = {
            "config_file": '%s_%s.yaml'%(robot_option, env_option),
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 4
+           "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 2,
@@ -116,7 +117,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 1500000,
+        "timesteps_total": 700000, #3000000,
         #"episode_reward_mean": 0,
     }
 
@@ -135,7 +136,7 @@ def train_ppo():
 
     ray.init()
 
-    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)
+    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)
 
 
 
@@ -146,7 +147,7 @@ def train_sac():
 
     ray.init()
 
-    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)    
+    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)    
 
 def train_dqn():
     ray.init()
@@ -166,7 +167,7 @@ def train_dqn():
            print("checkpoint saved at", checkpoint)
     '''
 
-    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_freq=20, checkpoint_at_end=True)
+    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)
 
 if __name__ == "__main__":    
     #train_dqn()

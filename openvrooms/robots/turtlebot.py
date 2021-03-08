@@ -103,15 +103,16 @@ class Turtlebot(LocomotorRobot):
         return self.robot_mass
         
     # get normalized joint velocity and torque
-    # range: [-1,1]
-    def get_joint_info(self, normalized):
+    # range: [-1,1] (try to, may overflow)
+    # all ordered joints are wheel joints
+    def get_joint_state(self, normalized):
         # [n,3]: n joints
         if normalized:
             joint_info = np.array([j.get_relative_state() for j in self.ordered_joints]).astype(np.float32)
         else:
             joint_info = np.array([j.get_state() for j in self.ordered_joints]).astype(np.float32)    
 
-        joint_position = joint_info[:,0]
+        #joint_position = joint_info[:,0]
         joint_velocity = joint_info[:,1]
         joint_torque = joint_info[:,2]
 
@@ -124,7 +125,9 @@ class Turtlebot(LocomotorRobot):
         return joint_velocity, joint_torque
 
     def get_energy(self, normalized=True, discrete_action_space=False, wheel_velocity=1.0):
-        joint_velocity, joint_torque = self.get_joint_info(normalized)
+        joint_velocity, joint_torque = self.get_joint_state(normalized)
+        #print("joint velocity: %s"%(joint_velocity))
+        #print("joint torque: %s"%(joint_torque))
         energy = np.abs(joint_velocity * joint_torque).mean()
 
 
@@ -133,4 +136,16 @@ class Turtlebot(LocomotorRobot):
         #print("Energy cost: %f"%energy)
 
         return energy
+
+    def print_joint_info(self): 
+        print("%d Joints"%(len(self.ordered_joints)))
+        for j in self.ordered_joints:
+            _, vel, trq = j.get_state()
+            _, rvel, rtrq = j.get_relative_state()
+            print("----------------------------------------------")
+            print("%s: "%(j.joint_name))
+            print("max_velocity: %f, current_absolute_velocity: %f, current_relative_velocity: %f"%(j.max_velocity, vel, rvel))
+            print("max_torque: %f, current_absolute_torque: %f, current_relative_torque:%f"%(j.max_torque, trq, rtrq))
+            print("max_energy_cost: %f, current_absolute_energy_cost: %f, current_relative_energy_cost:%f"%(np.abs(j.max_velocity*j.max_torque), np.abs(vel*trq), np.abs(rvel*rtrq)))
+            print("----------------------------------------------")  
 

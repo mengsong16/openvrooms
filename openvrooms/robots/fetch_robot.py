@@ -176,10 +176,14 @@ class Fetch(LocomotorRobot):
             link_a, link_b = joints_from_names(robot_id, names)
             p.setCollisionFilterPair(robot_id, robot_id, link_a, link_b, 0)
 
-        self.get_wheels()    
+        #self.get_wheels()  
+        self.separate_wheel_non_wheel()
 
+        # disable non wheel joints  
+        #self.disable_non_wheel()
         return ids
 
+    '''
     def get_wheels(self):
         self.wheel_joints = []
         wheel_names = ['l_wheel_joint', 'r_wheel_joint']
@@ -188,7 +192,42 @@ class Fetch(LocomotorRobot):
                 if j.joint_name == name:
                     self.wheel_joints.append(j)
                     break
+    '''                
+    def separate_wheel_non_wheel(self):
+        self.wheel_joints = []
+        self.non_wheel_joints = []
+        wheel_names = ['l_wheel_joint', 'r_wheel_joint']
+        for j in self.ordered_joints:
+            if j.joint_name in wheel_names:
+                self.wheel_joints.append(j)
+            else:
+                self.non_wheel_joints.append(j)   
+
+        print("----------------------------------------------")
+        print('Wheeled joints: %d'%(len(self.wheel_joints))) 
+        print('Non-wheeled joints: %d'%(len(self.non_wheel_joints))) 
+        print("----------------------------------------------")        
+    
+    def disable_non_wheel(self):
+        print("----------------------------------------------")
+        for j in self.non_wheel_joints:    
+            j.disable_motor()
+            print("Disabled %s"%(j.joint_name))
+
+        print("----------------------------------------------")    
+
            
+    def print_joint_info(self): 
+        print("%d Joints"%(len(self.ordered_joints)))
+        for j in self.ordered_joints:
+            _, vel, trq = j.get_state()
+            _, rvel, rtrq = j.get_relative_state()
+            print("----------------------------------------------")
+            print("%s: "%(j.joint_name))
+            print("max_velocity: %f, current_absolute_velocity: %f, current_relative_velocity: %f"%(j.max_velocity, vel, rvel))
+            print("max_torque: %f, current_absolute_torque: %f, current_relative_torque:%f"%(j.max_torque, trq, rtrq))
+            print("max_energy_cost: %f, current_absolute_energy_cost: %f, current_relative_energy_cost:%f"%(np.abs(j.max_velocity*j.max_torque), np.abs(vel*trq), np.abs(rvel*rtrq)))
+            print("----------------------------------------------")
 
     def apply_robot_action(self, action):
         """
@@ -212,15 +251,16 @@ class Fetch(LocomotorRobot):
         return self.robot_mass
 
     # get normalized joint velocity and torque
-    # range: [-1,1]
-    def get_joint_info(self, normalized):
+    # range: [-1,1] (try to, may overflow)
+    # only consider wheel joints
+    def get_joint_state(self, normalized):
         # [n,3]: n joints
         if normalized:
-            joint_info = np.array([j.get_relative_state() for j in self.ordered_joints]).astype(np.float32)
+            joint_info = np.array([j.get_relative_state() for j in self.wheel_joints]).astype(np.float32)
         else:
-            joint_info = np.array([j.get_state() for j in self.ordered_joints]).astype(np.float32)    
+            joint_info = np.array([j.get_state() for j in self.wheel_joints]).astype(np.float32)    
 
-        joint_position = joint_info[:,0]
+        #joint_position = joint_info[:,0]
         joint_velocity = joint_info[:,1]
         joint_torque = joint_info[:,2]
 
@@ -233,7 +273,7 @@ class Fetch(LocomotorRobot):
         return joint_velocity, joint_torque
 
     def get_energy(self, normalized=True, discrete_action_space=False, wheel_velocity=1.0):
-        joint_velocity, joint_torque = self.get_joint_info(normalized)
+        joint_velocity, joint_torque = self.get_joint_state(normalized)
         #print("joint velocity: %s"%(joint_velocity))
         #print("joint torque: %s"%(joint_torque))
         energy = np.abs(joint_velocity * joint_torque).mean()
