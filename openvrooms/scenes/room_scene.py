@@ -43,7 +43,8 @@ class RoomScene(Scene):
                  scene_id, 
                  load_from_xml=True,
                  fix_interactive_objects=False,
-                 empty_room=False
+                 empty_room=False,
+                 multi_band=False
                  ):
         
         logging.info("Room scene: {}".format(scene_id))
@@ -79,6 +80,8 @@ class RoomScene(Scene):
         self.fix_interactive_objects = fix_interactive_objects
 
         self.empty_room = empty_room
+
+        self.multi_band = multi_band
 
         
         

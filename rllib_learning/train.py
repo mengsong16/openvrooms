@@ -75,7 +75,7 @@ ppo_train_config = {
         "num_workers": 10,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
-        "seed": 6,
+        "seed": 1,
         "train_batch_size": 4000,#8192, #4000,
         "sgd_minibatch_size": 512,
         #"model": {

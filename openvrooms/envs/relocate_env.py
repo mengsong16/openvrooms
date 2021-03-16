@@ -167,11 +167,16 @@ class RelocateEnv(iGibsonEnv):
 		for i, obj in enumerate(self.scene.interative_objects):
 			obj.set_mass(obj_mass[i])
 
-			
+	def set_floor_friction(self):
+		floor_friction = np.array(self.config.get('floor_friction', [0.5]), dtype="float32")
+		self.scene.set_floor_friction_coefficient(mu=floor_friction)		
 
 	def set_physics(self):
 		# set interactive objects weights
 		self.set_interactive_obj_mass()
+
+		# set floor friction coefficient
+		self.set_floor_friction()
 
 		print('-------------- object mass ------------------')
 		for obj in self.scene.interative_objects:

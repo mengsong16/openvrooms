@@ -20,8 +20,18 @@ brdf_dataset_path = os.path.join(original_dataset_path, "BRDFOriginDataset")
 turtlebot_urdf_file = os.path.join(assets_path, "models/turtlebot/turtlebot.urdf")
 
 
-def get_scene_path(scene_id):
+def get_scene_path(scene_id, suffix=None):
     assert scene_id in os.listdir(interative_dataset_path), print("Error: scene folder %s doesn't exit!"%(scene_id))
 
-    return os.path.join(interative_dataset_path, scene_id)
+    if suffix is None:
+    	return os.path.join(interative_dataset_path, scene_id)
+    else:
+    	return os.path.join(interative_dataset_path, scene_id+'_'+suffix)	
+
+def get_pickle_path(scene_id, suffix=None):
+    if suffix is None:
+    	return os.path.join(metadata_path, str(scene_id)+'.pkl')
+    else:
+    	return os.path.join(metadata_path, str(scene_id)+'_'+suffix+'.pkl')
+    	
 

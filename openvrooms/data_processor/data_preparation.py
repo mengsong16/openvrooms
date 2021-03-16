@@ -13,7 +13,7 @@ import argparse
 import shutil
 
 # parse and generate mtl for one scene
-def parse_generate_mtl_scene(scene_id):
+def parse_generate_mtl_scene(scene_id, multi_band=False):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		'scene_root': os.path.join(original_dataset_path, 'scenes'),
@@ -23,24 +23,37 @@ def parse_generate_mtl_scene(scene_id):
 		'layoutMesh_root': os.path.join(original_dataset_path, 'layoutMesh')
 	}
 
+	if multi_band:
+		suffix = 'multi_band'
+	else:
+		suffix = None
+
 	# parse the scene and generate mtl files
-	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, **kwargs)
+	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
 	parser.parse()
 
 	## object list of the scene to a pickle file
-	pickle_path = os.path.join(metadata_path, str(scene_id)+'.pkl')
+	pickle_path = get_pickle_path(scene_id, suffix=suffix)
 	parser.save_param(pickle_path)
 
 # generate urdf for one scene
-def generate_urdf_scene(scene_id):
+def generate_urdf_scene(scene_id, multi_band=False):
 	# load object list
 	parser = SceneParser(scene_id=scene_id)
-	pickle_path = os.path.join(metadata_path, str(scene_id)+'.pkl')
+	if multi_band:
+		suffix = 'multi_band'
+	else:
+		suffix = None
+
+	pickle_path = get_pickle_path(scene_id, suffix=suffix)
 	parser.load_param(pickle_path)
 	parser.print_param()
 
 	urdf_prototype_file = os.path.join(metadata_path, 'urdf_prototype.urdf') # urdf template
-	scene_folder = get_scene_path(scene_id)
+
+	scene_folder = get_scene_path(scene_id, suffix=suffix)
+	if not os.path.exists(scene_folder):
+		os.makedirs(scene_folder)
 
 	
 	for obj in parser.obj_list:
@@ -75,7 +88,7 @@ if __name__ == '__main__':
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 	
-	parse_generate_mtl_scene(args.id)
-	generate_urdf_scene(args.id)
+	parse_generate_mtl_scene(args.id, multi_band=True)
+	generate_urdf_scene(args.id, multi_band=True)
 	
 	

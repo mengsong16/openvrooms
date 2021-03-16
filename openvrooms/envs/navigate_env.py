@@ -145,6 +145,15 @@ class NavigateEnv(RelocateEnv):
 		self.load_observation_space(self.task.task_obs_dim)
 		self.load_action_space()
 		self.load_miscellaneous_variables()	
+		self.set_physics()
+
+	def set_physics(self):
+		# set floor friction coefficient
+		self.set_floor_friction()
+
+		print('--------------------------------')
+		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
+		print('--------------------------------')	
 
 	# get collision links with robot base link, ignore some, return collisions with interactive and non-interactive links respectively
 	def filter_collision_links(self, collision_links):
