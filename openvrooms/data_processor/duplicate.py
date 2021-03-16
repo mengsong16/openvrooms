@@ -84,6 +84,16 @@ def duplicate_floor(xml_dir, materials: list, borders: list):
             assert start_idx != -1 and end_idx != -1, "material folder not found!"
             s.set('value', img_dir[:start_idx+1] + material_name + img_dir[end_idx:])
         
+        ## reset albedoScale
+        for rgb in bblock.iter('rgb'):
+            if rgb.get('name') == 'albedoScale':
+                rgb.set('value', '1.0 1.0 1.0')
+        
+        ## reset uvScale
+        #for flt in bblock.iter('float'):
+        #    if flt.get('name') == 'uvScale':
+        #        flt.set('value', '1.0')
+        
         ## add bsdf block to the tree
         xmlsplit.root.append(bblock)
         
