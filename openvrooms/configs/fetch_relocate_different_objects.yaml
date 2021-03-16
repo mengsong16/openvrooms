@@ -23,8 +23,8 @@ obj_initial_pos: [[1, 0], [-1, 0]] #[[0, 1.5], [0, -1.5]] #[[1, 1], [2, 2]], [[-
 obj_initial_orn: [[0, 0, 1.5708], [0, 0, 1.5708]] #[[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[0, -1], [0, 2]] #[[-0.5, 0], [1.5, 0]] #[[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 1.5708], [0, 0, 1.5708]] #[[0, 0, 0], [0, 0, 0]]
-obj_mass: [10, 70]
-obj_material: ['Material__wood_hemlock', 'Material__steel_oxydized_bright']
+obj_mass: [70, 10] #[10, 70]
+obj_material: ['Material__steel_oxydized_bright', 'Material__wood_hemlock'] #['Material__wood_hemlock', 'Material__steel_oxydized_bright']
 
 # observation space: sensor spec
 output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb

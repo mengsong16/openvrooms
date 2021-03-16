@@ -750,8 +750,8 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    #test_relocate_scene_different_objects()
-    test_robot_energy_cost()
+    test_relocate_scene_different_objects()
+    #test_robot_energy_cost()
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')
     #get_robot_info()

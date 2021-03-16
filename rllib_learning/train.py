@@ -65,6 +65,7 @@ ppo_train_config = {
         "env_config": {
            "env": env_option,
            "config_file": '%s_%s.yaml'%(robot_option, env_option),
+           #"config_file": 'fetch_relocate_different_objects.yaml',
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
            "frame_stack": 0
@@ -74,8 +75,7 @@ ppo_train_config = {
         "num_workers": 10,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
-        "seed": 1,
-        
+        "seed": 6,
         "train_batch_size": 4000,#8192, #4000,
         "sgd_minibatch_size": 512,
         #"model": {
@@ -117,7 +117,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 700000, #3000000,
+        "timesteps_total": 700000 #1000000, #3000000,
         #"episode_reward_mean": 0,
     }
 

@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import os
 import gym, ray
-from all.core.state import State
-from all.environments.gym import GymEnvironment
+#from all.core.state import State
+#from all.environments.gym import GymEnvironment
 from openvrooms.envs.relocate_env import RelocateEnv
 from openvrooms.envs.navigate_env import NavigateEnv
 from openvrooms.config import *
@@ -14,6 +14,7 @@ from gym.utils import seeding
 import random
 
 
+'''
 # transform OpenRoom env to gym and ALL env
 class OpenRoomEnvironmentALL(GymEnvironment):
     def __init__(self, gym_id, config_file,
@@ -147,26 +148,25 @@ def test_all_env():
     #print(env.state_space)
     #print(env.observation_space)
     #print(env.action_space)
-    
-    '''
-    #env.start_video_recorder()
-    i = 0
-    env.reset()
-    while i < 100:
-        action = env.action_space.sample()
-        env.step(torch.from_numpy(np.array([action])))
-        #frame = env.render()
-        #print(frame.shape)
+   
+    # #env.start_video_recorder()
+    # i = 0
+    # env.reset()
+    # while i < 100:
+    #     action = env.action_space.sample()
+    #     env.step(torch.from_numpy(np.array([action])))
+    #     #frame = env.render()
+    #     #print(frame.shape)
         
-        i += 1
+    #     i += 1
 
-        print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation_np.shape, env.reward, env.done, env.success))
-        print("--------------------------------------------------------")
+    #     print("step: %d, action: %s, state: %s, reward: %d, done: %d, success: %s"%(i, action, env.observation_np.shape, env.reward, env.done, env.success))
+    #     print("--------------------------------------------------------")
         
-    env.close()
-    print("Done!")
-    '''
+    # env.close()
+    # print("Done!")
     #env.save()
+''' 
 
 # transform OpenRoom env to RLLIB env
 class OpenRoomEnvironmentRLLIB(gym.Env): 
