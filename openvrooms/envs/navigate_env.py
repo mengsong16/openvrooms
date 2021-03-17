@@ -90,7 +90,11 @@ class NavigateEnv(RelocateEnv):
 		if self.config['scene'] == 'navigate':
 			scene_id = self.config['scene_id']
 			n_obstacles = self.config.get('obs_num', 0)
-			scene = NavigateScene(scene_id=scene_id, n_obstacles=n_obstacles)
+			if "multi_band" in scene_id:
+				scene = NavigateScene(scene_id=scene_id, n_obstacles=n_obstacles, multi_band=True)
+			else:	
+				scene = NavigateScene(scene_id=scene_id, n_obstacles=n_obstacles)
+			
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
 			self.scene = scene
 		else:

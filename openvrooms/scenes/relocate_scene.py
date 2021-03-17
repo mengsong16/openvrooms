@@ -44,9 +44,9 @@ class RelocateScene(RoomScene):
     """
     def __init__(self,
                  scene_id, 
-                 n_interactive_objects=1
-                 ):
-        super(RelocateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=False)
+                 n_interactive_objects=1,
+                 multi_band=False):
+        super(RelocateScene, self).__init__(scene_id=scene_id, fix_interactive_objects=False, multi_band=multi_band)
 
         
         #self.interative_object_obj_filename = '03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'
@@ -95,7 +95,12 @@ class RelocateScene(RoomScene):
         self.get_interactive_obj_dimension()
 
          # return static object ids, floor id, wall_id 
-        return [self.floor_id] + self.static_object_ids
+        #return [self.floor_id] + self.static_object_ids
+
+        if self.multi_band:
+            return self.floor_id + self.static_object_ids
+        else:    
+            return [self.floor_id] + self.static_object_ids
 
     
     def load_scene_metainfo(self):

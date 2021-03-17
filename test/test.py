@@ -97,6 +97,31 @@ def test_layout():
 
     p.disconnect()
 
+def test_multi_band_scene(scene_id='scene0420_01_multi_band'):
+    time_step = 1./40. 
+    p.connect(p.GUI)
+    p.setGravity(0, 0, -9.8)
+    p.setTimeStep(time_step)
+
+    
+    #scene = RoomScene(scene_id=scene_id, multi_band=True)
+    scene = RelocateScene(scene_id=scene_id, n_interactive_objects=1, multi_band=True)
+    #scene = NavigateScene(scene_id=scene_id, n_obstacles=2, multi_band=True)
+    scene.load()
+    
+    robot_config = parse_config(os.path.join(config_path, "fetch_relocate.yaml"))
+    robot = Fetch(config=robot_config) 
+
+    robot.load()
+    
+    robot.set_position([0, 0, 0])
+    robot.robot_specific_reset()
+    robot.keep_still()
+    
+    for _ in range(2400000):  # at least 100 seconds
+         p.stepSimulation()
+         #time.sleep(1./240.)
+
 def test_relocate_scene_different_objects(scene_id='scene0420_01'):
     time_step = 1./40. 
     p.connect(p.GUI)
@@ -750,7 +775,8 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    test_relocate_scene_different_objects()
+    test_multi_band_scene()
+    #test_relocate_scene_different_objects()
     #test_robot_energy_cost()
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')

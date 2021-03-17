@@ -144,7 +144,11 @@ class RelocateEnv(iGibsonEnv):
 		if self.config['scene'] == 'relocate':
 			scene_id = self.config['scene_id']
 			n_interactive_objects = self.config.get('obj_num', 1)
-			scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects)
+			if "multi_band" in scene_id:
+				scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects, multi_band=True)
+			else:	
+				scene = RelocateScene(scene_id=scene_id, n_interactive_objects=n_interactive_objects)
+
 			self.simulator.import_scene(scene, load_texture=self.config.get('load_texture', True))
 			self.scene = scene
 		elif self.config['scene'] == 'relocate_different_objects':
@@ -185,7 +189,10 @@ class RelocateEnv(iGibsonEnv):
 		for obj in self.scene.interative_objects:
 			print(obj.get_material())
 		print('--------------------------------')
-		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
+		if self.scene.multi_band:
+			print('floor friction: %s'%(str(self.scene.get_floor_friction_coefficient())))
+		else:
+			print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
 		print('--------------------------------')
 
 
@@ -606,8 +613,13 @@ class RelocateEnv(iGibsonEnv):
 					continue
 
 				# ignore collision between interactive objects and floor
-				if item[2] == self.scene.floor_id:
-					continue
+				if self.scene.multi_band:
+					if item[2] in self.scene.floor_id:
+						#print("collsion: box and floor: %d"%(item[2]))
+						continue
+				else:
+					if item[2] == self.scene.floor_id:
+						continue
 
 				# collide with another interactive objects
 				if item[2] in collision_ignore_body_b_ids_list[i+1:]:
@@ -947,8 +959,8 @@ if __name__ == '__main__':
 		start = time.time()
 		env.reset()
 		for _ in range(400):  # 10 seconds
-			#action = env.action_space.sample()
-			action = 3
+			action = env.action_space.sample()
+			#action = 3
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
 			#pos_distances, rot_distances = env.task.goal_distance()

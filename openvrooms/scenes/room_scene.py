@@ -57,15 +57,25 @@ class RoomScene(Scene):
         self.interative_object_list = [] # metainfo list of interactive objects
         self.layout_list = None # metainfo of layout
 
+        self.multi_band = multi_band
+
         # obj file names
-        self.floor_obj_file_name = None
+        if self.multi_band:
+            self.floor_obj_file_name = []
+        else:    
+            self.floor_obj_file_name = None
+
         self.wall_obj_file_name = None
         self.ceiling_obj_file_name = None
 
         self.interative_objects = [] # a list of InteractiveObj
         self.static_object_ids = [] # a list of urdf ids of static objects, including ceilings, window, door, ...
 
-        self.floor_id = None # urdf id of floor
+        if self.multi_band:
+            self.floor_id = []
+        else:    
+            self.floor_id = None # urdf id of floor
+
         self.wall_id = None # urdf id of walls
         self.ceiling_id = None # urdf id of ceiling
 
@@ -81,10 +91,6 @@ class RoomScene(Scene):
 
         self.empty_room = empty_room
 
-        self.multi_band = multi_band
-
-        
-        
 
     def load(self):
         """
@@ -119,7 +125,10 @@ class RoomScene(Scene):
         self.disable_collision_group()
 
          # return static object ids, floor id, wall_id 
-        return [self.floor_id] + self.static_object_ids
+        if self.multi_band:
+            return self.floor_id + self.static_object_ids
+        else:    
+            return [self.floor_id] + self.static_object_ids
 
     # load interactive objects
     def load_interative_objects(self):
@@ -166,7 +175,10 @@ class RoomScene(Scene):
         for obj_meta in self.layout_list:
             name = obj_meta.obj_path
             if 'floor' in name:
-                self.floor_obj_file_name = name
+                if self.multi_band:
+                    self.floor_obj_file_name.append(name)
+                else:    
+                    self.floor_obj_file_name = name
             elif 'wall' in name: 
                 self.wall_obj_file_name = name
             elif 'ceiling' in name: 
@@ -187,15 +199,22 @@ class RoomScene(Scene):
         
         #floor = os.path.join(pybullet_data.getDataPath(), "mjcf/ground_plane.xml")
         #self.layout_id = p.loadMJCF(floor)
+        if self.multi_band:
+            for floor_name in self.floor_obj_file_name:
+                self.floor_id.append(self.get_split_urdf(floor_name))
+        else:    
+            self.floor_id = self.get_split_urdf(self.floor_obj_file_name)
 
-        self.floor_id = self.get_split_urdf(self.floor_obj_file_name)
         self.wall_id = self.get_split_urdf(self.wall_obj_file_name)
         self.ceiling_id = self.get_split_urdf(self.ceiling_obj_file_name)
 
         #print('Layout urdf loaded: %s'%(layout_urdf_file))
         #print('Layout id: %d'%(self.layout_id))
         print('Layout urdf loaded')
-        print('Layout ids: floor: %d, wall: %d, ceiling: %d'%(self.floor_id, self.wall_id, self.ceiling_id))
+        if self.multi_band:
+            print('Layout ids: floor: %s, wall: %d, ceiling: %d'%(str(self.floor_id), self.wall_id, self.ceiling_id))
+        else:    
+            print('Layout ids: floor: %d, wall: %d, ceiling: %d'%(self.floor_id, self.wall_id, self.ceiling_id))
 
         # compute z coordinate, x and y range of the ground
         #filename, _ = os.path.splitext(obj_file_name)
@@ -215,6 +234,7 @@ class RoomScene(Scene):
         
     # load generated floor
     # upper surface of floor has z=0
+    # discarded !!!
     def load_floor(self):
         floor_urdf_file = os.path.join(self.scene_path, "floor.urdf")
         self.floor_id = p.loadURDF(fileName=floor_urdf_file, useFixedBase=1)
@@ -287,7 +307,11 @@ class RoomScene(Scene):
     def print_scene_info(self, interactive_only=False):
         if not interactive_only:
             if self.floor_id is not None:
-                self.get_metric_centroid_physics_pose(obj_file_name=self.floor_obj_file_name, urdf_id=self.floor_id)
+                if self.multi_band:
+                    for i in list(range(len(self.floor_id))):
+                        self.get_metric_centroid_physics_pose(obj_file_name=self.floor_obj_file_name[i], urdf_id=self.floor_id[i])
+                else:    
+                    self.get_metric_centroid_physics_pose(obj_file_name=self.floor_obj_file_name, urdf_id=self.floor_id)
 
             if self.wall_id is not None:
                 self.get_metric_centroid_physics_pose(obj_file_name=self.wall_obj_file_name, urdf_id=self.wall_id) 
@@ -331,10 +355,21 @@ class RoomScene(Scene):
                 self.set_mesh_centroid_as_position(obj_file_name=self.interative_object_list[i].obj_path, urdf_id=self.interative_objects[i].body_id)   
 
     def get_floor_friction_coefficient(self):
-        return p.getDynamicsInfo(self.floor_id, -1)[1] 
+        if self.multi_band:
+            fc = []
+            for fid in self.floor_id:
+                fc.append(p.getDynamicsInfo(fid, -1)[1])
+            return fc    
+        else:
+            return p.getDynamicsInfo(self.floor_id, -1)[1] 
 
     def set_floor_friction_coefficient(self, mu):
-        return p.changeDynamics(bodyUniqueId=self.floor_id, linkIndex=-1, lateralFriction=mu)     
+        if self.multi_band:
+            assert mu.shape[0] == len(self.floor_id)
+            for i in list(range(len(self.floor_id))):
+                p.changeDynamics(bodyUniqueId=self.floor_id[i], linkIndex=-1, lateralFriction=mu[i])
+        else:    
+            return p.changeDynamics(bodyUniqueId=self.floor_id, linkIndex=-1, lateralFriction=mu)     
 
     def get_metric_centroid_physics_pose(self, obj_file_name, urdf_id, center='geometric'):
         mesh = trimesh.load(os.path.join(self.scene_path, obj_file_name))
@@ -469,7 +504,11 @@ class RoomScene(Scene):
         fixed_body_ids = self.static_object_ids
 
         if self.floor_id is not None:
-            fixed_body_ids.append(self.floor_id)
+            if self.multi_band:
+                for fid in self.floor_id:
+                    fixed_body_ids.append(fid)
+            else:    
+                fixed_body_ids.append(self.floor_id)
 
         if self.wall_id is not None:
             fixed_body_ids.append(self.wall_id)    
