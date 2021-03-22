@@ -775,15 +775,16 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    test_multi_band_scene()
+    #test_multi_band_scene()
     #test_relocate_scene_different_objects()
     #test_robot_energy_cost()
+    #test_relocate_scene()
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')
     #get_robot_info()
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
-    #test_scene(args.id, fix_interactive_objects=False)
+    test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
     #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')

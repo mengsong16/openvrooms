@@ -35,7 +35,7 @@ dqn_train_config = {
             "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        "num_gpus": 2,
+        "num_gpus": 1,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
         "seed": 1,
@@ -71,7 +71,7 @@ ppo_train_config = {
            "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        "num_gpus": 2,
+        "num_gpus": 1,
         "num_workers": 10,
         "lr": 1e-4, # try different lrs
         "framework": "torch",
@@ -102,7 +102,7 @@ sac_train_config = {
            "frame_stack": 0
         },
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        "num_gpus": 2,
+        "num_gpus": 1,
         "num_workers": 10,
         "lr": 1e-4, # try different lrs
         "framework": "torch",

@@ -33,7 +33,7 @@ class SceneParser:
 			self.uvMapped_root = kwargs['uvMapped_root']
 			self.envDataset_root = kwargs['envDataset_root']
 			self.layoutMesh_root = kwargs['layoutMesh_root']
-			if save_root is None:
+			if suffix is None:
 				self.save_root = os.path.join(save_root, scene_id)
 			else:
 				self.save_root = os.path.join(save_root, scene_id+'_'+suffix) 
@@ -77,6 +77,7 @@ class SceneParser:
 
 	# parse one shape block - one object instance
 	def parse_shape_block(self, shape_block):
+		#print(shape_block.get('id'))
 		obj = SceneObj(id=shape_block.get('id'))
 
 		## obj type: static or interactive
@@ -329,7 +330,8 @@ class SceneParser:
 	# each bsdf block corresponds to one material
 	# each shape block corresponds to one object, and may inlcude multiple bsdf blocks (materials)
 	# the same shape id could appear multiple times in the scene, each for one object instance
-	def parse(self, is_split=True, is_floor_replaced=True):
+	# is_split: split layout
+	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True):
 		## clear output directory and recreate an empty directory
 		if os.path.isdir(self.save_root): 
 			rmtree(self.save_root)
@@ -347,9 +349,10 @@ class SceneParser:
 			scene_xml_path = split_layout(self.scene_id, scene_xml_path, os.path.join(self.layoutMesh_root, self.scene_id), tmp_root)
 			# duplicate floors
 			#materials = ['Material__ceramic_small_diamond', 'Material__roughcast_sprayed', 'Material__ceramic_small_diamond']
-			materials = ['Material__carpet_loop', 'Material__roughcast_sprayed', 'Material__carpet_loop']
-			borders = [3., 4.]
-			duplicate_floor(scene_xml_path, materials, borders)
+			if split_floor:
+				materials = ['Material__carpet_loop', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
+				borders = [3., 4.]
+				duplicate_floor(scene_xml_path, materials, borders)
 
 		## get scene xml file
 		self.xml_root = self.__get_scene_xml(scene_xml_path)
@@ -360,6 +363,13 @@ class SceneParser:
 			if obj == None: 
 				continue
 			self.obj_list.append(obj)
+
+		
+		#print("*****************************************")
+		#for o in self.obj_list:
+		#	print(o.id)	
+		#print("*****************************************")
+		
 		
 		## replace floor with planar object
 		if is_floor_replaced:

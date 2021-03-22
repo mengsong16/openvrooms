@@ -16,7 +16,8 @@ import shutil
 def parse_generate_mtl_scene(scene_id, multi_band=False):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
-		'scene_root': os.path.join(original_dataset_path, 'scenes'),
+		#'scene_root': os.path.join(original_dataset_path, 'scenes'),
+		'scene_root': dataset_path,
 		'brdf_root' : os.path.join(original_dataset_path, 'BRDFOriginDataset'),
 		'uvMapped_root': os.path.join(original_dataset_path, 'uv_mapped'),
 		'envDataset_root': os.path.join(original_dataset_path, 'EnvDataset'),
@@ -25,12 +26,14 @@ def parse_generate_mtl_scene(scene_id, multi_band=False):
 
 	if multi_band:
 		suffix = 'multi_band'
+		split_floor = True
 	else:
 		suffix = None
+		split_floor = False
 
 	# parse the scene and generate mtl files
 	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
-	parser.parse()
+	parser.parse(split_floor=split_floor)
 
 	## object list of the scene to a pickle file
 	pickle_path = get_pickle_path(scene_id, suffix=suffix)
@@ -58,7 +61,7 @@ def generate_urdf_scene(scene_id, multi_band=False):
 	
 	for obj in parser.obj_list:
 		obj_file = os.path.join(scene_folder, obj.obj_path)	
-		print(obj_file)
+		#print(obj_file)
 		if 'floor' in obj_file:
 			# copy .obj to vhach.obj
 			floor_vhacd_obj_path = os.path.join(scene_folder, obj_file.replace('.obj', '_vhacd.obj'))

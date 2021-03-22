@@ -203,6 +203,7 @@ class RoomScene(Scene):
             for floor_name in self.floor_obj_file_name:
                 self.floor_id.append(self.get_split_urdf(floor_name))
         else:    
+            print(self.floor_obj_file_name)
             self.floor_id = self.get_split_urdf(self.floor_obj_file_name)
 
         self.wall_id = self.get_split_urdf(self.wall_obj_file_name)

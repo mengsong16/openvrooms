@@ -959,8 +959,8 @@ if __name__ == '__main__':
 		start = time.time()
 		env.reset()
 		for _ in range(400):  # 10 seconds
-			action = env.action_space.sample()
-			#action = 3
+			#action = env.action_space.sample()
+			action = 3
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
 			#pos_distances, rot_distances = env.task.goal_distance()
