@@ -250,38 +250,53 @@ class Fetch(LocomotorRobot):
     def get_mass(self):
         return self.robot_mass
 
-    # get normalized joint velocity and torque
+    # get raw and max joint velocity and torque
     # range: [-1,1] (try to, may overflow)
     # only consider wheel joints
-    def get_joint_state(self, normalized):
+    # setted_wheel_velocity is in [0,1]
+    def get_joint_state(self, discrete_action_space, setted_wheel_velocity):
         # [n,3]: n joints
-        if normalized:
-            joint_info = np.array([j.get_relative_state() for j in self.wheel_joints]).astype(np.float32)
-        else:
-            joint_info = np.array([j.get_state() for j in self.wheel_joints]).astype(np.float32)    
 
+        # get raw joint velocity and torque
+        joint_info = np.array([j.get_state() for j in self.wheel_joints]).astype(np.float32)    
         #joint_position = joint_info[:,0]
-        joint_velocity = joint_info[:,1]
-        joint_torque = joint_info[:,2]
+        joint_raw_velocity = joint_info[:,1]
+        joint_raw_torque = joint_info[:,2]
 
-    
-        #print("---------------------------")
-        #print("Joint velocity: %s"%(joint_velocity))
-        #print("Joint torque: %s"%(joint_torque))
-
-
-        return joint_velocity, joint_torque
-
-    def get_energy(self, normalized=True, discrete_action_space=False, wheel_velocity=1.0):
-        joint_velocity, joint_torque = self.get_joint_state(normalized)
-        #print("joint velocity: %s"%(joint_velocity))
-        #print("joint torque: %s"%(joint_torque))
-        energy = np.abs(joint_velocity * joint_torque).mean()
-
-
+        joint_max_velocity = np.array([j.max_velocity for j in self.wheel_joints]).astype(np.float32)
         if discrete_action_space:
-            energy /= abs(float(wheel_velocity))
-        #print("Energy cost: %f"%energy)
+           joint_max_velocity *= abs(float(setted_wheel_velocity))
+             
+        # Note that since we are using velocity control, the real torque could be larger than mox torque     
+        joint_max_torque = np.array([j.max_torque for j in self.wheel_joints]).astype(np.float32) 
+        # print("---------------------------")
+        # print("Joint raw velocity: %s"%(joint_raw_velocity))
+        # print("Joint raw torque: %s"%(joint_raw_torque))
+        # print("Joint max velocity: %s"%(joint_max_velocity))
+        # print("Joint max torque: %s"%(joint_max_torque))
+        # print("---------------------------")
 
-        return energy
+        return joint_raw_velocity, joint_raw_torque, joint_max_velocity, joint_max_torque
+
+    def get_energy(self, normalized=True, discrete_action_space=False, setted_wheel_velocity=1.0):
+        joint_raw_velocity, joint_raw_torque, joint_max_velocity, joint_max_torque = self.get_joint_state(discrete_action_space, setted_wheel_velocity)
+        #print("joint velocity: %s"%(joint_raw_velocity))
+        #print("joint torque: %s"%(joint_raw_torque))
+        raw_energy = np.abs(np.dot(joint_raw_velocity, joint_raw_torque))
+
+        if normalized:
+            max_energy = np.abs(np.dot(joint_max_velocity, joint_max_torque))
+            normalized_energy = float(raw_energy) / float(max_energy)
+            #print("---------------------------")
+            #print(raw_energy)
+            #print(max_energy)
+            #print(normalized_energy)
+            #print("---------------------------")
+            return normalized_energy
+        #print("Energy cost: %f"%energy)
+        else:
+            # print("---------------------------")
+            # print(raw_energy)
+            # print("---------------------------")
+            return raw_energy
           

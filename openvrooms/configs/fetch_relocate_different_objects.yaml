@@ -56,7 +56,7 @@ out_of_bound_reward: -1000.0
 tier_cost: -1.0
 
 use_energy_cost: false
-energy_cost_scale: 1.0
+#energy_cost_scale: 1.0
 normalized_energy: true #false
 
 # episode termination condition

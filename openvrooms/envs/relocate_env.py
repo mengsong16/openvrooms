@@ -730,8 +730,8 @@ class RelocateEnv(iGibsonEnv):
 			reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
 
 		# consider energy cost when succeed
-		assert self.config.get('normalized_energy') == True
 		if info['success'] and self.use_energy_cost:
+			assert self.config.get('normalized_energy') == True
 			ratio = self.current_episode_robot_energy_cost / float(self.config.get('max_step'))
 			reward = reward * (1 - ratio)
 		
@@ -959,8 +959,8 @@ if __name__ == '__main__':
 		start = time.time()
 		env.reset()
 		for _ in range(400):  # 10 seconds
-			#action = env.action_space.sample()
-			action = 3
+			action = env.action_space.sample()
+			#action = 3
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
 			#pos_distances, rot_distances = env.task.goal_distance()
@@ -978,7 +978,8 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		print('Episode energy cost (normalized): %f'%(env.current_episode_robot_energy_cost/float(400.0)))
+		print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost))	
+		#print('Episode energy cost (normalized): %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(env.current_step)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
