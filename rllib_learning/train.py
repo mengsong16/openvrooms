@@ -24,7 +24,7 @@ robot_option = 'fetch'
 #robot_option = 'turtlebot'
 
 
-dqn_train_config = dqn.DEFAULT_CONFIG.copy()
+#dqn_train_config = dqn.DEFAULT_CONFIG.copy()
 dqn_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
@@ -58,7 +58,7 @@ dqn_train_config = {
         }
     }
 
-ppo_train_config = ppo.DEFAULT_CONFIG.copy()
+#ppo_train_config = ppo.DEFAULT_CONFIG.copy()
 ppo_train_config = {
         #"env": "Breakout-v0",
         "env": OpenRoomEnvironmentRLLIB,  
@@ -90,7 +90,7 @@ ppo_train_config = {
         "kl_target": 0.01
 }
 
-sac_train_config = sac.DEFAULT_CONFIG.copy()
+#sac_train_config = sac.DEFAULT_CONFIG.copy()
 sac_train_config = {
         #"env": "Breakout-v0",
         "env": OpenRoomEnvironmentRLLIB,  
