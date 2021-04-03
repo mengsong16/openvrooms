@@ -14,6 +14,8 @@ from ray.rllib.agents import ppo, dqn, sac
 from ray import tune
 from ray.tune.logger import pretty_print
 
+from openvrooms.utils.callbacks import CustomTrainingMetrics
+
 
 
 #-------------------- config -------------------
@@ -70,6 +72,7 @@ ppo_train_config = {
            "device_idx": 0, # renderer use gpu 0
            "frame_stack": 0
         },
+        "callbacks": CustomTrainingMetrics,
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 1,
         "num_workers": 10,
@@ -136,7 +139,7 @@ def train_ppo():
 
     ray.init()
 
-    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)
+    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True, local_dir="~/ray_results")
 
 
 
@@ -147,7 +150,7 @@ def train_sac():
 
     ray.init()
 
-    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)    
+    results = tune.run("SAC", config=sac_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True, local_dir="~/ray_results")    
 
 def train_dqn():
     ray.init()
@@ -167,7 +170,7 @@ def train_dqn():
            print("checkpoint saved at", checkpoint)
     '''
 
-    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True)
+    results = tune.run("DQN", config=dqn_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True, local_dir="~/ray_results")
 
 if __name__ == "__main__":    
     #train_dqn()

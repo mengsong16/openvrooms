@@ -48,6 +48,8 @@ from openvrooms.simulator.simulator import Simulator
 from gibson2.utils.utils import parse_config
 from gibson2.render.mesh_renderer.mesh_renderer_settings import MeshRendererSettings
 
+from openvrooms.utils.utils import l2_distance
+
 class RelocateEnv(iGibsonEnv):
 	"""
 	iGibson Environment (OpenAI Gym interface)
@@ -58,8 +60,6 @@ class RelocateEnv(iGibsonEnv):
 		config_file,
 		scene_id=None,
 		mode='headless',
-		action_timestep=1 / 10.0,
-		physics_timestep=1 / 240.0,
 		device_idx=0,
 		render_to_tensor=False,
 		automatic_reset=False,
@@ -89,8 +89,16 @@ class RelocateEnv(iGibsonEnv):
 			self.config['scene_id'] = scene_id
 
 		self.mode = mode
-		self.action_timestep = action_timestep
-		self.physics_timestep = physics_timestep
+
+		self.action_timestep = self.config['action_timestep']
+		self.physics_timestep = self.config['physics_timestep']
+
+		# energy in reward function
+		#self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
+		self.use_energy_cost = self.config.get('use_energy_cost')
+		self.history_energy_ratio = self.config.get('history_energy_ratio')
+		self.joint_level_energy = self.config.get('joint_level_energy')
+		self.normalized_energy = self.config.get('normalized_energy')
 
 
 		enable_shadow = self.config.get('enable_shadow', False)
@@ -105,8 +113,8 @@ class RelocateEnv(iGibsonEnv):
 										texture_scale=texture_scale)
 
 		self.simulator = Simulator(mode=mode,
-								   physics_timestep=physics_timestep,
-								   render_timestep=action_timestep,
+								   physics_timestep=self.physics_timestep,
+								   render_timestep=self.action_timestep,
 								   image_width=self.config.get(
 									   'image_width', 128),
 								   image_height=self.config.get(
@@ -118,22 +126,23 @@ class RelocateEnv(iGibsonEnv):
 								   rendering_settings=settings,
 								   external_camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
 								   external_camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]),
-								   normalized_energy=self.config.get('normalized_energy', True),
+								   normalized_energy=self.normalized_energy,
 								   discrete_action_space=self.config.get('is_discrete', False), 
-                 				   wheel_velocity=self.config.get('wheel_velocity', 1.0))
+								   wheel_velocity=self.config.get('wheel_velocity', 1.0))
 
 		self.load()								 
 
 		self.automatic_reset = automatic_reset
 
 
-		self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
-		self.use_energy_cost = self.config.get('use_energy_cost')
-
 		if self.use_energy_cost:
-			print("Consider energy cost in reward function")
+			print("Consider energy cost in success reward")
+			if self.history_energy_ratio:
+				print("Use running history energy as ratio")
+			else:
+				print("Use paper's method as ratio")	
 		else:
-			print("DO NOT consider energy cost in reward function")	
+			print("DO NOT consider energy cost in success reward")	
 		print('--------------------------------')	
 		
 
@@ -277,12 +286,21 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		Load miscellaneous variables for book keeping
 		"""
-		self.current_step = 0
-		self.non_interactive_collision_step = 0
-		self.interactive_collision_step = 0
+		self.current_step = 0 # per episode
+		self.non_interactive_collision_step = 0 # per episode
+		self.interactive_collision_step = 0 # per episode
 		self.current_episode = 0
-		self.non_interactive_collision_links = []
-		self.interactive_collision_links = []
+
+		self.current_episode_robot_energy_cost = 0.0 # per episode
+		self.current_episode_pushing_energy_translation = 0.0 # per episode
+		self.current_episode_pushing_energy_rotation = 0.0 # per episode
+
+		self.non_interactive_collision_links = [] # per step
+		self.interactive_collision_links = [] # per step
+
+		## record max energy among all successful episodes
+		self.max_success_episode_robot_energy_cost = 0.
+		self.max_success_episode_pushing_energy_cost = 0.
 
 	def load(self):
 		"""
@@ -549,18 +567,23 @@ class RelocateEnv(iGibsonEnv):
 		#print(combined_state.shape)
 		return combined_state	
 	
+
+	# run physics engine simulator for n steps (run one action step)
 	def run_simulation(self):
 		"""
 		Run simulation for one action timestep (same as one render timestep in Simulator class)
 
 		:return: collision_links: collisions from last physics timestep
 		"""
+		
 		# call simulator.step()
+		# run one action step
 		self.simulator_step()
-		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
-		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 
-		non_interactive_collision_links, interactive_collision_links = self.filter_collision_links(collision_links)
+		# check collision at the end of n physics simulator steps
+
+		# only consider where bodyA=robot
+		non_interactive_collision_links, interactive_collision_links = self.filter_collision_links()
 
 		'''
 		bodyB_robot = list(p.getContactPoints(bodyB=self.robots[0].robot_ids[0]))
@@ -577,8 +600,8 @@ class RelocateEnv(iGibsonEnv):
 			print("----------------------------------")		
 		'''	
 
+		# get collision where bodyA=interactive_object, bodyB=non_interactive_object or interactive_object
 		negative_collisions = self.filter_interactive_collision_links()
-
 		non_interactive_collision_links.extend(negative_collisions)
 
 		'''
@@ -596,11 +619,13 @@ class RelocateEnv(iGibsonEnv):
 				print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))		
 		'''
 
-		# get robot energy of current step
-		self.current_step_robot_energy_cost = self.simulator.robot_energy_cost
+		# get robot energy of current action step after stepping physics simulator
+		current_step_robot_energy_cost = self.simulator.robot_energy_cost
 
-		return non_interactive_collision_links, interactive_collision_links
+		
+		return non_interactive_collision_links, interactive_collision_links, current_step_robot_energy_cost
 
+	# get collision where bodyA=interactive_object, bodyB=non_interactive_object or interactive_object
 	def filter_interactive_collision_links(self):
 		negative_collisions = []
 		collision_ignore_body_b_ids_list = list(self.collision_ignore_body_b_ids)
@@ -636,10 +661,45 @@ class RelocateEnv(iGibsonEnv):
 				
 		return negative_collisions
 
+	def get_interactive_obj_physics(self, obj):
+		object_urdf_id = obj.body_id
+		collisions = list(p.getContactPoints(bodyA=object_urdf_id))
+		# 0-contactFlag, 1-bodyUniqueIdA, 2-bodyUniqueIdB, 3-linkIndexA, 4-linkIndexB
+		floor_collisions = []
+		for item in collisions:
+			if self.scene.multi_band:
+				# collision where bodyA = wheels, bodyB = floor
+				if item[2] in self.scene.floor_id:
+					#print("collsion: box and floor: %d"%(item[2]))
+					floor_collisions.append(item)
+			# single floor		
+			else:
+				# collision where bodyA = wheels, bodyB = floor
+				if item[2] == self.scene.floor_id:
+					floor_collisions.append(item)
+
+		# average floor coefficients if there are more than one floors
+		floor_friction_coefficient = 0
+		for floor_collision in floor_collisions:
+			floor_urdf_id = floor_collision[2]	
+			floor_friction_coefficient += p.getDynamicsInfo(floor_urdf_id, -1)[1]
+
+		floor_friction_coefficient /= float(len(floor_collisions))	
+
+		object_mass = obj.get_mass()
+
+		current_orn_z = obj.get_orientation_z()
+
+		current_pos_xy = obj.get_xy_position()
+
+		obj_x_width, obj_y_width = obj.get_xy_dimension()
+
+		return floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width
+
 
 	# get collision links with robot base link
-	# ignore some, return collisions with interactive and non-interactive links respectively
-	def filter_collision_links(self, collision_links):
+	# get collision links where bodyA=robot base link, bodyB=non-interactive objects and interactive objects respectively
+	def filter_collision_links(self):
 		"""
 		Filter out collisions that should be ignored
 
@@ -647,22 +707,27 @@ class RelocateEnv(iGibsonEnv):
 		:return: filtered collisions
 		"""
 
+		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 		# 0-contactFlag, 1-bodyUniqueIdA, 2-bodyUniqueIdB, 3-linkIndexA, 4-linkIndexB
 		non_interactive_collision_links = []
 		interactive_collision_links = []
+		
 
 		for item in collision_links:
-			# ignore collision with robot link a (wheels)
+			# ignore collision where bodyA = ignored robot link (wheels)
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
-
-			# ignore self collision with robot link a (body b is also robot itself)
-			if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
+				
+			# ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
+			#if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
+			# ignore self collision where bodyA = not ignored robot link, bodyB = any robot link
+			if item[2] == self.robots[0].robot_ids[0]:	
 				continue
 
-			# ignore collision between robot and body b - interactive objects
+			# collision between where bodyA = robot base, bodyB = interactive objects
 			if item[2] in self.collision_ignore_body_b_ids:
 				interactive_collision_links.append(item)
+			# collision between where bodyA = robot base, bodyB = non interactive objects	
 			else:
 				#print("***********************************")
 				#print("non-interactive collision: %d"%(item[2]))
@@ -675,6 +740,24 @@ class RelocateEnv(iGibsonEnv):
 
 		return non_interactive_collision_links, interactive_collision_links
 
+	def calc_pushing_energy_trans(self, pos1, pos2, mass, coeff):
+		pos1 = np.array(pos1).flatten()
+		pos2 = np.array(pos2).flatten()
+
+		# note that usually pos1 != pos2 even if object did not move
+		#print(np.array_equal(pos1, pos2))
+		#print(pos1)
+		#print(pos2)
+		#print('---------------------------------------')
+
+		assert len(pos1) == len(pos2) == 2, f"[calc_pushing_energy_trans]Error: invalid position vector size: pos1={len(pos1)} and pos2={len(pos2)}!"
+	
+		# igibson set gravity as 9.8
+		return abs(coeff * mass) * 9.8 * np.linalg.norm(pos1 - pos2)
+
+	def calc_pushing_energy_rot(self, orn1, orn2, mass, len_x, len_y):
+		return 0
+
 	# populate information into info
 	def populate_info(self, info):
 		"""
@@ -683,6 +766,46 @@ class RelocateEnv(iGibsonEnv):
 		info['episode_length'] = self.current_step
 		info['non_interactive_collision_step'] = self.non_interactive_collision_step # how many steps involve collision with non-interactive objects
 		info['interactive_collision_step'] = self.interactive_collision_step # how many steps involve collision with interactive objects
+
+	def compute_pushing_energy_per_action_step(self, prev_obj_pos_xy, prev_obj_orn_z):
+		current_step_pushing_energy_translation = 0
+		current_step_pushing_energy_rotation = 0
+
+		for i, obj in enumerate(self.scene.interative_objects):
+			floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width = self.get_interactive_obj_physics(obj)
+			obj_pushing_energy_translation = self.calc_pushing_energy_trans(pos1=prev_obj_pos_xy[i], pos2=current_pos_xy, mass=object_mass, coeff=floor_friction_coefficient)
+			#print(obj_pushing_energy_translation)
+			obj_pushing_energy_rotation = self.calc_pushing_energy_rot(orn1=prev_obj_orn_z[i], orn2=current_orn_z, mass=object_mass, len_x=obj_x_width, len_y=obj_y_width)
+
+			current_step_pushing_energy_translation += obj_pushing_energy_translation
+			current_step_pushing_energy_rotation += obj_pushing_energy_rotation
+
+		return  current_step_pushing_energy_translation, current_step_pushing_energy_rotation
+
+	# only get called when the episode is success
+	def compute_energy_ratio(self):
+		# running history
+		if self.history_energy_ratio:
+			# compute current episode pushing energy
+			current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
+			
+			# record max energy among all successful episodes
+			self.max_success_episode_robot_energy_cost = max(self.max_success_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
+			self.max_success_episode_pushing_energy_cost = max(self.max_success_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
+
+			if self.joint_level_energy: # normalized or not
+				ratio = self.current_episode_robot_energy_cost / float(self.max_success_episode_robot_energy_cost)
+			else:
+				ratio = current_episode_pushing_energy_cost / float(self.max_success_episode_pushing_energy_cost)
+		# paper's method		
+		else:
+			assert self.joint_level_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported by joint level energy cost!"
+			assert self.normalized_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported when joint level energy is normalized!"
+			
+			physics_simulation_steps = int(self.config.get('max_step')) * int(self.action_timestep / self.physics_timestep)
+			ratio = self.current_episode_robot_energy_cost / float(physics_simulation_steps)	
+
+		return ratio	
 
 	def step(self, action):
 		"""
@@ -701,8 +824,20 @@ class RelocateEnv(iGibsonEnv):
 		if action is not None:
 			self.robots[0].apply_action(action)
 
-		# step simulator and check collisions
-		non_interactive_collision_links, interactive_collision_links = self.run_simulation()
+		
+		# before step 
+		prev_obj_pos_xy = list()
+		prev_obj_orn_z = list()
+		for obj in self.scene.interative_objects:
+			prev_obj_pos_xy.append(obj.get_xy_position())
+			prev_obj_orn_z.append(obj.get_orientation_z())
+			
+
+		# step simulator, check collisions, compute current_step_robot_energy_cost
+		non_interactive_collision_links, interactive_collision_links, current_step_robot_energy_cost = self.run_simulation()
+
+		# after step
+		# used by reward_termination collision
 		self.non_interactive_collision_links = non_interactive_collision_links
 		self.interactive_collision_links = interactive_collision_links
 
@@ -710,15 +845,19 @@ class RelocateEnv(iGibsonEnv):
 		self.interactive_collision_step += int(len(interactive_collision_links) > 0)
 
 
-		# accumulate robot_energy_cost at this step
-		self.current_episode_robot_energy_cost += self.current_step_robot_energy_cost
+		# accumulate robot energy cost at this step
+		self.current_episode_robot_energy_cost += current_step_robot_energy_cost
 		
 		#print('Energy cost: %f'%(self.robot_energy_cost_cur_step * self.energy_cost_scale))
 		#print('Action: %s'%(action))
 		#if len(interactive_collision_links) > 0:
 		#	print('Push')
 		#print('--------------------------')
-		
+
+		# accumulate pushing energy cost at this step
+		current_step_pushing_energy_translation, current_step_pushing_energy_rotation = self.compute_pushing_energy_per_action_step(prev_obj_pos_xy, prev_obj_orn_z)
+		self.current_episode_pushing_energy_translation +=  current_step_pushing_energy_translation
+		self.current_episode_pushing_energy_rotation += current_step_pushing_energy_rotation
 
 		state = self.get_state()
 		info = {}
@@ -729,10 +868,9 @@ class RelocateEnv(iGibsonEnv):
 			assert self.config['scene'] == 'relocate_different_objects'
 			reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
 
-		# consider energy cost when succeed
+		# consider energy cost in reward function when succeed
 		if info['success'] and self.use_energy_cost:
-			assert self.config.get('normalized_energy') == True
-			ratio = self.current_episode_robot_energy_cost / float(self.config.get('max_step'))
+			ratio = self.compute_energy_ratio()
 			reward = reward * (1 - ratio)
 		
 		#print(sub_reward)
@@ -900,14 +1038,16 @@ class RelocateEnv(iGibsonEnv):
 			print("-------------------------------------------------")
 		'''
 		self.current_episode += 1
-		self.current_step = 0
-		self.non_interactive_collision_step = 0
-		self.interactive_collision_step = 0
-		self.non_interactive_collision_links = []
-		self.interactive_collision_links = []
+		self.current_step = 0 # per episode
+		self.non_interactive_collision_step = 0 # per episode
+		self.interactive_collision_step = 0 # per episode
 
-		self.current_step_robot_energy_cost = 0.0
-		self.current_episode_robot_energy_cost = 0.0
+		self.current_episode_robot_energy_cost = 0.0 # per episode
+		self.current_episode_pushing_energy_translation = 0.0 # per episode
+		self.current_episode_pushing_energy_rotation = 0.0 # per episode
+
+		self.non_interactive_collision_links = [] # per step
+		self.interactive_collision_links = [] # per step
 
 
 	def reset(self):
@@ -947,9 +1087,7 @@ if __name__ == '__main__':
 	#sys.stdout = open('/home/meng/ray_results/output.txt', 'w')
 
 	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
-					 mode=args.mode,
-					 action_timestep=1.0 / 10.0,
-					 physics_timestep=1.0 / 40.0)
+					 mode=args.mode)
 
 	
 	step_time_list = []
@@ -978,7 +1116,9 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost))	
+		print('Episode robot output energy: %f'%(env.current_episode_robot_energy_cost))
+		print('Episode pushing energy (translation): %f'%(env.current_episode_pushing_energy_translation))
+		print('Episode pushing energy (rotation): %f'%(env.current_episode_pushing_energy_rotation))	
 		#print('Episode energy cost (normalized): %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(env.current_step)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(

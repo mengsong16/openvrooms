@@ -39,7 +39,11 @@ class InteractiveObj(Object):
 
     def get_xy_position(self):
         pos, _ = p.getBasePositionAndOrientation(self.body_id)
-        return [pos[0], pos[1]]       
+        return [pos[0], pos[1]] 
+
+    def get_orientation_z(self):
+        _, orn = p.getBasePositionAndOrientation(self.body_id) 
+        return orn[2]         
 
     def get_mesh(self):           
         obj_file = self.filename.replace(".urdf", ".obj")
@@ -72,5 +76,8 @@ class InteractiveObj(Object):
         self.material = m
 
     def get_material(self): 
-        return self.material            
+        return self.material  
+
+    def get_xy_dimension(self):
+        return self.box_x_width, self.box_y_width              
 

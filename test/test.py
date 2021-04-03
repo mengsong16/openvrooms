@@ -627,7 +627,7 @@ def robot_move_forward(robot, scene, robot_start_position=[-2, 0, 0], robot_goal
 
 
 # push forward for some distance
-def push_forward(robot, obj, scene, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=10, time_step=0.025):
+def push_forward_simulator_level(robot, obj, scene, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=10, time_step=0.025):
     # set object start position, mass, robot start position
     obj.set_xy_position(object_start_position[0], object_start_position[1])
     obj.set_mass(object_mass)
@@ -678,7 +678,8 @@ def push_forward(robot, obj, scene, robot_start_position=[-2, 0, 0], object_star
     print('Energy per step: %f'%(total_energy / float(step_num)))  
     print("---------------------------") 
 
-def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1): 
+
+def test_robot_energy_cost_simulator_level(scene_id='scene0420_01', n_interactive_objects=1): 
     time_step = 1./40.
     p.connect(p.GUI)
     #p.connect(p.DIRECT)
@@ -707,7 +708,7 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
     robot.robot_specific_reset()
     robot.keep_still()
 
-    push_forward(robot, obj, scene, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=80, time_step=time_step)
+    push_forward_simulator_level(robot, obj, scene, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=80, time_step=time_step)
     
     #robot_move_forward(robot, scene, robot_start_position=[-2, 0, 0], robot_goal_position=[0.5, 0, 0], time_step=0.025)
     #robot_random_move(robot, scene, step_num=190, time_step=0.025)
@@ -719,6 +720,81 @@ def test_robot_energy_cost(scene_id='scene0420_01', n_interactive_objects=1):
         time.sleep(time_step)
 
     p.disconnect()
+
+def test_robot_energy_cost_agent_level(scene_id='scene0420_01', n_interactive_objects=1): 
+    #mode = "gui"
+    mode = "headless"
+    env = RelocateEnv(config_file=os.path.join(config_path, "fetch_relocate.yaml"), mode="headless")
+    
+    # warm up
+    for _ in range(100):
+        env.step(3)
+
+    # push
+    push_forward_agent_level(env=env, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=80, floor_friction=0.5)
+    
+    # cool down
+    for _ in range(2400000):
+        env.step(3)
+
+
+# push forward for some distance
+def push_forward_agent_level(env, robot_start_position=[-2, 0, 0], object_start_position=[-1.4, 0], object_goal_position=[1, 0], object_mass=10, floor_friction=0.5):
+    
+    scene = env.scene
+    robot = env.robots[0]
+    obj = env.scene.interative_objects[0]
+
+    # set object start position, mass, robot start position
+    obj.set_xy_position(object_start_position[0], object_start_position[1])
+    obj.set_mass(object_mass)
+    robot.set_position(robot_start_position)
+    scene.set_floor_friction_coefficient(floor_friction)
+
+    total_energy = 0.0
+    # action step, not simulation step
+    step_num = 0
+
+    while True:
+        # move robot forward for one action step
+        state, reward, done, info = env.step(0)
+
+        # get normalized step energy
+        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, wheel_velocity=0.5)
+
+        step_num += 1
+
+        # reach goal?    
+        object_current_position = obj.get_xy_position()
+        if object_current_position[0] > object_goal_position[0]:
+            break
+
+    robot_end_position = robot.get_position()
+    object_end_position = obj.get_xy_position() 
+    
+    print("---------------------------")
+    print("Object mass: %f"%(obj.get_mass()))
+    print("Robot mass: %f"%(robot.get_mass()))
+    print("Object FC: %f"%(obj.get_friction_coefficient()))
+    print("Floor FC: %f"%(scene.get_floor_friction_coefficient()))
+    print("Robot wheel velocity (normalized): %f"%(robot.wheel_velocity))
+    print("Physics simulator timestep: %f"%(env.physics_timestep))
+    print("---------------------------")
+    print('Object start position: %s'%(object_start_position))
+    print('Object end position: %s'%(object_end_position))
+    print('Object target position: %s'%(object_goal_position))
+    print('Object traveled distance: %f'%(l2_distance(object_start_position, object_end_position)))
+    print("---------------------------")
+    print('Robot start position: %s'%(robot_start_position))
+    print('Robot end position: %s'%(robot_end_position))
+    print('Robot traveled distance: %f'%(l2_distance(robot_start_position, robot_end_position)))
+    print("---------------------------")
+    print("Total time steps: %d"%(step_num))
+    print('Total energy: %f'%total_energy)
+    print('Energy per step: %f'%(total_energy / float(step_num)))  
+    print("---------------------------") 
+
+
 
 def get_robot_info(scene_id='scene0420_01'):
     time_step = 1./40.
@@ -777,14 +853,16 @@ if __name__ == "__main__":
 
     #test_multi_band_scene()
     #test_relocate_scene_different_objects()
-    #test_robot_energy_cost()
+    #test_robot_energy_cost_simulator_level()
     #test_relocate_scene()
+
+    test_robot_energy_cost_agent_level()
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')
     #get_robot_info()
     #test_relocate_scene(args.id, n_interactive_objects=1)
     #test_navigate_scene(args.id, n_obstacles=1)
-    test_scene(args.id, fix_interactive_objects=False)
+    #test_scene(args.id, fix_interactive_objects=False)
     #test_layout()
     #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')

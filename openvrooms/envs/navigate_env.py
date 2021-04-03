@@ -56,8 +56,6 @@ class NavigateEnv(RelocateEnv):
 		config_file,
 		scene_id=None,
 		mode='headless',
-		action_timestep=1 / 10.0,
-		physics_timestep=1 / 240.0,
 		device_idx=0,
 		render_to_tensor=False,
 		automatic_reset=False,
@@ -76,8 +74,6 @@ class NavigateEnv(RelocateEnv):
 		super(NavigateEnv, self).__init__(config_file=config_file,
 										 scene_id=scene_id,
 										 mode = mode,
-										 action_timestep=action_timestep,
-										 physics_timestep=physics_timestep,
 										 device_idx=device_idx,
 										 render_to_tensor=render_to_tensor,
 										 automatic_reset=automatic_reset)
@@ -159,28 +155,32 @@ class NavigateEnv(RelocateEnv):
 		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
 		print('--------------------------------')	
 
-	# get collision links with robot base link, ignore some, return collisions with interactive and non-interactive links respectively
-	def filter_collision_links(self, collision_links):
+	# get collision links where bodyA=robot base link, bodyB=non-interactive objects
+	def filter_collision_links(self):
 		"""
 		Filter out collisions that should be ignored
 
 		:param collision_links: original collisions, a list of collisions
 		:return: filtered collisions
 		"""
+		# only consider where bodyA=robot
+		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
 
 		# 0-contactFlag, 1-bodyUniqueIdA, 2-bodyUniqueIdB, 3-linkIndexA, 4-linkIndexB
 		filtered_collision_links = []
 
 		for item in collision_links:
-			# ignore collision with robot link a
+			# ignore collision where bodyA = ignored robot link (wheels)
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
 
-			# ignore self collision with robot link a (body b is also robot itself)
-			if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
+			# ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
+			#if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
+			# ignore self collision where bodyA = not ignored robot link, bodyB = any robot link
+			if item[2] == self.robots[0].robot_ids[0]:	
 				continue
 
-			# ignore collision with body b - interactive objects
+			# ignore collision between where bodyA = robot base, bodyB = interactive objects
 			if item[2] in self.collision_ignore_body_b_ids:
 				continue
 			
@@ -189,6 +189,7 @@ class NavigateEnv(RelocateEnv):
 			print('step: %d'%self.current_step)
 			print('bodyA:{}, bodyB:{}, linkA:{}, linkB:{}'.format(item[1], item[2], item[3], item[4]))
 			'''
+			# collision between where bodyA = robot base, bodyB = non interactive objects
 			filtered_collision_links.append(item)
 
 		return filtered_collision_links
@@ -200,10 +201,9 @@ class NavigateEnv(RelocateEnv):
 		:return: collision_links: collisions from last physics timestep
 		"""
 		self.simulator_step()
-		# only consider collisions between robot and objects or self collisions, not consider collisions between objects
-		collision_links = list(p.getContactPoints(bodyA=self.robots[0].robot_ids[0]))
+		
 
-		return self.filter_collision_links(collision_links)	
+		return self.filter_collision_links()	
 
 	# populate information into info
 	def populate_info(self, info):
@@ -305,9 +305,7 @@ if __name__ == '__main__':
 
 
 	env = NavigateEnv(config_file=os.path.join(config_path, args.config),
-					 mode=args.mode,
-					 action_timestep=1.0 / 10.0,
-					 physics_timestep=1.0 / 40.0)
+					 mode=args.mode)
 
 	
 	step_time_list = []

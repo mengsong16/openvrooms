@@ -23,6 +23,7 @@ import logging
 from transforms3d.euler import euler2quat
 from gibson2.utils.mesh_util import perspective, lookat, xyz2mat, quat2rotmat, mat2xyz, safemat2quat, xyzw2wxyz, ortho, transform_vertex
 import math
+from openvrooms.utils.utils import l2_distance
 
 class Simulator:
     """
@@ -101,7 +102,7 @@ class Simulator:
         self.class_name_to_class_id = get_class_name_to_class_id()
         self.body_links_awake = 0
 
-        self.robot_energy_cost = 0.0
+        self.robot_energy_cost = 0.0  # robot energy for one action step
         self.normalized_energy = normalized_energy
         self.discrete_action_space = discrete_action_space
         self.wheel_velocity = wheel_velocity
@@ -596,19 +597,30 @@ class Simulator:
             if instance.dynamic:
                 self.update_position(instance)
 
-    # called by envs
+    
+    
+    # called by env.simulator_step()
+    # run physics engine simulator for n steps
     def step(self):
         """
         Step the simulation at self.render_timestep and update positions in renderer
         """
+        
         self.robot_energy_cost = 0.0
 
         n = int(self.render_timestep / self.physics_timestep)
+
+        #print("render_timestep: %f"%(self.render_timestep))
+        #print("physics_timestep: %f"%(self.physics_timestep))
+
         
         for _ in range(n):
             p.stepSimulation()
-            self.robot_energy_cost += self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
 
+            # accumulate robot energy cost
+            self.robot_energy_cost += self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
+            
+            
             '''
             print(self.normalized_energy)
             print(self.discrete_action_space)
@@ -618,7 +630,7 @@ class Simulator:
             '''
         # ensure [0,1]
         #if self.normalized_energy:
-        self.robot_energy_cost /= float(n)
+        #self.robot_energy_cost /= float(n)
 
         #print(self.robot_energy_cost) [0.1,0.2, navigate without pushing]
 
