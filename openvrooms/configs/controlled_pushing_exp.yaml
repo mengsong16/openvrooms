@@ -5,6 +5,7 @@ obj_initial_pos: [[-1.4, 0]]
 obj_target_pos: [[1, 0]] 
 obj_mass: [10]
 floor_friction: [0.5]
+obj_num: 1 #2
 
 # normalized wheel velocity
 wheel_velocity: 0.5 
@@ -21,7 +22,6 @@ physics_timestep: 0.025 # physics timestep for pybullet, 1/40
 scene: relocate
 scene_id: scene0420_01
 load_texture: true
-obj_num: 1 #2
 duplicated_objects: true
 
 # robot
