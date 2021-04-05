@@ -605,7 +605,7 @@ def robot_move_forward(robot, scene, robot_start_position=[-2, 0, 0], robot_goal
         p.stepSimulation()
 
         # get normalized joint velocity and torque
-        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, wheel_velocity=0.5)
+        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, setted_wheel_velocity=0.5)
 
         step_num += 1
 
@@ -649,7 +649,7 @@ def push_forward_simulator_level(robot, obj, scene, robot_start_position=[-2, 0,
         p.stepSimulation()
 
         # get normalized step energy
-        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, wheel_velocity=0.5)
+        total_energy += robot.get_energy(normalized=True, discrete_action_space=True, setted_wheel_velocity=0.5)
 
         step_num += 1
 
@@ -727,87 +727,6 @@ def test_robot_energy_cost_simulator_level(scene_id='scene0420_01', n_interactiv
     p.disconnect()
 
 
-def test_robot_energy_cost_agent_level(mode="gui"):
-    config_file_path = os.path.join(config_path, "controlled_pushing_exp.yaml") 
-    env = RelocateEnv(config_file=config_file_path, mode=mode)
-    env.reset()
-
-    # warm up
-    for _ in range(200):
-        env.step(3)
-    
-    # push
-    push_forward_agent_level(env=env, config_file=config_file_path)
-
-    # cool down
-    for _ in range(2400000):
-        env.step(3)
-
-    env.close()
-
-# push forward for some distance 
-def push_forward_agent_level(env, config_file):
-    scene = env.scene
-    robot = env.robots[0]
-    obj = env.scene.interative_objects[0]
-
-    config = parse_config(config_file)
-    
-    object_start_position = env.task.obj_initial_pos[0]
-    object_goal_position = env.task.obj_target_pos[0]
-    robot_start_position = env.task.agent_initial_pos
-    robot_energy_normalized = env.normalized_energy
-
-    # action step, not simulation step
-    step_num = 0
-
-    while True:
-        # move robot forward for one action step
-        state, reward, done, info = env.step(0)
-
-        step_num += 1
-
-        # reach goal?    
-        object_current_position = obj.get_xy_position()
-        if object_current_position[0] > object_goal_position[0]:
-            break
-
-    robot_end_position = robot.get_position()
-    object_end_position = obj.get_xy_position() 
-    
-    print("*******************************************************")
-    print("Experiment summary")
-    print("*******************************************************")
-    print("Object mass: %f"%(obj.get_mass()))
-    print("Robot mass: %f"%(robot.get_mass()))
-    print("Object friction coefficient: %f"%(obj.get_friction_coefficient()))
-    print("Floor friction coefficient: %f"%(scene.get_floor_friction_coefficient()))
-    print("---------------------------")
-    print("Robot wheel velocity (normalized): %f"%(robot.wheel_velocity)) # set in config
-    print("Physics simulation timestep: %f"%(env.physics_timestep)) # set in config
-    print("Action timestep: %f"%(env.action_timestep)) # set in config
-    print("---------------------------")
-    print('Object start position: %s'%(object_start_position))
-    print('Object end position: %s'%(object_end_position))
-    print('Object target position: %s'%(object_goal_position))
-    print('Object traveled distance: %f'%(l2_distance(object_start_position, object_end_position)))
-    print("---------------------------")
-    print('Robot start position: %s'%(robot_start_position))
-    print('Robot end position: %s'%(robot_end_position))
-    print('Robot traveled distance: %f'%(l2_distance(robot_start_position, robot_end_position)))
-    print("---------------------------")
-    print("Total (action) time steps: %d"%(step_num))
-    if robot_energy_normalized:
-        robot_energy_string = "Robot energy(normalized)"
-    else:
-        robot_energy_string = "Robot energy(raw)"    
-    print(robot_energy_string+': episode: %f, per step: %f'%(env.current_episode_robot_energy_cost, env.current_episode_robot_energy_cost/float(step_num)))
-    print('Pushing translation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_translation, env.current_episode_pushing_energy_translation/float(step_num)))  
-    print('Pushing rotation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_rotation, env.current_episode_pushing_energy_rotation/float(step_num)))  
-    print("*******************************************************") 
-
-
-
 def get_robot_info(scene_id='scene0420_01'):
     time_step = 1./40.
     #p.connect(p.GUI)
@@ -865,10 +784,8 @@ if __name__ == "__main__":
 
     #test_multi_band_scene()
     #test_relocate_scene_different_objects()
-    #test_robot_energy_cost_simulator_level()
+    test_robot_energy_cost_simulator_level()
     #test_relocate_scene()
-
-    test_robot_energy_cost_agent_level(mode="gui")
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')
     #get_robot_info()

@@ -1,11 +1,15 @@
 # ---------------------------------
 # parameters need to be set here
+# use navigation scene and task if no object involved
+scene: relocate #navigate
+task: relocate_goal_fixed #navigate_goal_fixed
+
 agent_initial_pos: [-2, 0, 0]
 obj_initial_pos: [[-1.4, 0]] 
-obj_target_pos: [[1, 0]] 
-obj_mass: [10]
+obj_target_pos: [[1, 0]]  
+obj_mass: [10] 
 floor_friction: [0.5]
-obj_num: 1 #2
+obj_num: 1 
 
 # normalized wheel velocity
 wheel_velocity: 0.5 
@@ -19,7 +23,6 @@ physics_timestep: 0.025 # physics timestep for pybullet, 1/40
 
 # ---------------------------------
 # scene
-scene: relocate
 scene_id: scene0420_01
 load_texture: true
 duplicated_objects: true
@@ -52,7 +55,6 @@ image_width: 84
 image_height: 84
 
 # task
-task: relocate_goal_fixed
 goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
