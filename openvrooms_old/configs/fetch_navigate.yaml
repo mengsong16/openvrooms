@@ -1,0 +1,94 @@
+# scene
+scene: navigate
+scene_id: scene0420_01
+load_texture: true
+obs_num: 0 #2
+
+# robot
+robot: Fetch
+agent_initial_pos: [0, 0, 0]
+agent_initial_orn: [0, 0, 0]
+agent_target_pos: [0.5, 0.5, 0]
+
+body_width: 0.5  # diameter of base link
+
+# action space
+is_discrete: true
+wheel_velocity: 0.5 # normalized wheel velocity
+move_distance: 0.1  #0.05
+turn_angle: 0.174 # 10 degree #0.03
+joint_control: true
+
+#linear_velocity: 0.5
+#angular_velocity: 1.5707963267948966
+
+# fixed obstacles: pos:[x,y], orn: eular angles
+obs_pos: [[0.5,0.5]] #[[1, 1], [2, 2]]
+obs_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
+
+# physics
+floor_friction: [0.5]
+
+# observation space: sensor spec
+output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb
+third_person_view: true
+external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
+external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
+image_width: 84
+image_height: 84
+
+# task
+task: navigate_goal_fixed
+goal_format: cartesian
+task_obs_dim: 6 # basic dimensions in state
+
+# reward
+use_goal_dist_reward: false
+goal_dist_reward_weight: 1.0 # should > 0
+
+success_reward: 10.0
+dist_tol: 0.25 # l2 distance in meter
+
+collision_penalty: -1.0 #-1000.0
+time_elapse_reward: 0.0 #-1.0
+out_of_bound_reward: -1000.0
+
+use_energy_cost: false
+energy_cost_scale: 1.0
+normalized_energy: false
+
+
+# episode termination condition
+max_step: 200
+max_collisions_allowed: 200
+
+# misc config
+initial_pos_z_offset: 0.1
+collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot links
+visual_object_visible_to_agent: false # visual target landmarks
+
+# simulation
+action_timestep: 0.1  # environment executes action per action_timestep second
+physics_timestep: 0.025 # physics timestep for pybullet
+
+#-----------------------------------------------------------------------------------------
+# rl for ALL
+# general training settings
+# training_timesteps: 200000
+# discount_factor: 0.99
+# learning_rate: 0.0001
+# minibatch_size: 64
+# frame_stack: 4
+
+# # dqn
+# update_frequency: 1
+# target_update_frequency: 100
+# replay_start_size: 1000
+# replay_buffer_size: 10000
+# initial_exploration: 1.0
+# final_exploration: 0.0
+# final_exploration_frame: 200000
+
+
+
+

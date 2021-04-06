@@ -50,6 +50,8 @@ from gibson2.render.mesh_renderer.mesh_renderer_settings import MeshRendererSett
 
 from openvrooms.utils.utils import l2_distance
 
+from openvrooms.utils.utils import GRAVITY
+
 class RelocateEnv(iGibsonEnv):
 	"""
 	iGibson Environment (OpenAI Gym interface)
@@ -92,6 +94,7 @@ class RelocateEnv(iGibsonEnv):
 
 		self.action_timestep = self.config['action_timestep']
 		self.physics_timestep = self.config['physics_timestep']
+		#self.physics_timestep = 1 / 240.0
 
 		# energy in reward function
 		#self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
@@ -241,7 +244,7 @@ class RelocateEnv(iGibsonEnv):
 		self.initial_pos_z_offset = self.config.get(
 			'initial_pos_z_offset', 0.1)
 		# s = 0.5 * G * (t ** 2)
-		drop_distance = 0.5 * 9.8 * (self.action_timestep ** 2)
+		drop_distance = 0.5 * GRAVITY * (self.action_timestep ** 2)
 		assert drop_distance < self.initial_pos_z_offset, \
 			'initial_pos_z_offset is too small for collision checking'
 
@@ -637,7 +640,7 @@ class RelocateEnv(iGibsonEnv):
 				if item[2] == self.robots[0].robot_ids[0]:
 					continue
 
-				# ignore collision between interactive objects and floor
+				# ignore collisions between interactive objects and floor
 				if self.scene.multi_band:
 					if item[2] in self.scene.floor_id:
 						#print("collsion: box and floor: %d"%(item[2]))
@@ -718,10 +721,10 @@ class RelocateEnv(iGibsonEnv):
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
 				
-			# ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
+			# keep ignore wheel collisions: ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
 			#if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
 			# ignore self collision where bodyA = not ignored robot link, bodyB = any robot link
-			if item[2] == self.robots[0].robot_ids[0]:	
+			if item[2] == self.robots[0].robot_ids[0]:
 				continue
 
 			# collision between where bodyA = robot base, bodyB = interactive objects
@@ -753,10 +756,33 @@ class RelocateEnv(iGibsonEnv):
 		assert len(pos1) == len(pos2) == 2, f"[calc_pushing_energy_trans]Error: invalid position vector size: pos1={len(pos1)} and pos2={len(pos2)}!"
 	
 		# igibson set gravity as 9.8
-		return abs(coeff * mass) * 9.8 * np.linalg.norm(pos1 - pos2)
+		return abs(coeff * mass) * GRAVITY * np.linalg.norm(pos1 - pos2)
 
-	def calc_pushing_energy_rot(self, orn1, orn2, mass, len_x, len_y):
-		return 0
+	def calc_pushing_energy_rot(self, orn1: float, orn2: float, mass: float, coeff: float, len_x: float, len_y: float)-> float:
+		# calc angle rotated
+		theta = abs(orn2 - orn1)
+
+		# calc gravity per unit area
+		rho = abs(mass * GRAVITY) / abs(len_x * len_y)
+
+		return coeff * rho * theta * self.calc_integral(len_x, len_y)
+
+	def calc_integral(self, X: float, Y: float) -> float:
+		X = abs(X)
+		Y = abs(Y)
+
+		# calc trigonometric functions
+		tan = Y / X
+		cos = X / np.sqrt(X**2 + Y**2)
+		sin = Y / np.sqrt(X**2 + Y**2)
+
+		# calc \integral 1/cos(\theta)^3 d\theta, 0 to \phi
+		A = 1/2 * (tan/cos + np.log(tan + 1/cos))
+
+		# calc \integral 1/sin(\theta)^3 d\theta, \phi to \pi/2
+		B = 1/2 * ( 1/tan * 1/sin - np.log( np.sqrt((1 - cos)/(1 + cos)) ) )
+
+		return (X**3)/6 * A + (Y**3)/6 * B	
 
 	# populate information into info
 	def populate_info(self, info):
@@ -775,7 +801,7 @@ class RelocateEnv(iGibsonEnv):
 			floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width = self.get_interactive_obj_physics(obj)
 			obj_pushing_energy_translation = self.calc_pushing_energy_trans(pos1=prev_obj_pos_xy[i], pos2=current_pos_xy, mass=object_mass, coeff=floor_friction_coefficient)
 			#print(obj_pushing_energy_translation)
-			obj_pushing_energy_rotation = self.calc_pushing_energy_rot(orn1=prev_obj_orn_z[i], orn2=current_orn_z, mass=object_mass, len_x=obj_x_width, len_y=obj_y_width)
+			obj_pushing_energy_rotation = self.calc_pushing_energy_rot(orn1=prev_obj_orn_z[i], orn2=current_orn_z, mass=object_mass, coeff=floor_friction_coefficient, len_x=obj_x_width, len_y=obj_y_width)
 
 			current_step_pushing_energy_translation += obj_pushing_energy_translation
 			current_step_pushing_energy_rotation += obj_pushing_energy_rotation

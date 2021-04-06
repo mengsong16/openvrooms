@@ -1,0 +1,43 @@
+
+# scene
+scene: navigate
+scene_id: scene0420_01
+load_texture: true
+obj_num: 1 #2
+duplicated_objects: true
+
+# robot
+robot: Turtlebot
+agent_initial_pos: [0, 0, 0]
+agent_initial_orn: [0, 0, 0]
+body_width: 0.36  # diameter of base link
+
+# action space
+is_discrete: true
+velocity: 1.0 # normalized wheel velocity
+move_distance: 0.1  #0.05
+turn_angle: 0.1 #0.03
+joint_control: true
+
+# objects: pos:[x,y], orn: eular angles
+obj_initial_pos: [[0.5,1]] #[[1, 1], [2, 2]]
+obj_initial_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
+obj_target_pos: [[1,1]] #[[-1, -1], [-2, -2]]
+obj_target_orn: [[0,0,0]] #[[0, 0, 0], [0, 0, 0]]
+
+# observation space: sensor spec
+output: [rgb]  # if learning, can only handle single modal  #task_obs or rgb
+third_person_view: true
+external_camera_pos: [2, -0.3, 2.3] #[2, 0, 2.3] #[1, 0, 2.3] 
+external_camera_view_direction: [-0.4, 0.3, -0.9] #[-0.3, 0, -0.8] #[-0.5, 0, -0.6] 
+image_width: 84
+image_height: 84
+
+# misc config
+initial_pos_z_offset: 0.1
+collision_ignore_link_a_ids: [1, 2, 3, 4]  # ignore collisions with these robot links
+visual_object_visible_to_agent: false # visual target landmarks
+
+# simulation
+action_timestep: 0.1  # environment executes action per action_timestep second
+physics_timestep: 0.025 # physics timestep for pybullet

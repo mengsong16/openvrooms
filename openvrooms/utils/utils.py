@@ -16,6 +16,8 @@ scipy_version = version.parse(scipy.version.version)
 
 # File I/O related
 
+# constants
+GRAVITY = 9.8
 # quat: [w,x,y,z], n1*n2*...*4
 def quat_identity():
 	return np.array([1, 0, 0, 0])
@@ -124,6 +126,9 @@ def	quatToXYZW_array(orn, seq):
 
 
 # orn: np.arraylike
+# quat: w,x,y,z
+# euler: in radian
+# default axes='sxyz'
 def	euler2quat_array(orn):
 	orn = np.array(orn)
 	if orn.ndim >= 2:
@@ -139,6 +144,9 @@ def	euler2quat_array(orn):
 
 
 # orn: np.arraylike
+# quat: w,x,y,z
+# euler: in radian
+# default axes='sxyz'
 def	quat2euler_array(orn):
 	orn = np.array(orn)
 	if orn.ndim >= 2:

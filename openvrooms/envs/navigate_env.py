@@ -175,7 +175,7 @@ class NavigateEnv(RelocateEnv):
 			if item[3] in self.collision_ignore_link_a_ids:
 				continue
 
-			# ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
+			# keep ignore wheel collisions: ignore self collision where bodyA = not ignored robot link, bodyB = ignored robot link (wheels)
 			#if item[2] == self.robots[0].robot_ids[0] and item[4] in self.collision_ignore_link_a_ids:
 			# ignore self collision where bodyA = not ignored robot link, bodyB = any robot link
 			if item[2] == self.robots[0].robot_ids[0]:	

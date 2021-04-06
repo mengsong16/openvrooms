@@ -5,7 +5,7 @@ import trimesh
 import copy
 
 from openvrooms.objects.base_object import Object
-
+from openvrooms.utils.utils import quatFromXYZW_array, quat2euler_array
 # only load urdf
 class InteractiveObj(Object):
     """
@@ -42,8 +42,12 @@ class InteractiveObj(Object):
         return [pos[0], pos[1]] 
 
     def get_orientation_z(self):
-        _, orn = p.getBasePositionAndOrientation(self.body_id) 
-        return orn[2]         
+        # orn: [x,y,z,w]
+        _, xyzw_orn = p.getBasePositionAndOrientation(self.body_id)
+        # [x,y,z,w] --> [w,x,y,z] --> euler
+        wxyz_orn = quatFromXYZW_array(np.array(xyzw_orn), 'wxyz')
+        euler = quat2euler_array(np.array(wxyz_orn))
+        return euler[2]         
 
     def get_mesh(self):           
         obj_file = self.filename.replace(".urdf", ".obj")

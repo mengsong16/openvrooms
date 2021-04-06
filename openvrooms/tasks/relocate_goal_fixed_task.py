@@ -408,7 +408,7 @@ class RelocateGoalFixedTask(BaseTask):
 			# time elapse
 			else:
 				reward = float(self.config["time_elapse_reward"]) + float(self.config["tier_cost"])* reward_tier	
-
+				
 		return reward, done, info, sub_reward		
 	
 	
