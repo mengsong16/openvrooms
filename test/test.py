@@ -67,14 +67,15 @@ def test_object():
     p.loadMJCF(floor)
     
     scene_path = get_scene_path(scene_id='scene0420_01')
-    chair1 = os.path.join(scene_path, '03001627_9231ef07326eae09b04cb542e2c50eb4_object_alignedNew.urdf')
-    chair2 = os.path.join(scene_path, '03001627_fe57bad06e1f6dd9a9fe51c710ac111b_object_alignedNew.urdf')
-    curtain = os.path.join(scene_path, 'curtain_4_object_alignedNew.urdf')
+    chair1 = os.path.join(scene_path, '03001627_9231ef07326eae09b04cb542e2c50eb4_object.urdf')
+    chair2 = os.path.join(scene_path, '03001627_fe57bad06e1f6dd9a9fe51c710ac111b_object.urdf')
+    curtain = os.path.join(scene_path, 'curtain_4_object.urdf')
 
     obj1 = InteractiveObj(curtain)
     #obj1 = InteractiveObj(filename=curtain)
     obj1.load()
     #obj1.set_position([0,0,0.5])
+    print(obj1.get_orientation())
 
     for _ in range(240000):  # at least 100 seconds
         p.stepSimulation()
@@ -784,7 +785,7 @@ if __name__ == "__main__":
 
     #test_multi_band_scene()
     #test_relocate_scene_different_objects()
-    test_robot_energy_cost_simulator_level()
+    #test_robot_energy_cost_simulator_level()
     #test_relocate_scene()
 
     #sys.stdout = open('/home/meng/ray_results/energy_cost_1.txt', 'w')
@@ -795,7 +796,7 @@ if __name__ == "__main__":
     #test_layout()
     #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')
-    #test_object()
+    test_object()
     #test_various_robot(args.id)
 
     '''

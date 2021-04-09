@@ -18,7 +18,7 @@ wheel_velocity: 0.5
 normalized_energy: false 
 
 # simulation
-action_timestep: 0.1  # environment executes action per action_timestep second, 1/10
+action_timestep: 0.2  # environment executes action per action_timestep second, 1/10
 physics_timestep: 0.025 # physics timestep for pybullet, 1/40
 
 # ---------------------------------

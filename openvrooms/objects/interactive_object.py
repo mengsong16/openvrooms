@@ -47,7 +47,12 @@ class InteractiveObj(Object):
         # [x,y,z,w] --> [w,x,y,z] --> euler
         wxyz_orn = quatFromXYZW_array(np.array(xyzw_orn), 'wxyz')
         euler = quat2euler_array(np.array(wxyz_orn))
-        return euler[2]         
+        return euler[2] 
+
+    # x,y,z,w
+    def get_orientation(self):   
+        _, xyzw_orn = p.getBasePositionAndOrientation(self.body_id)
+        return xyzw_orn         
 
     def get_mesh(self):           
         obj_file = self.filename.replace(".urdf", ".obj")
@@ -83,5 +88,12 @@ class InteractiveObj(Object):
         return self.material  
 
     def get_xy_dimension(self):
-        return self.box_x_width, self.box_y_width              
+        return self.box_x_width, self.box_y_width    
+
+if __name__ == '__main__':
+    xyzw_orn = [0,0,0.707,0.707]
+    xyzw_orn = [0,0,0,1]
+    wxyz_orn = quatFromXYZW_array(np.array(xyzw_orn), 'wxyz')
+    euler = quat2euler_array(np.array(wxyz_orn))  
+    print(euler[2])              
 
