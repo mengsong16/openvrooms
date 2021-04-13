@@ -46,6 +46,8 @@ from openvrooms.simulator.simulator import Simulator
 from gibson2.utils.utils import parse_config
 from gibson2.render.mesh_renderer.mesh_renderer_settings import MeshRendererSettings
 
+from openvrooms.utils.utils import GRAVITY
+
 class NavigateEnv(RelocateEnv):
 	"""
 	iGibson Environment (OpenAI Gym interface)
@@ -108,7 +110,7 @@ class NavigateEnv(RelocateEnv):
 		self.initial_pos_z_offset = self.config.get(
 			'initial_pos_z_offset', 0.1)
 		# s = 0.5 * G * (t ** 2)
-		drop_distance = 0.5 * 9.8 * (self.action_timestep ** 2)
+		drop_distance = 0.5 * GRAVITY * (self.action_timestep ** 2)
 		assert drop_distance < self.initial_pos_z_offset, \
 			'initial_pos_z_offset is too small for collision checking'
 

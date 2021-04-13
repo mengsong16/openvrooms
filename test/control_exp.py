@@ -126,7 +126,7 @@ def push_forward(env, scene, robot, obj, config):
     print('Robot end position: %s'%(robot_end_position))
     print('Robot traveled distance: %f'%(l2_distance(robot_start_position, robot_end_position)))
     print("---------------------------")
-    print("Total (action) time steps: %d"%(step_num))
+    print("Total (action) steps: %d"%(step_num))
     if robot_energy_normalized:
         robot_energy_string = "Robot energy(normalized)"
     else:
@@ -141,7 +141,7 @@ def random_move(env, scene, robot, config):
     robot_energy_normalized = env.normalized_energy
 
     # action step, not simulation step
-    step_num = 50
+    step_num = 14
 
     for _ in range(step_num):  # 10 seconds
         action = env.action_space.sample()
@@ -158,7 +158,7 @@ def random_move(env, scene, robot, config):
     print("Physics simulation timestep: %f"%(env.physics_timestep)) # set in config
     print("Action timestep: %f"%(env.action_timestep)) # set in config
     print("---------------------------")
-    print("Total (action) time steps: %d"%(step_num))
+    print("Total (action) steps: %d"%(step_num))
     if robot_energy_normalized:
         robot_energy_string = "Robot energy(normalized)"
     else:
@@ -183,6 +183,6 @@ def simple_trajectory_agent_level(env, config_file, exp_type="push_forward"):
         print("Error: undefined experiment type!!")   
 
 if __name__ == "__main__":
-    test_robot_energy_cost_agent_level(mode="gui", exp_type="push_forward")
+    test_robot_energy_cost_agent_level(mode="gui", exp_type="random_move")
 
 

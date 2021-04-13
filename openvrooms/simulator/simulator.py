@@ -33,8 +33,8 @@ class Simulator:
 
     def __init__(self,
                  gravity=9.8,
-                 physics_timestep=1 / 120.0,
-                 render_timestep=1 / 30.0,
+                 physics_timestep=1 / 240.0,
+                 render_timestep=1 / 10.0,
                  mode='gui',
                  image_width=128,
                  image_height=128,
@@ -600,7 +600,7 @@ class Simulator:
     
     
     # called by env.simulator_step()
-    # run physics engine simulator for n steps
+    # run physics engine simulator for n simulator steps (one action step)
     def step(self):
         """
         Step the simulation at self.render_timestep and update positions in renderer
@@ -618,14 +618,14 @@ class Simulator:
             p.stepSimulation()
 
             # accumulate robot energy cost
-            self.robot_energy_cost += self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
+            self.robot_energy_cost += self.robots[0].get_energy(self.physics_timestep, self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
             
             
             '''
             print(self.normalized_energy)
             print(self.discrete_action_space)
             print(self.wheel_velocity)
-            print(self.robots[0].get_energy(self.normalized_energy, self.discrete_action_space, self.wheel_velocity)) 
+            print(self.robots[0].get_energy(self.physics_timestep, self.normalized_energy, self.discrete_action_space, self.wheel_velocity)) 
             print('---------------------------------------------------------------------')   
             '''
         # ensure [0,1]

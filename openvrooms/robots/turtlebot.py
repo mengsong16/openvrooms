@@ -124,18 +124,27 @@ class Turtlebot(LocomotorRobot):
 
         return joint_velocity, joint_torque
 
-    def get_energy(self, normalized=True, discrete_action_space=False, wheel_velocity=1.0):
-        joint_velocity, joint_torque = self.get_joint_state(normalized)
-        #print("joint velocity: %s"%(joint_velocity))
-        #print("joint torque: %s"%(joint_torque))
-        energy = np.abs(joint_velocity * joint_torque).mean()
+    def get_energy(self, physics_simulation_timestep, normalized=True, discrete_action_space=False, setted_wheel_velocity=1.0):
+        joint_raw_velocity, joint_raw_torque, joint_max_velocity, joint_max_torque = self.get_joint_state(discrete_action_space, setted_wheel_velocity)
+        #print("joint velocity: %s"%(joint_raw_velocity))
+        #print("joint torque: %s"%(joint_raw_torque))
+        raw_power = np.abs(np.dot(joint_raw_velocity, joint_raw_torque))
 
-
-        if discrete_action_space:
-            energy /= abs(float(wheel_velocity))
+        if normalized:
+            max_power = np.abs(np.dot(joint_max_velocity, joint_max_torque))
+            normalized_power = float(raw_power) / float(max_power)
+            #print("---------------------------")
+            #print(raw_energy)
+            #print(max_energy)
+            #print(normalized_energy)
+            #print("---------------------------")
+            return normalized_power * physics_simulation_timestep
         #print("Energy cost: %f"%energy)
-
-        return energy
+        else:
+            # print("---------------------------")
+            # print(raw_energy)
+            # print("---------------------------")
+            return raw_power * physics_simulation_timestep
 
     def print_joint_info(self): 
         print("%d Joints"%(len(self.ordered_joints)))

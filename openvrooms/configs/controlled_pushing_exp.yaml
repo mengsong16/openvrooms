@@ -1,25 +1,26 @@
 # ---------------------------------
 # parameters need to be set here
 # use navigation scene and task if no object involved
-scene: relocate #navigate
-task: relocate_goal_fixed #navigate_goal_fixed
+scene: navigate #relocate #navigate
+task: navigate_goal_fixed #relocate_goal_fixed #navigate_goal_fixed
 
 agent_initial_pos: [-2, 0, 0]
 obj_initial_pos: [[-1.4, 0]] 
 obj_target_pos: [[1, 0]]  
 obj_mass: [10] 
-floor_friction: [0.5]
+floor_friction: [0.9]
 obj_num: 1 
 
 # normalized wheel velocity
-wheel_velocity: 0.5 
+wheel_velocity: 1 
 
 # for joint level energy
 normalized_energy: false 
 
 # simulation
 action_timestep: 0.2  # environment executes action per action_timestep second, 1/10
-physics_timestep: 0.025 # physics timestep for pybullet, 1/40
+#physics_timestep: 0.004 # physics timestep for pybullet, 1/40
+initial_pos_z_offset: 0.2
 
 # ---------------------------------
 # scene
@@ -83,7 +84,6 @@ max_step: 400
 max_collisions_allowed: 100
 
 # misc config
-initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot links
 visual_object_visible_to_agent: false # visual target landmarks
 

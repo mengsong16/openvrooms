@@ -69,7 +69,7 @@ visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
 action_timestep: 0.1  # environment executes action per action_timestep second
-physics_timestep: 0.025 # physics timestep for pybullet
+#physics_timestep: 0.025 # physics timestep for pybullet
 
 #-----------------------------------------------------------------------------------------
 # rl for ALL

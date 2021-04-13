@@ -93,8 +93,8 @@ class RelocateEnv(iGibsonEnv):
 		self.mode = mode
 
 		self.action_timestep = self.config['action_timestep']
-		self.physics_timestep = self.config['physics_timestep']
-		#self.physics_timestep = 1 / 240.0
+		#self.physics_timestep = self.config['physics_timestep']
+		self.physics_timestep = 1 / 240.0
 
 		# energy in reward function
 		#self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)

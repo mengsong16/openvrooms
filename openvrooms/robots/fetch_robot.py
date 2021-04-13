@@ -278,25 +278,25 @@ class Fetch(LocomotorRobot):
 
         return joint_raw_velocity, joint_raw_torque, joint_max_velocity, joint_max_torque
 
-    def get_energy(self, normalized=True, discrete_action_space=False, setted_wheel_velocity=1.0):
+    def get_energy(self, physics_simulation_timestep, normalized=True, discrete_action_space=False, setted_wheel_velocity=1.0):
         joint_raw_velocity, joint_raw_torque, joint_max_velocity, joint_max_torque = self.get_joint_state(discrete_action_space, setted_wheel_velocity)
         #print("joint velocity: %s"%(joint_raw_velocity))
         #print("joint torque: %s"%(joint_raw_torque))
-        raw_energy = np.abs(np.dot(joint_raw_velocity, joint_raw_torque))
+        raw_power = np.abs(np.dot(joint_raw_velocity, joint_raw_torque))
 
         if normalized:
-            max_energy = np.abs(np.dot(joint_max_velocity, joint_max_torque))
-            normalized_energy = float(raw_energy) / float(max_energy)
+            max_power = np.abs(np.dot(joint_max_velocity, joint_max_torque))
+            normalized_power = float(raw_power) / float(max_power)
             #print("---------------------------")
             #print(raw_energy)
             #print(max_energy)
             #print(normalized_energy)
             #print("---------------------------")
-            return normalized_energy
+            return normalized_power * physics_simulation_timestep
         #print("Energy cost: %f"%energy)
         else:
             # print("---------------------------")
             # print(raw_energy)
             # print("---------------------------")
-            return raw_energy
+            return raw_power * physics_simulation_timestep
           
