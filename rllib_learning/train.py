@@ -76,7 +76,7 @@ ppo_train_config = {
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 1,
         "num_workers": 10,
-        "lr": 1e-4, # try different lrs
+        "lr": 1e-4, # try different lrs, 5e-5
         "framework": "torch",
         "seed": 1,
         "train_batch_size": 4000,#8192, #4000,
