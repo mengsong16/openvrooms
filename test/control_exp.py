@@ -69,7 +69,7 @@ def test_robot_energy_cost_agent_level(mode="gui", exp_type="push_forward"):
     env.reset()
 
     # warm up
-    for _ in range(200):
+    for _ in range(100):
         env.step(3)
     
     # experiment (push, random ...)
@@ -132,8 +132,10 @@ def push_forward(env, scene, robot, obj, config):
     else:
         robot_energy_string = "Robot energy(raw)"    
     print(robot_energy_string+': episode: %f, per step: %f'%(env.current_episode_robot_energy_cost, env.current_episode_robot_energy_cost/float(step_num)))
-    print('Pushing translation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_translation, env.current_episode_pushing_energy_translation/float(step_num)))  
-    print('Pushing rotation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_rotation, env.current_episode_pushing_energy_rotation/float(step_num)))  
+    #print('Pushing translation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_translation, env.current_episode_pushing_energy_translation/float(step_num)))  
+    #print('Pushing rotation energy: episode: %f, per step: %f'%(env.current_episode_pushing_energy_rotation, env.current_episode_pushing_energy_rotation/float(step_num)))  
+    pushing_energy = env.current_episode_pushing_energy_rotation + env.current_episode_pushing_energy_translation
+    print('Pushing energy: episode: %f, per step: %f'%(pushing_energy, pushing_energy/float(step_num)))  
     print("*******************************************************") 
 
 def random_move(env, scene, robot, config):
@@ -183,6 +185,6 @@ def simple_trajectory_agent_level(env, config_file, exp_type="push_forward"):
         print("Error: undefined experiment type!!")   
 
 if __name__ == "__main__":
-    test_robot_energy_cost_agent_level(mode="gui", exp_type="random_move")
+    test_robot_energy_cost_agent_level(mode="gui", exp_type="push_forward")
 
 

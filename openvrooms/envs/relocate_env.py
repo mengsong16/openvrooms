@@ -682,12 +682,19 @@ class RelocateEnv(iGibsonEnv):
 					floor_collisions.append(item)
 
 		# average floor coefficients if there are more than one floors
-		floor_friction_coefficient = 0
-		for floor_collision in floor_collisions:
-			floor_urdf_id = floor_collision[2]	
-			floor_friction_coefficient += p.getDynamicsInfo(floor_urdf_id, -1)[1]
+		if len(floor_collisions) > 0:
+			floor_friction_coefficient = 0
+			for floor_collision in floor_collisions:
+				floor_urdf_id = floor_collision[2]	
+				floor_friction_coefficient += p.getDynamicsInfo(floor_urdf_id, -1)[1]
 
-		floor_friction_coefficient /= float(len(floor_collisions))	
+			floor_friction_coefficient /= float(len(floor_collisions))	
+		else:
+			print("Error: no floor is contacting with object %d, use default floor"%(object_urdf_id))	
+			if self.scene.multi_band:
+				floor_friction_coefficient = self.scene.floor_id[0]
+			else:
+				floor_friction_coefficient = self.scene.floor_id	
 
 		object_mass = obj.get_mass()
 
