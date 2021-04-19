@@ -298,12 +298,18 @@ class RelocateEnv(iGibsonEnv):
 		self.current_episode_pushing_energy_translation = 0.0 # per episode
 		self.current_episode_pushing_energy_rotation = 0.0 # per episode
 
+		#self.current_succeed_episode_robot_energy_cost = 0.0 # per episode
+		#self.current_succeed_episode_pushing_energy_translation = 0.0 # per episode
+		#self.current_succeed_episode_pushing_energy_rotation = 0.0 # per episode
+
 		self.non_interactive_collision_links = [] # per step
 		self.interactive_collision_links = [] # per step
 
-		## record max energy among all successful episodes
-		self.max_success_episode_robot_energy_cost = 0.
-		self.max_success_episode_pushing_energy_cost = 0.
+		## record min and max energy among all successful episodes
+		self.max_succeed_episode_robot_energy_cost = 0.
+		self.max_succeed_episode_pushing_energy_cost = 0.
+		self.min_succeed_episode_robot_energy_cost = np.inf
+		self.min_succeed_episode_pushing_energy_cost = np.inf
 
 	def load(self):
 		"""
@@ -692,9 +698,11 @@ class RelocateEnv(iGibsonEnv):
 		else:
 			print("Error: no floor is contacting with object %d, use default floor"%(object_urdf_id))	
 			if self.scene.multi_band:
-				floor_friction_coefficient = self.scene.floor_id[0]
+				floor_urdf_id = self.scene.floor_id[0]
 			else:
-				floor_friction_coefficient = self.scene.floor_id	
+				floor_urdf_id = self.scene.floor_id	
+
+			floor_friction_coefficient = p.getDynamicsInfo(floor_urdf_id, -1)[1]	
 
 		object_mass = obj.get_mass()
 
@@ -820,16 +828,16 @@ class RelocateEnv(iGibsonEnv):
 		# running history
 		if self.history_energy_ratio:
 			# compute current episode pushing energy
-			current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
+			#current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
 			
 			# record max energy among all successful episodes
-			self.max_success_episode_robot_energy_cost = max(self.max_success_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
-			self.max_success_episode_pushing_energy_cost = max(self.max_success_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
+			#self.max_succeed_episode_robot_energy_cost = max(self.max_succeed_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
+			#self.max_succeed_episode_pushing_energy_cost = max(self.max_succeed_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
 
 			if self.joint_level_energy: # normalized or not
-				ratio = self.current_episode_robot_energy_cost / float(self.max_success_episode_robot_energy_cost)
+				ratio = self.current_episode_robot_energy_cost / float(self.max_succeed_episode_robot_energy_cost)
 			else:
-				ratio = current_episode_pushing_energy_cost / float(self.max_success_episode_pushing_energy_cost)
+				ratio = current_episode_pushing_energy_cost / float(self.max_succeed_episode_pushing_energy_cost)
 		# paper's method		
 		else:
 			assert self.joint_level_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported by joint level energy cost!"
@@ -900,6 +908,20 @@ class RelocateEnv(iGibsonEnv):
 		else:	
 			assert self.config['scene'] == 'relocate_different_objects'
 			reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
+
+		# if succeed, update min and max energy among all successful episodes
+		if info['success']:
+			# compute current episode pushing energy
+			current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
+			
+			self.max_succeed_episode_robot_energy_cost = max(self.max_succeed_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
+			self.max_succeed_episode_pushing_energy_cost = max(self.max_succeed_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
+			self.min_succeed_episode_robot_energy_cost = min(self.min_succeed_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
+			self.min_succeed_episode_pushing_energy_cost = min(self.min_succeed_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
+
+			#self.current_succeed_episode_robot_energy_cost = self.current_episode_robot_energy_cost
+			#self.current_succeed_episode_pushing_energy_translation = self.current_episode_pushing_energy_translation
+			#self.current_succeed_episode_pushing_energy_rotation = self.current_episode_pushing_energy_rotation
 
 		# consider energy cost in reward function when succeed
 		if info['success'] and self.use_energy_cost:
@@ -1078,6 +1100,10 @@ class RelocateEnv(iGibsonEnv):
 		self.current_episode_robot_energy_cost = 0.0 # per episode
 		self.current_episode_pushing_energy_translation = 0.0 # per episode
 		self.current_episode_pushing_energy_rotation = 0.0 # per episode
+
+		#self.current_succeed_episode_robot_energy_cost = 0.0 # per episode
+		#self.current_succeed_episode_pushing_energy_translation = 0.0 # per episode
+		#self.current_succeed_episode_pushing_energy_rotation = 0.0 # per episode
 
 		self.non_interactive_collision_links = [] # per step
 		self.interactive_collision_links = [] # per step

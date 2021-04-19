@@ -24,7 +24,7 @@ obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_mass: [10]
-floor_friction: [0.4]
+floor_friction: [0.2]
 
 # observation space: sensor spec
 output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb

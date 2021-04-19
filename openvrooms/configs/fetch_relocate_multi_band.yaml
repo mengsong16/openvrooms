@@ -24,7 +24,7 @@ obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
 obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
 obj_mass: [10]
-floor_friction: [0.9, 0.1, 0.9]
+floor_friction: [0.8, 0.2, 0.8]
 
 # observation space: sensor spec
 output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb
@@ -56,22 +56,25 @@ collision_reward: -0.5 #1.0 #0.2 #-0.1
 time_elapse_reward: -1.0 #0.0
 out_of_bound_reward: -1000.0
 
-use_energy_cost: true
+# use energy in reward function
+use_energy_cost: false
 #energy_cost_scale: 1.0
-normalized_energy: true #false
+normalized_energy: false #false  # for joint level energy
+joint_level_energy: true # false: pushing energy
+history_energy_ratio: false # false: method of paper
 
 # episode termination condition
 max_step: 400
 max_collisions_allowed: 100
 
 # misc config
-initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot links
 visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
 action_timestep: 0.1  # environment executes action per action_timestep second, 1/10
 #physics_timestep: 0.025 # physics timestep for pybullet, 1/40
+initial_pos_z_offset: 0.1
 
 #-----------------------------------------------------------------------------------------
 # rl for ALL

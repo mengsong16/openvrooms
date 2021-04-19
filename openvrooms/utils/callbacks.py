@@ -17,18 +17,23 @@ from ray.rllib.policy.sample_batch import SampleBatch
 
 
 class CustomTrainingMetrics(DefaultCallbacks):
-    def on_episode_end(self, *, worker: RolloutWorker, base_env: BaseEnv,
-                       policies: Dict[str, Policy], episode: MultiAgentEpisode,
-                       env_index: int, **kwargs):
-        env_list = base_env.get_unwrapped()
-        assert len(env_list) == 1, f"Number of unwrapped base_env is not 1: {len(env_list)}!"
-        env = env_list[0].env
-        
-        episode.custom_metrics["episode_robot_energy"] = env.current_episode_robot_energy_cost
-        episode.custom_metrics["episode_pushing_energy"] = env.current_episode_pushing_energy_translation + env.current_episode_pushing_energy_rotation
+	def on_episode_end(self, *, worker: RolloutWorker, base_env: BaseEnv,
+					   policies: Dict[str, Policy], episode: MultiAgentEpisode,
+					   env_index: int, **kwargs):
+		env_list = base_env.get_unwrapped()
+		assert len(env_list) == 1, f"Number of unwrapped base_env is not 1: {len(env_list)}!"
+		env = env_list[0].env
+		
+		episode.custom_metrics["episode_robot_energy"] = env.current_episode_robot_energy_cost
+		episode.custom_metrics["episode_pushing_energy"] = env.current_episode_pushing_energy_translation + env.current_episode_pushing_energy_rotation
 
-        if episode.last_info_for()['success']:
-        	episode.custom_metrics["success_rate"] = 1.
-        else:
-        	episode.custom_metrics["success_rate"] = 0.
-        		
+
+		if episode.last_info_for()['success']:
+			episode.custom_metrics["success_rate"] = 1.
+			episode.custom_metrics["succeed_episode_robot_energy"] = episode.custom_metrics["episode_robot_energy"]
+			episode.custom_metrics["succeed_episode_pushing_energy"] = episode.custom_metrics["episode_pushing_energy"]
+		else:
+			episode.custom_metrics["success_rate"] = 0.
+			episode.custom_metrics["succeed_episode_robot_energy"] = 0
+			episode.custom_metrics["succeed_episode_pushing_energy"] = 0
+				

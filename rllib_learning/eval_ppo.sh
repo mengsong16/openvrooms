@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rllib rollout ~/ray_results/PPO/PPO_OpenRoomEnvironmentRLLIB_373e7_00000_0_2021-03-02_05-14-27/checkpoint_175/checkpoint-175 \
+rllib rollout ~/ray_results/PPO/PPO_OpenRoomEnvironmentRLLIB_56068_00000_0_2021-04-18_13-12-01/checkpoint_000200/checkpoint-200 \
 --config "{\"env_config\": {\"env\": \"relocate\", \
 \"config_file\": \"fetch_relocate.yaml\", \
 \"mode\": \"gui\", \
@@ -8,7 +8,7 @@ rllib rollout ~/ray_results/PPO/PPO_OpenRoomEnvironmentRLLIB_373e7_00000_0_2021-
 \"device_idx\": 0 },\
 \"explore\": \"False\",\
 \"num_workers\": 0}" \
---run PPO --env openvroom-v0 --episodes 30 --out ~/ray_results/PPO/PPO_OpenRoomEnvironmentRLLIB_373e7_00000_0_2021-03-02_05-14-27/rollouts.pkl \
+--run PPO --env openvroom-v0 --episodes 30 --out ~/ray_results/PPO/PPO_OpenRoomEnvironmentRLLIB_56068_00000_0_2021-04-18_13-12-01/rollouts.pkl \
 --no-render
 
 

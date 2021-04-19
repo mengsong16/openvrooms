@@ -783,7 +783,7 @@ if __name__ == "__main__":
     aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
     args = aparser.parse_args()
 
-    #test_multi_band_scene()
+    test_multi_band_scene()
     #test_relocate_scene_different_objects()
     #test_robot_energy_cost_simulator_level()
     #test_relocate_scene()
@@ -796,7 +796,7 @@ if __name__ == "__main__":
     #test_layout()
     #test_robot(robot_name='fetch')
     #test_robot(robot_name='turtlebot')
-    test_object()
+    #test_object()
     #test_various_robot(args.id)
 
     '''

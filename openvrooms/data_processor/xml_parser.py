@@ -351,8 +351,9 @@ class SceneParser:
 			#materials = ['Material__ceramic_small_diamond', 'Material__roughcast_sprayed', 'Material__ceramic_small_diamond']
 			if split_floor:
 				materials = ['Material__carpet_loop', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
-				borders = [3., 4.]
-				duplicate_floor(scene_xml_path, materials, borders)
+				#borders = [3., 4.]
+				borders = [-1., 0.]
+				duplicate_floor(scene_xml_path, materials, borders, border_type="y_border")
 
 		## get scene xml file
 		self.xml_root = self.__get_scene_xml(scene_xml_path)
