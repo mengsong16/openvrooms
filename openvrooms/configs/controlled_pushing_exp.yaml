@@ -18,7 +18,7 @@ obj_num: 1
 # normalized wheel velocity
 wheel_velocity: 0.5 
 
-# for joint level energy
+# for joint level energy only
 normalized_energy: false 
 
 # simulation
@@ -79,9 +79,8 @@ out_of_bound_reward: -1000.0
 
 # use energy in reward function
 use_energy_cost: false
-#energy_cost_scale: 1.0
-joint_level_energy: true # false: pushing energy
-history_energy_ratio: false # false: method of paper
+joint_level_energy: true # false: pushing energy, true: robot output energy
+ratio_method: "history" # "paper" "heuristic"
 
 # episode termination condition
 max_step: 400

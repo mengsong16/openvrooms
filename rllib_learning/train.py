@@ -88,9 +88,9 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.33, #0.33 #0.3
+        "clip_param": 0.34, #0.33 #0.3
         "entropy_coeff": 0,
-        "kl_coeff": 0.3,
+        "kl_coeff": 0.31,
         "kl_target": 0.01
 }
 

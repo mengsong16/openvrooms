@@ -99,9 +99,11 @@ class RelocateEnv(iGibsonEnv):
 		# energy in reward function
 		#self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
 		self.use_energy_cost = self.config.get('use_energy_cost')
-		self.history_energy_ratio = self.config.get('history_energy_ratio')
+		self.ratio_method = self.config.get('ratio_method')
 		self.joint_level_energy = self.config.get('joint_level_energy')
 		self.normalized_energy = self.config.get('normalized_energy')
+		self.heuristic_succeed_episode_energy_min = float(self.config.get('heuristic_succeed_episode_energy_min'))
+		self.heuristic_succeed_episode_energy_max = float(self.config.get('heuristic_succeed_episode_energy_max'))
 
 
 		enable_shadow = self.config.get('enable_shadow', False)
@@ -140,10 +142,14 @@ class RelocateEnv(iGibsonEnv):
 
 		if self.use_energy_cost:
 			print("Consider energy cost in success reward")
-			if self.history_energy_ratio:
-				print("Use running history energy as ratio")
+			if self.ratio_method == "paper":
+				print("Use paper's method to compute ratio")
+			elif self.ratio_method == "heuristic":
+				print("Use heuristics to compute ratio")
+			elif self.ratio_method == "history":
+				print("Use running history to compute ratio")		
 			else:
-				print("Use paper's method as ratio")	
+				print("Error: undefined ratio computing method")
 		else:
 			print("DO NOT consider energy cost in success reward")	
 		print('--------------------------------')	
@@ -824,27 +830,40 @@ class RelocateEnv(iGibsonEnv):
 		return  current_step_pushing_energy_translation, current_step_pushing_energy_rotation
 
 	# only get called when the episode is success
+	# lower energy --> lower ratio
+	# ratio: [0,1]
+	# three methods
 	def compute_energy_ratio(self):
 		# running history
-		if self.history_energy_ratio:
-			# compute current episode pushing energy
-			#current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
-			
-			# record max energy among all successful episodes
-			#self.max_succeed_episode_robot_energy_cost = max(self.max_succeed_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
-			#self.max_succeed_episode_pushing_energy_cost = max(self.max_succeed_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
-
+		if self.ratio_method == "history":
 			if self.joint_level_energy: # normalized or not
-				ratio = self.current_episode_robot_energy_cost / float(self.max_succeed_episode_robot_energy_cost)
+				if self.max_succeed_episode_robot_energy_cost == self.min_succeed_episode_robot_energy_cost:
+					ratio = 0
+				else:	
+					ratio = (self.current_episode_robot_energy_cost - self.min_succeed_episode_robot_energy_cost) / float(self.max_succeed_episode_robot_energy_cost - self.min_succeed_episode_robot_energy_cost)
 			else:
-				ratio = current_episode_pushing_energy_cost / float(self.max_succeed_episode_pushing_energy_cost)
+				if self.max_succeed_episode_pushing_energy_cost == self.min_succeed_episode_pushing_energy_cost:
+					ratio = 0
+				else:	
+					current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
+					ratio = (current_episode_pushing_energy_cost - self.min_succeed_episode_pushing_energy_cost) / float(self.max_succeed_episode_pushing_energy_cost - self.min_succeed_episode_pushing_energy_cost)
+		# heuristics 
+		elif self.ratio_method == "heuristic":
+			if self.joint_level_energy: # normalized or not
+				ratio = (self.current_episode_robot_energy_cost - self.heuristic_succeed_episode_energy_min) / float(self.heuristic_succeed_episode_energy_max - self.heuristic_succeed_episode_energy_min)
+			else:
+				current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
+				ratio = (current_episode_pushing_energy_cost - self.heuristic_succeed_episode_energy_min) / float(self.heuristic_succeed_episode_energy_max - self.heuristic_succeed_episode_energy_min)	
 		# paper's method		
-		else:
+		elif self.ratio_method == "paper":
 			assert self.joint_level_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported by joint level energy cost!"
 			assert self.normalized_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported when joint level energy is normalized!"
 			
 			physics_simulation_steps = int(self.config.get('max_step')) * int(self.action_timestep / self.physics_timestep)
 			ratio = self.current_episode_robot_energy_cost / float(physics_simulation_steps)	
+		else:
+			print("Error: undefined ratio computing method")
+			return 0
 
 		return ratio	
 
@@ -924,6 +943,7 @@ class RelocateEnv(iGibsonEnv):
 			#self.current_succeed_episode_pushing_energy_rotation = self.current_episode_pushing_energy_rotation
 
 		# consider energy cost in reward function when succeed
+		# make sure that current_episode_energy, max_succeed and min_succeed are updated before ratio
 		if info['success'] and self.use_energy_cost:
 			ratio = self.compute_energy_ratio()
 			reward = reward * (1 - ratio)

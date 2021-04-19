@@ -58,10 +58,9 @@ out_of_bound_reward: -1000.0
 
 # use energy in reward function
 use_energy_cost: false
-#energy_cost_scale: 1.0
-normalized_energy: false #false  # for joint level energy
-joint_level_energy: true # false: pushing energy
-history_energy_ratio: false # false: method of paper
+joint_level_energy: true # false: pushing energy, true: robot output energy
+normalized_energy: false # for joint level energy only
+ratio_method: "heuristic" # "paper" "history"
 
 # episode termination condition
 max_step: 400
