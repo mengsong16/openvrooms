@@ -21,7 +21,7 @@ turtlebot_urdf_file = os.path.join(assets_path, "models/turtlebot/turtlebot.urdf
 
 
 def get_scene_path(scene_id, suffix=None):
-    assert scene_id in os.listdir(interative_dataset_path), print("Error: scene folder %s doesn't exit!"%(scene_id))
+    #assert scene_id in os.listdir(interative_dataset_path), print("Error: scene folder %s doesn't exit!"%(scene_id))
 
     if suffix is None:
     	return os.path.join(interative_dataset_path, scene_id)

@@ -14,7 +14,8 @@ from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.policy import Policy
 from ray.rllib.policy.sample_batch import SampleBatch
-
+from ray.tune.logger import LoggerCallback
+from openvrooms.config import *
 
 class CustomTrainingMetrics(DefaultCallbacks):
 	def on_episode_end(self, *, worker: RolloutWorker, base_env: BaseEnv,
@@ -37,3 +38,8 @@ class CustomTrainingMetrics(DefaultCallbacks):
 			episode.custom_metrics["succeed_episode_robot_energy"] = 0
 			episode.custom_metrics["succeed_episode_pushing_energy"] = 0
 				
+class CustomLogger(LoggerCallback):
+    def on_trial_start(self, iteration, trials, trial, **info):
+        source_env_config_file = os.path.join(config_path, trial.config['env_config']['config_file'])
+        logged_env_config_file = os.path.join(trial.logdir, trial.config['env_config']['config_file'])
+        copyfile(source_env_config_file, logged_env_config_file)

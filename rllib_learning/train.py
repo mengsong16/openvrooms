@@ -14,7 +14,7 @@ from ray.rllib.agents import ppo, dqn, sac
 from ray import tune
 from ray.tune.logger import pretty_print
 
-from openvrooms.utils.callbacks import CustomTrainingMetrics
+from openvrooms.utils.callbacks import CustomTrainingMetrics, CustomLogger
 
 
 
@@ -140,7 +140,7 @@ def train_ppo():
 
     ray.init()
 
-    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True, local_dir="~/ray_results")
+    results = tune.run("PPO", config=ppo_train_config, stop=stop, checkpoint_freq=100, checkpoint_at_end=True, local_dir="~/ray_results", callbacks=[CustomLogger()])
 
 
 

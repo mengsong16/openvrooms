@@ -12,8 +12,10 @@ from openvrooms.data_processor.urdf_generator import generate_urdf
 import argparse
 import shutil
 
+from gibson2.utils.utils import parse_config
+
 # parse and generate mtl for one scene
-def parse_generate_mtl_scene(scene_id, multi_band=False):
+def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.]):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		#'scene_root': os.path.join(original_dataset_path, 'scenes'),
@@ -33,7 +35,10 @@ def parse_generate_mtl_scene(scene_id, multi_band=False):
 
 	# parse the scene and generate mtl files
 	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
-	parser.parse(split_floor=split_floor)
+	if multi_band:
+		parser.parse(split_floor=split_floor, borders=borders)
+	else:
+		parser.parse(split_floor=split_floor)	
 
 	## object list of the scene to a pickle file
 	pickle_path = get_pickle_path(scene_id, suffix=suffix)
@@ -86,12 +91,22 @@ def data_generation_all_scenes():
 		parse_generate_mtl_scene(scene_id)
 		generate_urdf_scene(scene_id)
 
+def data_generation_one_scene(scene_id, multi_band):
+	if multi_band == True:
+		config_file = os.path.join(config_path, 'fetch_relocate_multi_band.yaml')
+		config = parse_config(config_file)
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')))
+		generate_urdf_scene(scene_id, multi_band=multi_band)
+	else:
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band)
+		generate_urdf_scene(scene_id, multi_band=multi_band)	
+	
+
+
 if __name__ == '__main__':
 	aparser = argparse.ArgumentParser(description="Run data preprocessing.")
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
-	
-	parse_generate_mtl_scene(args.id, multi_band=True)
-	generate_urdf_scene(args.id, multi_band=True)
-	
+
+	data_generation_one_scene(args.id, multi_band=True)
 	
