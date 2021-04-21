@@ -16,6 +16,7 @@ from ray.rllib.policy import Policy
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.tune.logger import LoggerCallback
 from openvrooms.config import *
+from shutil import copyfile
 
 class CustomTrainingMetrics(DefaultCallbacks):
 	def on_episode_end(self, *, worker: RolloutWorker, base_env: BaseEnv,
