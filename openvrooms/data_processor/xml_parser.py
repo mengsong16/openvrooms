@@ -331,7 +331,7 @@ class SceneParser:
 	# each shape block corresponds to one object, and may inlcude multiple bsdf blocks (materials)
 	# the same shape id could appear multiple times in the scene, each for one object instance
 	# is_split: split layout
-	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, borders=[-1., 0.]):
+	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, borders=[-1., 0.], border_type="y_border"):
 		## clear output directory and recreate an empty directory
 		if os.path.isdir(self.save_root): 
 			rmtree(self.save_root)
@@ -353,7 +353,7 @@ class SceneParser:
 				materials = ['Material__carpet_loop', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
 				#borders = [3., 4.]
 				borders = borders
-				duplicate_floor(scene_xml_path, materials, borders, border_type="y_border")
+				duplicate_floor(scene_xml_path, materials, borders, border_type=border_type)
 
 		## get scene xml file
 		self.xml_root = self.__get_scene_xml(scene_xml_path)

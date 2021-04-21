@@ -7,8 +7,8 @@ duplicated_objects: true
 
 # robot
 robot: Fetch
-agent_initial_pos: [-1.6, -1, 0]
-agent_initial_orn: [0, 0, 0]
+agent_initial_pos: [-2.6, -2, 0] #[-1.6, -1, 0]
+agent_initial_orn: [0, 0, 0] #[0, 0, 0]
 body_width: 0.5  # diameter of base link
 
 # action space
@@ -19,13 +19,14 @@ turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[-0.5, -0.5]] #[[1, 1], [2, 2]], [[-1, -1]]
-obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
-obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
-obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
+obj_initial_pos: [[-1.6, -1.5]] #[[-0.5, -0.5]] 
+obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0]] 
+obj_target_pos: [[2.5, 1.3]] #[[1.5, 1]] 
+obj_target_orn: [[0, 0, 0]] #[[0, 0, 0]] 
 obj_mass: [10]
 floor_friction: [0.8, 0.2, 0.8]
-floor_borders: [-1., 0.]
+floor_borders: [-2., 0.] #[-1., 0.]
+border_type: "y_border"
 
 # observation space: sensor spec
 output: [task_obs]  # if learning, can only handle single modal  #task_obs or rgb

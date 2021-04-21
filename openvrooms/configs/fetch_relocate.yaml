@@ -7,8 +7,8 @@ duplicated_objects: true
 
 # robot
 robot: Fetch
-agent_initial_pos: [-1.6, -1, 0]
-agent_initial_orn: [0, 0, 0]
+agent_initial_pos: [-2.6, -2, 0] #[-1.9, -1.8, 0] # [-1.6, -1, 0] 
+agent_initial_orn: [0, 0, 0] #[0, 0, 0.64] # [0, 0, 0]
 body_width: 0.5  # diameter of base link
 
 # action space
@@ -19,10 +19,10 @@ turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[-0.5, -0.5]] #[[1, 1], [2, 2]], [[-1, -1]]
-obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
-obj_target_pos: [[1.5, 1]] #[[-1, -1], [-2, -2]]
-obj_target_orn: [[0, 0, 0]] #[[0, 0, 0], [0, 0, 0]]
+obj_initial_pos: [[-1.6, -1.5]] #[[-1.5, -1.5]] # [[-0.5, -0.5]]
+obj_initial_orn: [[0, 0, 0]] #[[0, 0, 0.64]] #[[0, 0, 0]]
+obj_target_pos: [[2.5, 1.3]] #[[2.5, 1.5]] #[[1.5, 1]]
+obj_target_orn: [[0, 0, 0]] #[[0, 0, 0.64]] #[[0, 0, 0]]
 obj_mass: [10]
 floor_friction: [0.2]
 
@@ -58,9 +58,12 @@ out_of_bound_reward: -1000.0
 
 # use energy in reward function
 use_energy_cost: false
-joint_level_energy: true # false: pushing energy, true: robot output energy
+joint_level_energy: false # false: pushing energy, true: robot output energy
 normalized_energy: false # for joint level energy only
-ratio_method: "heuristic" # "paper" "history"
+ratio_method: "history" # "paper" "history" "heuristic"
+heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
+heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+
 
 # episode termination condition
 max_step: 400

@@ -15,7 +15,7 @@ import shutil
 from gibson2.utils.utils import parse_config
 
 # parse and generate mtl for one scene
-def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.]):
+def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], border_type="y_border"):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		#'scene_root': os.path.join(original_dataset_path, 'scenes'),
@@ -36,7 +36,7 @@ def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.]):
 	# parse the scene and generate mtl files
 	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
 	if multi_band:
-		parser.parse(split_floor=split_floor, borders=borders)
+		parser.parse(split_floor=split_floor, borders=borders, border_type=border_type)
 	else:
 		parser.parse(split_floor=split_floor)	
 
@@ -95,7 +95,7 @@ def data_generation_one_scene(scene_id, multi_band):
 	if multi_band == True:
 		config_file = os.path.join(config_path, 'fetch_relocate_multi_band.yaml')
 		config = parse_config(config_file)
-		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')))
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')), border_type=config.get('border_type'))
 		generate_urdf_scene(scene_id, multi_band=multi_band)
 	else:
 		parse_generate_mtl_scene(scene_id, multi_band=multi_band)
