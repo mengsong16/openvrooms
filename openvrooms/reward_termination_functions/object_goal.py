@@ -15,8 +15,8 @@ class ObjectGoal(BaseRewardTerminationFunction):
         self.angle_tol = float(self.config.get('angle_tol', 0.2))
         self.success_reward = float(self.config.get('success_reward', 10.0))
 
-        self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', True)
-        self.rot_dist_reward_weight = float(self.config.get('rot_dist_reward_weight', 0.2))
+        self.use_goal_dist_reward = self.config.get('use_goal_dist_reward', False)
+        self.rot_dist_reward_weight = float(self.config.get('rot_dist_reward_weight', 0.0))
         self.goal_dist_reward_weight = float(self.config.get('goal_dist_reward_weight', 1.0))
 
         self.success = False
@@ -33,6 +33,8 @@ class ObjectGoal(BaseRewardTerminationFunction):
         if self.use_goal_dist_reward:
             self.goal_dist = self.get_goal_dist(task)
 
+        self.goal_dist_reward = 0    
+
         self.success = False
         self.goal_object = 0 
         self.obj_num = task.obj_num    
@@ -45,6 +47,7 @@ class ObjectGoal(BaseRewardTerminationFunction):
         weighted_distance = np.mean(pos_distances) + self.rot_dist_reward_weight * np.mean(rot_distances)
         return weighted_distance
 
+    # step
     def get_reward_termination(self, task, env):
         """
         Return whether the episode should terminate.
@@ -96,10 +99,13 @@ class ObjectGoal(BaseRewardTerminationFunction):
         # get goal reward
         if self.use_goal_dist_reward:
             new_goal_dist = self.compute_weighted_distance(pos_distances, rot_distances)
-            goal_dist_reward = self.goal_dist_reward_weight * (self.goal_dist - new_goal_dist)
+            #self.goal_dist_reward = self.goal_dist_reward_weight * (self.goal_dist - new_goal_dist)
+            self.goal_dist_reward = self.goal_dist_reward_weight * np.sign((self.goal_dist - new_goal_dist)) # use sign instead of distance
             self.goal_dist = new_goal_dist
 
-            reward += goal_dist_reward
+            reward += self.goal_dist_reward
+        else:
+            self.goal_dist_reward = 0    
    
 
         return reward, done, self.success

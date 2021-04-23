@@ -1154,7 +1154,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--config',
 		'-c',
-		help='which config file to use [default: use yaml files in examples/configs]', default='turtlebot_relocate.yaml')
+		help='which config file to use [default: use yaml files in examples/configs]', default='fetch_relocate.yaml')
 	parser.add_argument('--mode',
 						'-m',
 						choices=['headless', 'gui', 'iggui'],
@@ -1190,7 +1190,7 @@ if __name__ == '__main__':
 			#print(state)
 			#print('-----------------------------')
 			#print('reward', reward)
-			#print('-------------------------------')
+			print('-------------------------------')
 			#print(state['task_obs'].shape)
 			if done:
 				break

@@ -90,7 +90,7 @@ ppo_train_config = {
         "lambda": 0.98,
         "clip_param": 0.34, #0.33 #0.3
         "entropy_coeff": 0,
-        "kl_coeff": 0.3,
+        "kl_coeff": 0.2,
         "kl_target": 0.01
 }
 
@@ -121,7 +121,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 800000 #1000000, #3000000,
+        "timesteps_total": 1300000 #800000 #1000000, #3000000,
         #"episode_reward_mean": 0,
     }
 

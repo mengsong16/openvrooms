@@ -346,10 +346,14 @@ class RelocateGoalFixedTask(BaseTask):
 			# negative collision
 			if self.reward_termination_functions[2].has_negative_collision():
 				reward = float(self.config["collision_penalty"])
-			# positive collision	
+			# positive collision (push)	
 			elif self.reward_termination_functions[2].has_positive_collision():	
-				reward = float(self.config["collision_reward"])
-			# time elapse
+				if self.config["use_goal_dist_reward"]:
+					reward = float(self.config["collision_reward"]) + self.reward_termination_functions[1].goal_dist_reward
+					#print(self.reward_termination_functions[1].goal_dist_reward)
+				else:
+					reward = float(self.config["collision_reward"])
+			# time elapse (pure locomotion)
 			else:
 				reward = float(self.config["time_elapse_reward"])	
 
