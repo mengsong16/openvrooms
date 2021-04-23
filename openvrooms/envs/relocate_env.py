@@ -152,7 +152,12 @@ class RelocateEnv(iGibsonEnv):
 				print("Error: undefined ratio computing method")
 		else:
 			print("DO NOT consider energy cost in success reward")	
-		print('--------------------------------')	
+		print('--------------------------------')
+		if self.config["use_goal_dist_reward"]:
+			print("Use goal distance reward")
+		else:
+			print("DO NOT use goal distance reward")	
+		print('--------------------------------')		
 		
 
 	def load_scene_robot(self):

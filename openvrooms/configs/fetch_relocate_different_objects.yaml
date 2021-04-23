@@ -41,9 +41,9 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
 # reward
-use_goal_dist_reward: false
+use_goal_dist_reward: false # true
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
-goal_dist_reward_weight: 1.0 # should > 0
+goal_dist_reward_weight: 1.0 #0.1 # should > 0
 
 success_reward: 100.0 #800.0
 dist_tol: 0.25 #0.1 # l2 distance in meter
