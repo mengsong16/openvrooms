@@ -66,9 +66,9 @@ ppo_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
            "env": env_option,
-           #"config_file": '%s_%s.yaml'%(robot_option, env_option),
+           "config_file": '%s_%s.yaml'%(robot_option, env_option),
            #"config_file": 'fetch_relocate_different_objects.yaml',
-           "config_file": 'fetch_relocate_multi_band.yaml',
+           #"config_file": 'fetch_relocate_multi_band.yaml',
            "mode": "headless",
            "device_idx": 0, # renderer use gpu 0
            "frame_stack": 0
@@ -88,9 +88,9 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.34, #0.33 #0.3
+        "clip_param": 0.3, #0.33 #0.3
         "entropy_coeff": 0,
-        "kl_coeff": 0.2,
+        "kl_coeff": 0.3, #0.2,
         "kl_target": 0.01
 }
 
@@ -121,7 +121,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 1300000 #800000 #1000000, #3000000,
+        "timesteps_total": 800000 #1300000 #1000000, #3000000,
         #"episode_reward_mean": 0,
     }
 

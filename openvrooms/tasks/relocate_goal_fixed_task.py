@@ -88,6 +88,9 @@ class RelocateGoalFixedTask(BaseTask):
 
 		#print(env.collision_ignore_body_b_ids)
 
+		# whether take object goal as states
+		self.goal_conditioned = self.config.get('goal_conditioned')
+
 		# check validity of initial and target scene
 		print("--------------- Check validity of initial and target scene ------------")
 
@@ -470,16 +473,16 @@ class RelocateGoalFixedTask(BaseTask):
 			task_obs = np.append(task_obs, pos)
 			task_obs = np.append(task_obs, orn)
 
-		'''
+		
 		# object target pose: 6d each
-		for i, obj in enumerate(self.interactive_objects):
-			target_pos = [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z]
-			task_obs = np.append(task_obs, target_pos)
+		if self.goal_conditioned:
+			for i, obj in enumerate(self.interactive_objects):
+				target_pos = [self.obj_target_pos[i][0], self.obj_target_pos[i][1], obj.goal_z]
+				task_obs = np.append(task_obs, target_pos)
 
-			orn = np.array(self.obj_target_orn[i])
-			task_obs = np.append(task_obs, orn)
+				orn = np.array(self.obj_target_orn[i])
+				task_obs = np.append(task_obs, orn)
 			
-		'''
 		#print(task_obs.shape)
 		return task_obs
 

@@ -43,7 +43,7 @@ task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 # reward
 use_goal_dist_reward: false # true
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
-goal_dist_reward_weight: 1.0 #0.1 # should > 0
+goal_dist_reward_weight: 0.1 #1.0  # should > 0
 
 success_reward: 100.0 #800.0
 dist_tol: 0.25 #0.1 # l2 distance in meter
@@ -55,22 +55,26 @@ time_elapse_reward: -1.0 #0.0
 out_of_bound_reward: -1000.0
 tier_cost: -1.0
 
-use_energy_cost: false
-#energy_cost_scale: 1.0
-normalized_energy: true #false
+# use energy in reward function
+use_energy_cost: false #true 
+joint_level_energy: false # false: pushing energy, true: robot output energy
+normalized_energy: false #false  # for joint level energy only
+ratio_method: "history" # "paper" "history" "heuristic"
+heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
+heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
 
 # episode termination condition
 max_step: 400
 max_collisions_allowed: 100
 
 # misc config
-initial_pos_z_offset: 0.1
 collision_ignore_link_a_ids: [0, 1, 2]  # ignore collisions with these robot links
 visual_object_visible_to_agent: false # visual target landmarks
 
 # simulation
 action_timestep: 0.1  # environment executes action per action_timestep second, 1/10
 #physics_timestep: 0.025 # physics timestep for pybullet, 1/40
+initial_pos_z_offset: 0.1
 
 #-----------------------------------------------------------------------------------------
 # rl for ALL

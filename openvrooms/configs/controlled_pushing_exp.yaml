@@ -12,7 +12,7 @@ agent_initial_pos: [-2, 0, 0]
 obj_initial_pos: [[-1.4, 0]] 
 obj_target_pos: [[1, 0]]  
 obj_mass: [10] 
-floor_friction: [0.1]
+floor_friction: [0.5]
 obj_num: 1 
 
 # normalized wheel velocity

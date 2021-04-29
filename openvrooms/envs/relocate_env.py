@@ -102,8 +102,8 @@ class RelocateEnv(iGibsonEnv):
 		self.ratio_method = self.config.get('ratio_method')
 		self.joint_level_energy = self.config.get('joint_level_energy')
 		self.normalized_energy = self.config.get('normalized_energy')
-		self.heuristic_succeed_episode_energy_min = float(self.config.get('heuristic_succeed_episode_energy_min'))
-		self.heuristic_succeed_episode_energy_max = float(self.config.get('heuristic_succeed_episode_energy_max'))
+		self.heuristic_succeed_episode_energy_min = float(self.config.get('heuristic_succeed_episode_energy_min', 0))
+		self.heuristic_succeed_episode_energy_max = float(self.config.get('heuristic_succeed_episode_energy_max', 300))
 
 
 		enable_shadow = self.config.get('enable_shadow', False)
@@ -157,8 +157,13 @@ class RelocateEnv(iGibsonEnv):
 			print("Use goal distance reward")
 		else:
 			print("DO NOT use goal distance reward")	
-		print('--------------------------------')		
-		
+		print('--------------------------------')	
+
+		if self.config.get('goal_conditioned'):
+			print("Goal conditioned")	
+		else:
+			print("Not goal conditioned")	
+		print('--------------------------------')
 
 	def load_scene_robot(self):
 		"""
@@ -328,7 +333,12 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		self.load_scene_robot()  # load robot and scene, use self load()
 		self.load_task_setup()
-		self.load_observation_space(self.task.task_obs_dim+self.task.obj_num*6)
+		if self.config.get('goal_conditioned'):
+			task_obs_dim = self.task.task_obs_dim+self.task.obj_num*12
+		else:
+			task_obs_dim = self.task.task_obs_dim+self.task.obj_num*6
+
+		self.load_observation_space(task_obs_dim)
 		self.load_action_space()
 		self.load_miscellaneous_variables()
 		self.set_physics()
@@ -1191,7 +1201,7 @@ if __name__ == '__main__':
 			#print(env.observation_space)
 			#print(env.state_space)
 			#print(info)
-			#print(state.shape)
+			print(state.shape)
 			#print(state)
 			#print('-----------------------------')
 			#print('reward', reward)
