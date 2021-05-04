@@ -28,6 +28,8 @@ from gibson2.robots.locobot_robot import Locobot
 
 
 from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
+from openvrooms.tasks.relocate_circle_task import RelocateCircleTask
+from openvrooms.tasks.relocate_outside_circle_task import RelocateOutsideCircleTask
 from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.scenes.relocate_scene_different_objects import RelocateSceneDifferentObjects
 from openvrooms.sensors.external_vision_sensor import ExternalVisionSensor
@@ -159,11 +161,21 @@ class RelocateEnv(iGibsonEnv):
 			print("DO NOT use goal distance reward")	
 		print('--------------------------------')	
 
-		if self.config.get('goal_conditioned'):
+		
+		
+		if self.goal_conditioned:
 			print("Goal conditioned")	
 		else:
 			print("Not goal conditioned")	
 		print('--------------------------------')
+	
+
+		if self.config['scene'] == 'relocate_different_objects':
+			if self.config['use_tier_reward']:
+				print("Use tier reward")
+			else:
+				print("Not use tier reward")	
+		print('--------------------------------')	
 
 	def load_scene_robot(self):
 		"""
@@ -275,6 +287,10 @@ class RelocateEnv(iGibsonEnv):
 		# task
 		if self.config['task'] == 'relocate_goal_fixed':
 			self.task = RelocateGoalFixedTask(self)
+		elif self.config['task'] == 'relocate_circle':
+			self.task = RelocateCircleTask(self)
+		elif self.config['task'] == 'relocate_outside_circle':
+			self.task = RelocateOutsideCircleTask(self)		
 		else:
 			self.task = None
 			print("No such task defined")	
@@ -333,7 +349,9 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		self.load_scene_robot()  # load robot and scene, use self load()
 		self.load_task_setup()
-		if self.config.get('goal_conditioned'):
+		
+		self.goal_conditioned = self.config.get('goal_conditioned', False)
+		if self.goal_conditioned:
 			task_obs_dim = self.task.task_obs_dim+self.task.obj_num*12
 		else:
 			task_obs_dim = self.task.task_obs_dim+self.task.obj_num*6
@@ -937,11 +955,13 @@ class RelocateEnv(iGibsonEnv):
 		state = self.get_state()
 		info = {}
 
-		if self.config['scene'] == 'relocate':
-			reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
-		else:	
-			assert self.config['scene'] == 'relocate_different_objects'
-			reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
+		if self.config['scene'] == 'relocate_different_objects':
+			if self.config['use_tier_reward'] == False:
+				reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
+			else:	
+				reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
+		else:
+			reward, done, info, sub_reward = self.task.get_reward_termination(self, info)		
 
 		# if succeed, update min and max energy among all successful episodes
 		if info['success']:
@@ -1201,10 +1221,10 @@ if __name__ == '__main__':
 			#print(env.observation_space)
 			#print(env.state_space)
 			#print(info)
-			print(state.shape)
+			#print(state.shape)
 			#print(state)
-			#print('-----------------------------')
-			#print('reward', reward)
+			print('-----------------------------')
+			print('reward', reward)
 			print('-------------------------------')
 			#print(state['task_obs'].shape)
 			if done:
