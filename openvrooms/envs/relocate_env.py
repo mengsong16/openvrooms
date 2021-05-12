@@ -175,7 +175,20 @@ class RelocateEnv(iGibsonEnv):
 				print("Use tier reward")
 			else:
 				print("Not use tier reward")	
-		print('--------------------------------')	
+		print('--------------------------------')
+
+		self.random_init_pose = self.config.get('random_init_pose', False)
+		if self.random_init_pose:
+			print("Randomize init pose")	
+		else:
+			print("Do NOT randomize init pose")	
+		print('--------------------------------')
+
+		self.swap = self.config.get('swap')
+		if self.swap:
+			print("Swap two box")
+		else:
+			print("Do NOT swap two box")	
 
 	def load_scene_robot(self):
 		"""
@@ -1170,10 +1183,16 @@ class RelocateEnv(iGibsonEnv):
 		"""
 		# move robot away from the scene
 		self.robots[0].set_position([100.0, 100.0, 100.0])
-		# reset scene
-		self.task.reset_scene(self)
-		# reset agent and rewards
-		self.task.reset_agent(self)
+
+		if self.random_init_pose == False:
+			# reset scene
+			self.task.reset_scene(self)
+			# reset agent and rewards
+			self.task.reset_agent(self)
+		# randomize agent and box pose	
+		else:
+			self.task.reset_scene_agent_random(self)
+
 		self.simulator.sync()
 		state = self.get_state()
 		# reset other variables
@@ -1189,7 +1208,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--config',
 		'-c',
-		help='which config file to use [default: use yaml files in examples/configs]', default='fetch_relocate.yaml')
+		help='which config file to use [default: use yaml files in examples/configs]', default='fetch_relocate_short.yaml')
 	parser.add_argument('--mode',
 						'-m',
 						choices=['headless', 'gui', 'iggui'],
@@ -1205,14 +1224,14 @@ if __name__ == '__main__':
 
 	
 	step_time_list = []
-	for episode in range(20):
+	for episode in range(40):
 		print("***********************************")
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(400):  # 10 seconds
-			action = env.action_space.sample()
-			#action = 3
+		for _ in range(100):  # 10 seconds
+			#action = env.action_space.sample()
+			action = 3
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
 			#pos_distances, rot_distances = env.task.goal_distance()

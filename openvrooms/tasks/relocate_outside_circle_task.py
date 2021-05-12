@@ -17,6 +17,8 @@ from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.objects.interactive_object import InteractiveObj
 
 import numpy as np
+import math
+import random
 
 from gibson2.utils.utils import quatToXYZW, quatFromXYZW
 from transforms3d.euler import euler2quat, quat2euler
@@ -64,15 +66,27 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
 		print("Circle radius: \n%s"%self.circle_radius)
 
+		self.sparser_reward = self.config.get("0_1_reward", True)
+
+		if self.sparser_reward:
+			print("Use 0-1 reward")
+		else:
+			print("Do NOT Use 0-1 reward")	
+
 
 		self.goal_format = self.config.get('goal_format', 'cartesian')
 
 		self.visual_object_visible_to_agent = self.config.get(
 			'visual_object_visible_to_agent', False
 		)
+
+		self.visual_object_visible_to_human = self.config.get(
+			'visual_object_visible_to_human', False
+		)
 		
 		self.third_person_view = self.config.get("third_person_view", True)
 
+		self.random_init_pose = self.config.get('random_init_pose', False)
 		self.load_visualization(env)
 
 		self.get_loaded_interactive_objects(env)
@@ -83,6 +97,10 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 
 		# whether take object goal as states
 		self.goal_conditioned = False
+
+		self.swap = self.config.get('swap')
+		
+		 
 		
 		# check validity of initial and target scene
 		print("--------------- Check validity of initial scene ------------")
@@ -134,8 +152,9 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 			for i in list(range(self.circle_num)):
 				env.simulator.import_object(self.vis_circles[i])
 		else:
-			for i in list(range(self.obj_num)):
-				self.initial_pos_vis_objs[i].load()
+			if not self.random_init_pose:
+				for i in list(range(self.obj_num)):
+					self.initial_pos_vis_objs[i].load()
 			
 			for i in list(range(self.circle_num)):
 				self.vis_circles[i].load()
@@ -186,25 +205,39 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		info['success'] = success
 
 		# get reward
-		# goal reached
-		if self.reward_termination_functions[1].goal_reached():
-			assert info['success'] == True
-			reward = float(self.config["success_reward"])
-		# not succeed	
-		else:	
-			# negative collision
-			if self.reward_termination_functions[2].has_negative_collision():
-				reward = float(self.config["collision_penalty"])
-			# positive collision (push)	
-			elif self.reward_termination_functions[2].has_positive_collision():	
-				if self.config["use_goal_dist_reward"]:
-					reward = float(self.config["collision_reward"]) + self.reward_termination_functions[1].goal_dist_reward
-					#print(self.reward_termination_functions[1].goal_dist_reward)
+		if self.sparser_reward == False:
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					if self.config["use_goal_dist_reward"]:
+						reward = float(self.config["collision_reward"]) + self.reward_termination_functions[1].goal_dist_reward
+						#print(self.reward_termination_functions[1].goal_dist_reward)
+					else:
+						reward = float(self.config["collision_reward"])
+				# time elapse (pure locomotion)
 				else:
-					reward = float(self.config["collision_reward"])
-			# time elapse (pure locomotion)
-			else:
-				reward = float(self.config["time_elapse_reward"])	
+					reward = float(self.config["time_elapse_reward"])	
+		# 0-1 reward
+		else:
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				else:
+					reward = 0.0
 
 		return reward, done, info, sub_reward
 
@@ -276,9 +309,107 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		if env.mode != 'gui':
 			return
 
-		for i in list(range(self.obj_num)):
-			self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
-		
+		if not self.random_init_pose:
+			for i in list(range(self.obj_num)):
+				self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
+			
 		for i in list(range(self.circle_num)):
 			self.vis_circles[i].set_position([self.agent_initial_pos[0], self.agent_initial_pos[1], 0])
 
+	def random_initial_pose(self, env):	
+		R = self.circle_radius[0]
+		obj_init_pose = []
+		for i in range(len(env.scene.interative_objects)):
+			x, y = self.random_point_in_circle(R)
+			z_angle = self.random_orientation()
+			obj_init_pose.append([x, y, z_angle])
+
+		robot_orn = self.random_orientation()	
+		return	robot_orn, obj_init_pose
+	
+	def random_point_in_circle(self, R, centerX=0.0, centerY=0.0):
+		r = R * math.sqrt(np.random.uniform(low=0.0, high=1.0))
+		theta = np.random.uniform(low=0.0, high=1.0) * 2.0 * math.pi
+
+		x = centerX + r * math.cos(theta)
+		y = centerY + r * math.sin(theta)
+
+		return x, y
+
+	def random_orientation(self):
+		z_angle = np.random.uniform(low=-math.pi, high=math.pi)
+
+		return z_angle
+
+	def recover_pybullet(self, state_id):
+		p.restoreState(state_id)
+		p.removeState(state_id)
+
+	def check_initial_pose(self, env, robot_orn, obj_init_pose):
+		state_id = p.saveState()
+
+		success = env.test_valid_position(env.robots[0],  self.agent_initial_pos,  [0,0,robot_orn])
+		if not success:
+			self.recover_pybullet(state_id)
+			return False
+		
+		for i, obj in enumerate(env.scene.interative_objects):    
+			success = env.test_valid_position(obj,  [obj_init_pose[i][0], obj_init_pose[i][1], obj.goal_z],  [0,0,obj_init_pose[i][2]])
+			if not success:
+				self.recover_pybullet(state_id)
+				return False
+
+		self.recover_pybullet(state_id)
+		return True
+
+	def reset_scene_agent_random(self, env):
+		'''
+		correct_scene = False
+		robot_orn = 0
+		obj_init_pose = []
+
+		while correct_scene == False:
+			robot_orn, obj_init_pose = self.random_initial_pose(env)
+			correct_scene = self.check_initial_pose(env, robot_orn, obj_init_pose)
+		'''
+		obj_init_pose, robot_orn = self.random_choose_predefined_pose()	
+
+		obj_initial_pos = []
+		obj_initial_orn = []
+		for i in range(len(obj_init_pose)):
+			obj_initial_pos.append([obj_init_pose[i][0], obj_init_pose[i][1]])
+			obj_initial_orn.append([0,0,obj_init_pose[i][2]])
+
+		env.scene.reset_interactive_object_poses(np.array(obj_initial_pos), np.array(obj_initial_orn))
+
+		# land robot at initial pose
+		env.land(env.robots[0], self.agent_initial_pos, [0,0,robot_orn])
+	
+		# robot x,y
+		self.robot_pos = self.agent_initial_pos[:2]
+
+		# reset reward functions
+		for reward_termination_function in self.reward_termination_functions:
+			reward_termination_function.reset(self, env)
+
+	def random_choose_predefined_pose(self):
+		obj_init_pose = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
+						[[-0.7, 0.7, 0], [-0.7, -0.7, 0]], \
+						[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
+						[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+		
+		robot_orn = [0, -math.pi, -math.pi/2.0, math.pi/2.0]
+
+		index = random.choice(list(range(4)))
+		obj_pose = obj_init_pose[index]
+		#swap = random.choice(list(range(2)))
+		#swap = 1
+
+		#if swap == 0:
+		if self.swap == False:
+			return obj_pose, robot_orn[index]
+		# swap two box		
+		else:
+			obj_pose[0], obj_pose[1] = obj_pose[1], obj_pose[0]		
+			return obj_pose, robot_orn[index]
+				

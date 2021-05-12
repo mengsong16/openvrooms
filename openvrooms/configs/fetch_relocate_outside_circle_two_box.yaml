@@ -19,11 +19,11 @@ turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[0.6, 0.6], [0.6, -0.6]] 
+obj_initial_pos: [[0.7, 0.7], [0.7, -0.7]] 
 obj_initial_orn: [[0, 0, 0], [0, 0, 0]] 
 circle_radius: [1.5] 
-obj_mass: [70, 10] 
-obj_material: ['Material__steel_oxydized_bright', 'Material__wood_hemlock'] 
+obj_mass: [10, 50] #[70, 10]  
+obj_material: ['Material__wood_hemlock', 'Material__steel_oxydized_bright'] # ['Material__steel_oxydized_bright', 'Material__wood_hemlock']
 floor_friction: [0.5]
 
 # observation space: sensor spec
@@ -56,8 +56,12 @@ tier_cost: -1.0
 
 use_tier_reward: false
 
+0_1_reward: true
+random_init_pose: true
+swap: true
+
 # use energy in reward function
-use_energy_cost: true #true 
+use_energy_cost: false #true 
 joint_level_energy: false # false: pushing energy, true: robot output energy
 normalized_energy: false #false  # for joint level energy only
 ratio_method: "history" # "paper" "history" "heuristic"

@@ -63,7 +63,8 @@ class OpenRoomEnvironmentRLLIB(gym.Env):
                 torch.backends.cudnn.benchmark = False
                 torch.backends.cudnn.deterministic = True
             except AssertionError:
-                print("Could not seed torch")   
+                print("Could not seed torch") 
+
 
     def get_current_episode_robot_energy_cost(self):
         return self.env.current_episode_robot_energy_cost              

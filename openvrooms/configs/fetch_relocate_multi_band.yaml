@@ -45,7 +45,7 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
 # reward
-use_goal_dist_reward: true #false
+use_goal_dist_reward: false #false
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
 goal_dist_reward_weight: 0.1 #1.0 # should > 0
 
@@ -59,7 +59,7 @@ time_elapse_reward: -1.0 #0.0
 out_of_bound_reward: -1000.0
 
 # use energy in reward function
-use_energy_cost: true #false
+use_energy_cost: false #false
 joint_level_energy: false # false: pushing energy, true: robot output energy
 normalized_energy: false #false  # for joint level energy only
 ratio_method: "history" # "paper" "history" "heuristic"

@@ -151,6 +151,7 @@ class RelocateSceneDifferentObjects(RelocateScene):
     
     # set dimension, volume and material of the interactive objects
     def get_interactive_obj_dimension(self):
+        #print(self.interative_objects)
         for i, obj_filename in enumerate(self.interative_object_obj_filenames):
             #print(obj_filename)
             #print("******************************")
