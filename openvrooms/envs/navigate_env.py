@@ -40,6 +40,7 @@ import numpy as np
 import pybullet as p
 import time
 import logging
+import sys
 
 #from gibson2.simulator import Simulator
 from openvrooms.simulator.simulator import Simulator
@@ -85,6 +86,7 @@ class NavigateEnv(RelocateEnv):
 		"""
 		Import the scene and robot (but have not reset their poses)
 		"""
+		
 		if self.config['scene'] == 'navigate':
 			scene_id = self.config['scene_id']
 			n_obstacles = self.config.get('obs_num', 0)
@@ -145,7 +147,14 @@ class NavigateEnv(RelocateEnv):
 		"""
 		self.load_scene_robot()  # load robot and scene, use self load()
 		self.load_task_setup()
-		self.load_observation_space(self.task.task_obs_dim)
+
+		self.goal_conditioned = self.config.get('goal_conditioned', False)
+		if self.goal_conditioned:
+			task_obs_dim = self.task.task_obs_dim + 6
+		else:
+			task_obs_dim = self.task.task_obs_dim
+
+		self.load_observation_space(task_obs_dim)
 		self.load_action_space()
 		self.load_miscellaneous_variables()	
 		self.set_physics()
@@ -155,7 +164,10 @@ class NavigateEnv(RelocateEnv):
 		self.set_floor_friction()
 
 		print('--------------------------------')
-		print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
+		if self.scene.multi_band:
+			print('floor friction: %s'%(str(self.scene.get_floor_friction_coefficient())))
+		else:
+			print('floor friction: %f'%(self.scene.get_floor_friction_coefficient()))
 		print('--------------------------------')	
 
 	# get collision links where bodyA=robot base link, bodyB=non-interactive objects
@@ -305,7 +317,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--config',
 		'-c',
-		help='which config file to use [default: use yaml files in examples/configs]', default='turtlebot_navigate.yaml')
+		help='which config file to use [default: use yaml files in examples/configs]', default='fetch_navigate_short.yaml')
 	parser.add_argument('--mode',
 						'-m',
 						choices=['headless', 'gui', 'iggui'],
@@ -314,9 +326,11 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 
+	#sys.stdout = open('output.txt', 'w')
 
 	env = NavigateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode)
+	#sys.stdout.close()
 
 	
 	step_time_list = []
@@ -339,13 +353,13 @@ if __name__ == '__main__':
 			#print(state)
 			#print('-----------------------------')
 			#print(env.collision_step)
-			#print('-------------------------------')
-			#print('reward', reward)
+			print('-------------------------------')
+			print('reward', reward)
 			#print(state['task_obs'].shape)
 			if done:
 				break
 	
 		print('Episode finished after {} timesteps, took {} seconds.'.format(
 			env.current_step, time.time() - start))
-			
+		
 	env.close()

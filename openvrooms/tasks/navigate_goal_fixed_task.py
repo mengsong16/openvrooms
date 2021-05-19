@@ -203,6 +203,7 @@ class NavigateGoalFixedTask(BaseTask):
 		for reward_termination_function in self.reward_termination_functions:
 			reward_termination_function.reset(self, env)
 
+	'''
 	def get_reward_termination(self, env, info):
 		"""
 		Aggreate reward functions and episode termination conditions
@@ -232,7 +233,56 @@ class NavigateGoalFixedTask(BaseTask):
 		info['success'] = success
 
 		return reward, done, info, sub_reward
+	'''
 	
+	def get_reward_termination(self, env, info):
+		"""
+		Aggreate reward functions and episode termination conditions
+
+		:param env: environment instance
+		:return reward: total reward of the current timestep
+		:return done: whether the episode is done
+		:return info: additional info
+		"""
+
+		assert self.reward_termination_functions[0].get_name() == "timeout" 
+		assert self.reward_termination_functions[1].get_name() == "point_goal" 
+		assert self.reward_termination_functions[2].get_name() == "negative_collision" 
+
+		# get done, success, and sub reward
+		done = False
+		success = False
+
+		sub_reward = {}
+
+		for reward_termination in self.reward_termination_functions:
+			r, d, s = reward_termination.get_reward_termination(self, env)
+
+			#reward += r
+			done = done or d
+			success = success or s
+
+			sub_reward[reward_termination.get_name()] = r
+
+		#info['done'] = done
+		info['success'] = success
+
+		# get reward
+		# goal reached
+		if self.reward_termination_functions[1].goal_reached():
+			assert info['success'] == True
+			reward = float(self.config["success_reward"])
+		# not succeed	
+		else:	
+			# negative collision
+			if self.reward_termination_functions[2].has_negative_collision():
+				reward = float(self.config["collision_penalty"])
+			# time elapse (pure locomotion)
+			else:
+				reward = float(self.config["time_elapse_reward"])	
+
+		return reward, done, info, sub_reward
+
 	# useful when the first person view is adopted
 	def global_to_local(self, env, pos):
 		"""

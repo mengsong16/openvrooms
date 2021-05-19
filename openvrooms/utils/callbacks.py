@@ -25,19 +25,24 @@ class CustomTrainingMetrics(DefaultCallbacks):
 		env_list = base_env.get_unwrapped()
 		assert len(env_list) == 1, f"Number of unwrapped base_env is not 1: {len(env_list)}!"
 		env = env_list[0].env
+
+		env_type = env.config['scene']
 		
 		episode.custom_metrics["episode_robot_energy"] = env.current_episode_robot_energy_cost
-		episode.custom_metrics["episode_pushing_energy"] = env.current_episode_pushing_energy_translation + env.current_episode_pushing_energy_rotation
+		if 'relocate' in env_type:
+			episode.custom_metrics["episode_pushing_energy"] = env.current_episode_pushing_energy_translation + env.current_episode_pushing_energy_rotation
 
 
 		if episode.last_info_for()['success']:
 			episode.custom_metrics["success_rate"] = 1.
 			episode.custom_metrics["succeed_episode_robot_energy"] = episode.custom_metrics["episode_robot_energy"]
-			episode.custom_metrics["succeed_episode_pushing_energy"] = episode.custom_metrics["episode_pushing_energy"]
+			if 'relocate' in env_type:
+				episode.custom_metrics["succeed_episode_pushing_energy"] = episode.custom_metrics["episode_pushing_energy"]
 		else:
 			episode.custom_metrics["success_rate"] = 0.
 			episode.custom_metrics["succeed_episode_robot_energy"] = 0
-			episode.custom_metrics["succeed_episode_pushing_energy"] = 0
+			if 'relocate' in env_type:
+				episode.custom_metrics["succeed_episode_pushing_energy"] = 0
 				
 class CustomLogger(LoggerCallback):
     def on_trial_start(self, iteration, trials, trial, **info):

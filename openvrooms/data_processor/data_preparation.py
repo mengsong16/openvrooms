@@ -15,7 +15,7 @@ import shutil
 from gibson2.utils.utils import parse_config
 
 # parse and generate mtl for one scene
-def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], border_type="y_border"):
+def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], border_type="y_border", is_box_replaced=False):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		#'scene_root': os.path.join(original_dataset_path, 'scenes'),
@@ -36,9 +36,9 @@ def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], bord
 	# parse the scene and generate mtl files
 	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
 	if multi_band:
-		parser.parse(split_floor=split_floor, borders=borders, border_type=border_type)
+		parser.parse(split_floor=split_floor, is_box_replaced=is_box_replaced, borders=borders, border_type=border_type)
 	else:
-		parser.parse(split_floor=split_floor)	
+		parser.parse(split_floor=split_floor, is_box_replaced=is_box_replaced)	
 
 	## object list of the scene to a pickle file
 	pickle_path = get_pickle_path(scene_id, suffix=suffix)
@@ -67,6 +67,8 @@ def generate_urdf_scene(scene_id, multi_band=False):
 	for obj in parser.obj_list:
 		obj_file = os.path.join(scene_folder, obj.obj_path)	
 		#print(obj_file)
+
+		# floor has no center of mass
 		if 'floor' in obj_file:
 			# copy .obj to vhach.obj
 			floor_vhacd_obj_path = os.path.join(scene_folder, obj_file.replace('.obj', '_vhacd.obj'))
@@ -91,14 +93,14 @@ def data_generation_all_scenes():
 		parse_generate_mtl_scene(scene_id)
 		generate_urdf_scene(scene_id)
 
-def data_generation_one_scene(scene_id, multi_band):
+def data_generation_one_scene(scene_id, multi_band, is_box_replaced):
 	if multi_band == True:
 		config_file = os.path.join(config_path, 'fetch_relocate_multi_band.yaml')
 		config = parse_config(config_file)
-		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')), border_type=config.get('border_type'))
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')), border_type=config.get('border_type'), is_box_replaced=is_box_replaced)
 		generate_urdf_scene(scene_id, multi_band=multi_band)
 	else:
-		parse_generate_mtl_scene(scene_id, multi_band=multi_band)
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, is_box_replaced=is_box_replaced)
 		generate_urdf_scene(scene_id, multi_band=multi_band)	
 	
 
@@ -108,5 +110,5 @@ if __name__ == '__main__':
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 
-	data_generation_one_scene(args.id, multi_band=True)
+	data_generation_one_scene(scene_id=args.id, multi_band=False, is_box_replaced=True)
 	

@@ -11,6 +11,7 @@ from tqdm import tqdm
 from math import ceil, floor
 from openvrooms.data_processor.split import split_layout
 from openvrooms.data_processor.floor_bbox import FloorBBox
+from openvrooms.data_processor.box_bbox import BoxBBox
 from openvrooms.data_processor.duplicate import duplicate_floor
 
 
@@ -331,7 +332,7 @@ class SceneParser:
 	# each shape block corresponds to one object, and may inlcude multiple bsdf blocks (materials)
 	# the same shape id could appear multiple times in the scene, each for one object instance
 	# is_split: split layout
-	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, borders=[-1., 0.], border_type="y_border"):
+	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, is_box_replaced=False, borders=[-1., 0.], border_type="y_border"):
 		## clear output directory and recreate an empty directory
 		if os.path.isdir(self.save_root): 
 			rmtree(self.save_root)
@@ -350,7 +351,8 @@ class SceneParser:
 			# duplicate floors
 			#materials = ['Material__ceramic_small_diamond', 'Material__roughcast_sprayed', 'Material__ceramic_small_diamond']
 			if split_floor:
-				materials = ['Material__carpet_loop', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
+				#materials = ['Material__carpet_loop', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
+				materials = ['Material__sls_alumide_polished_rosy_red', 'Material__sls_alumide_polished_rosy_red', 'Material__carpet_loop']
 				#borders = [3., 4.]
 				borders = borders
 				duplicate_floor(scene_xml_path, materials, borders, border_type=border_type)
@@ -384,6 +386,18 @@ class SceneParser:
 					floor_cnt += 1
 		print("%d floors replaced with planar objects!"%(floor_cnt))
 		
+		## replace box with rectangle object
+		if is_box_replaced:
+			box = BoxBBox()
+			box_cnt = 0
+			for obj in self.obj_list:
+				if obj.obj_path == '03337140_2f449bf1b7eade5772594f16694be05_object.obj':
+					box_obj_file_name = os.path.join(self.save_root, obj.obj_path)
+					box.parse_obj(box_obj_file_name)
+					box.generate_box(box_obj_file_name)
+					box_cnt += 1
+		print("%d boxes replaced with rectangle objects!"%(box_cnt))
+
 		print('-------------------------------------')
 		print('Parsing Done.')
 		print('Scene id: %s, Total: %d objects'%(self.scene_id, len(self.obj_list)))

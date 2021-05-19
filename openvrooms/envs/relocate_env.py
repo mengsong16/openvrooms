@@ -188,7 +188,11 @@ class RelocateEnv(iGibsonEnv):
 		if self.swap:
 			print("Swap two box")
 		else:
-			print("Do NOT swap two box")	
+			print("Do NOT swap two box")
+
+		print('--------------------------------')
+		self.config_index = int(self.config.get('config_index', 0))
+		print("Configuration index: %d"%(self.config_index))		
 
 	def load_scene_robot(self):
 		"""

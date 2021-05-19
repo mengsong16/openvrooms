@@ -259,7 +259,8 @@ class RoomScene(Scene):
             # predefined a subset of interactive objects
             if not self.empty_room:
                 #interative_object_obj_filenames = ['03001627_fe57bad06e1f6dd9a9fe51c710ac111b_object_alignedNew.obj']  # brown chair
-                interative_object_obj_filenames = ['03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'] # cabinet
+                #interative_object_obj_filenames = ['03337140_2f449bf1b7eade5772594f16694be05_object_alignedNew.obj'] # cabinet
+                interative_object_obj_filenames = ['03337140_2f449bf1b7eade5772594f16694be05_object.obj']
                 for obj_filename in interative_object_obj_filenames:
                     obj = SceneObj()
                     obj.obj_path = obj_filename

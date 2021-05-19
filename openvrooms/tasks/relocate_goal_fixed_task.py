@@ -367,7 +367,7 @@ class RelocateGoalFixedTask(BaseTask):
 
 		return reward, done, info, sub_reward
 
-	# for different objects
+	# for different objects (tier reward)
 	def get_reward_termination_different_objects(self, env, info):
 		"""
 		Aggreate reward functions and episode termination conditions

@@ -19,11 +19,13 @@ from openvrooms.objects.interactive_object import InteractiveObj
 import numpy as np
 import math
 import random
+import copy
 
 from gibson2.utils.utils import quatToXYZW, quatFromXYZW
 from transforms3d.euler import euler2quat, quat2euler
 
 from openvrooms.utils.utils import *
+from openvrooms.config import *
 
 from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
 
@@ -99,7 +101,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		self.goal_conditioned = False
 
 		self.swap = self.config.get('swap')
-		
+		self.config_index = int(self.config.get('config_index'))
+		self.get_configurations()
 		 
 		
 		# check validity of initial and target scene
@@ -152,10 +155,11 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 			for i in list(range(self.circle_num)):
 				env.simulator.import_object(self.vis_circles[i])
 		else:
+			'''
 			if not self.random_init_pose:
 				for i in list(range(self.obj_num)):
 					self.initial_pos_vis_objs[i].load()
-			
+			'''
 			for i in list(range(self.circle_num)):
 				self.vis_circles[i].load()
 	
@@ -309,10 +313,11 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		if env.mode != 'gui':
 			return
 
+		'''
 		if not self.random_init_pose:
 			for i in list(range(self.obj_num)):
 				self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
-			
+		'''	
 		for i in list(range(self.circle_num)):
 			self.vis_circles[i].set_position([self.agent_initial_pos[0], self.agent_initial_pos[1], 0])
 
@@ -392,16 +397,44 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		for reward_termination_function in self.reward_termination_functions:
 			reward_termination_function.reset(self, env)
 
-	def random_choose_predefined_pose(self):
-		obj_init_pose = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
-						[[-0.7, 0.7, 0], [-0.7, -0.7, 0]], \
+	def get_configurations(self):
+		obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
+						[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
 						[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
 						[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+
+		self.configurations = []
+		for i in range(4):
+			for j in range(2):
+				if j == 0:
+					current_config = copy.deepcopy(obj_init_pose_base)
+				else:
+					current_config = copy.deepcopy(obj_init_pose_base)
+					current_config[i][0], current_config[i][1] = current_config[i][1], current_config[i][0]	
+
+				self.configurations.append(current_config)
+
+
+
+	def print_configurations(self):
+		for i, con in enumerate(self.configurations):
+			print("=================================")
+			print("Config: %d"%(i))
+			for facing_dir in con:
+				print("---------------------------------")
+				print(str(facing_dir))
+			print("=================================")
+			
+	def random_choose_predefined_pose(self):
+			
+		configurations = self.get_configurations()
 		
 		robot_orn = [0, -math.pi, -math.pi/2.0, math.pi/2.0]
 
 		index = random.choice(list(range(4)))
-		obj_pose = obj_init_pose[index]
+		#obj_pose = obj_init_pose[index]
+		obj_pose = self.configurations[self.config_index][index]
+
 		#swap = random.choice(list(range(2)))
 		#swap = 1
 
@@ -412,4 +445,38 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		else:
 			obj_pose[0], obj_pose[1] = obj_pose[1], obj_pose[0]		
 			return obj_pose, robot_orn[index]
-				
+
+'''
+def get_configurations():
+		obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
+						[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
+						[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
+						[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+
+		configurations = []
+		for i in range(4):
+			for j in range(2):
+				if j == 0:
+					current_config = copy.deepcopy(obj_init_pose_base)
+				else:
+					current_config = copy.deepcopy(obj_init_pose_base)
+					current_config[i][0], current_config[i][1] = current_config[i][1], current_config[i][0]	
+
+				configurations.append(current_config)
+
+		return configurations
+
+def print_configurations(configurations):
+	with open('circle_configurations.txt', 'w') as f:
+		for i, con in enumerate(configurations):
+			f.write("=================================\n")
+			f.write("Config: %d\n"%(i+1))
+			for facing_dir in con:
+				f.write("---------------------------------\n")
+				f.write(str(facing_dir)+"\n")
+			f.write("=================================\n")
+'''
+if __name__ == '__main__':
+		configurations = get_configurations()
+		print_configurations(configurations)
+
