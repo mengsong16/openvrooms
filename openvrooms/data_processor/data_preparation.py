@@ -15,7 +15,7 @@ import shutil
 from gibson2.utils.utils import parse_config
 
 # parse and generate mtl for one scene
-def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], border_type="y_border", is_box_replaced=False):
+def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], border_type="y_border", is_box_replaced=False, reverse_two_band=False):
 	#original_dataset_path = os.path.join(dataset_path, 'original')
 	kwargs = {
 		#'scene_root': os.path.join(original_dataset_path, 'scenes'),
@@ -27,7 +27,10 @@ def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], bord
 	}
 
 	if multi_band:
-		suffix = 'multi_band'
+		if reverse_two_band:
+			suffix = 'multi_band_reverse'
+		else:
+			suffix = 'multi_band'	
 		split_floor = True
 	else:
 		suffix = None
@@ -36,7 +39,7 @@ def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], bord
 	# parse the scene and generate mtl files
 	parser = SceneParser(scene_id=scene_id, save_root=interative_dataset_path, suffix=suffix, **kwargs)
 	if multi_band:
-		parser.parse(split_floor=split_floor, is_box_replaced=is_box_replaced, borders=borders, border_type=border_type)
+		parser.parse(split_floor=split_floor, is_box_replaced=is_box_replaced, borders=borders, border_type=border_type, reverse_two_band=reverse_two_band)
 	else:
 		parser.parse(split_floor=split_floor, is_box_replaced=is_box_replaced)	
 
@@ -45,11 +48,14 @@ def parse_generate_mtl_scene(scene_id, multi_band=False, borders=[-1., 0.], bord
 	parser.save_param(pickle_path)
 
 # generate urdf for one scene
-def generate_urdf_scene(scene_id, multi_band=False):
+def generate_urdf_scene(scene_id, multi_band=False, reverse_two_band=False):
 	# load object list
 	parser = SceneParser(scene_id=scene_id)
 	if multi_band:
-		suffix = 'multi_band'
+		if reverse_two_band:
+			suffix = 'multi_band_reverse'
+		else:
+			suffix = 'multi_band'
 	else:
 		suffix = None
 
@@ -93,15 +99,15 @@ def data_generation_all_scenes():
 		parse_generate_mtl_scene(scene_id)
 		generate_urdf_scene(scene_id)
 
-def data_generation_one_scene(scene_id, multi_band, is_box_replaced):
+def data_generation_one_scene(scene_id, multi_band, is_box_replaced, reverse_two_band):
 	if multi_band == True:
-		config_file = os.path.join(config_path, 'fetch_relocate_multi_band.yaml')
+		config_file = os.path.join(config_path, 'fetch_relocate_two_band_short.yaml')
 		config = parse_config(config_file)
-		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')), border_type=config.get('border_type'), is_box_replaced=is_box_replaced)
-		generate_urdf_scene(scene_id, multi_band=multi_band)
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, borders=np.array(config.get('floor_borders')), border_type=config.get('border_type'), is_box_replaced=is_box_replaced, reverse_two_band=reverse_two_band)
+		generate_urdf_scene(scene_id, multi_band=multi_band, reverse_two_band=reverse_two_band)
 	else:
-		parse_generate_mtl_scene(scene_id, multi_band=multi_band, is_box_replaced=is_box_replaced)
-		generate_urdf_scene(scene_id, multi_band=multi_band)	
+		parse_generate_mtl_scene(scene_id, multi_band=multi_band, is_box_replaced=is_box_replaced, reverse_two_band=reverse_two_band)
+		generate_urdf_scene(scene_id, multi_band=multi_band, reverse_two_band=reverse_two_band)	
 	
 
 
@@ -110,5 +116,5 @@ if __name__ == '__main__':
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 
-	data_generation_one_scene(scene_id=args.id, multi_band=False, is_box_replaced=True)
+	data_generation_one_scene(scene_id=args.id, multi_band=True, is_box_replaced=True, reverse_two_band=True)
 	

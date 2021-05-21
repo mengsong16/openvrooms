@@ -72,7 +72,9 @@ ppo_train_config = {
            #"config_file": 'fetch_relocate_circle_one_box.yaml',
            #"config_file": 'fetch_relocate_circle_two_box.yaml',
            #"config_file": 'fetch_relocate_outside_circle_two_box.yaml',
-           "config_file": 'fetch_relocate_short.yaml',
+           #"config_file": 'fetch_relocate_short.yaml',
+           #"config_file": 'fetch_relocate_two_band_short.yaml',
+           "config_file": 'fetch_relocate_two_band_reverse_short.yaml',
            #"config_file": 'fetch_relocate_short_reward_shaping.yaml',
            #"config_file": 'fetch_navigate_short.yaml',
            "mode": "headless",
@@ -95,7 +97,7 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.33, #0.33 #0.3
+        "clip_param": 0.34, #0.33 #0.3
         "entropy_coeff": 0,
         "kl_coeff": 0.2, #0.3,
         "kl_target": 0.01
@@ -128,7 +130,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 1000000, #300000, #200000, #1000000 #400000, #170000, #120000, #100000 #800000 #1300000  #3000000,
+        "timesteps_total": 1200000, #300000, #200000, #1000000 #400000, #170000, #120000, #100000 #800000 #1300000  #3000000,
         #"episode_reward_mean": 0,
     }
 
