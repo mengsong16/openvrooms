@@ -243,10 +243,18 @@ class PlotTrajectory:
                 self.plot_goal_region()     
 
     def plot_goal_region(self, color='g'):
-        left_bottom = self.config['region_boundary']
-        region_width = X_MAX - left_bottom[0]
-        region_length = Y_MAX - left_bottom[1]
-        goal_region = patches.Rectangle([left_bottom[0], left_bottom[1]], region_width, region_length, angle=0, facecolor=color, alpha=0.5)
+        y_flip = self.config.get('y_flip', False)
+        if y_flip == False:
+            left_bottom = self.config['region_boundary']
+            region_width = X_MAX - left_bottom[0]
+            region_length = Y_MAX - left_bottom[1]
+            goal_region = patches.Rectangle([left_bottom[0], left_bottom[1]], region_width, region_length, angle=0, facecolor=color, alpha=0.5)
+        else:
+            left_upper = self.config['region_boundary']
+            region_width = X_MAX - left_upper[0]
+            region_length = left_upper[1] - Y_MIN
+            goal_region = patches.Rectangle([left_upper[0], Y_MIN], region_width, region_length, angle=0, facecolor=color, alpha=0.5)
+
         self.ax.add_patch(goal_region)
                     
 
@@ -369,8 +377,8 @@ def compare_trajectory(eval_trial_path1: str, eval_trial_path2: str, save_file: 
 if __name__ == '__main__':
     #eval_trial_path1 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_8a7b3_00000_0_2021-05-19_22-23-42')
     #eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_284d4_00000_0_2021-05-20_09-33-50')
-    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_f473a_00000_0_2021-05-23_01-29-13')
-    save_file = '2band-region-no-energy.png'
+    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_7bcb4_00000_0_2021-05-23_02-44-35')
+    save_file = '2band-region-reverse-no-energy-1.png'
     #plot_trajectory(eval_trial_path2, save_file)
     plot_trajectory(eval_trial_path2, save_file, shortest_path=False, draw_target_box=False, robot=False, failure=False)
     #compare_trajectory(eval_trial_path1, eval_trial_path2, save_file)
