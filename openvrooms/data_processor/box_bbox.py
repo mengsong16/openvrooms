@@ -79,7 +79,10 @@ class BoxBBox(object):
 
         vertices = np.array(self.reader.GetAttrib().vertices).reshape((-1, 3)) # (N, 3)
         [x1, y1, z1] = np.max(vertices, axis=0) # (3, )
+        #y1 = y1 - 0.32
         [x0, y0, z0] = np.min(vertices, axis=0) # (3, )
+        y1 = x1 - x0 + y0
+
         bounds = np.array([
             [x0, y0], 
             [x1, y0],

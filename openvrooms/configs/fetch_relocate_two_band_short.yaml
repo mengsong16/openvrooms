@@ -7,7 +7,7 @@ duplicated_objects: true
 
 # robot
 robot: Fetch
-agent_initial_pos: [-1.8, -0.9, 0] #[-1.6, -1, 0]
+agent_initial_pos: [-1.4, -0.6, 0] #[-1.6, -1, 0]
 agent_initial_orn: [0, 0, 0] #[0, 0, 0.64]
 body_width: 0.5  # diameter of base link
 
@@ -19,9 +19,9 @@ turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[-1.2, -0.9]] #[[-0.5, -0.5]] 
+obj_initial_pos: [[-0.8, -0.6]] #[[-0.5, -0.5]] 
 obj_initial_orn: [[0, 0, 0]]  # [[0, 0, 0.64]]
-obj_target_pos: [[1.2, 0.9]] #[[1.5, 1]] 
+obj_target_pos: [[0.8, 0.6]] #[[1.5, 1]] 
 obj_target_orn: [[0, 0, 0]] # [[0, 0, 0.64]]
 obj_mass: [10]
 floor_friction: [0.2, 0.2, 0.8]
@@ -45,6 +45,7 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
 # reward
+reward_function_choice: "-1-0-push-time"
 use_goal_dist_reward: false
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
 goal_dist_reward_weight: 0.1 #1.0 # should > 0

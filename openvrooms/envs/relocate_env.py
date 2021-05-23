@@ -30,6 +30,7 @@ from gibson2.robots.locobot_robot import Locobot
 from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
 from openvrooms.tasks.relocate_circle_task import RelocateCircleTask
 from openvrooms.tasks.relocate_outside_circle_task import RelocateOutsideCircleTask
+from openvrooms.tasks.relocate_region_task import RelocateRegionTask
 from openvrooms.scenes.relocate_scene import RelocateScene
 from openvrooms.scenes.relocate_scene_different_objects import RelocateSceneDifferentObjects
 from openvrooms.sensors.external_vision_sensor import ExternalVisionSensor
@@ -192,7 +193,15 @@ class RelocateEnv(iGibsonEnv):
 
 		print('--------------------------------')
 		self.config_index = int(self.config.get('config_index', 0))
-		print("Configuration index: %d"%(self.config_index))		
+		print("Configuration index: %d"%(self.config_index))
+
+		print('--------------------------------')
+		self.reward_function_choice = self.config.get("reward_function_choice", "0-1-push-time")	
+		#if self.sparser_reward:
+		#	print("Use 0-1 reward")
+		#else:
+		#	print("Do NOT Use 0-1 reward")
+		print("Reward function choice: "+self.reward_function_choice)	
 
 	def load_scene_robot(self):
 		"""
@@ -307,7 +316,9 @@ class RelocateEnv(iGibsonEnv):
 		elif self.config['task'] == 'relocate_circle':
 			self.task = RelocateCircleTask(self)
 		elif self.config['task'] == 'relocate_outside_circle':
-			self.task = RelocateOutsideCircleTask(self)		
+			self.task = RelocateOutsideCircleTask(self)	
+		elif self.config['task'] == 'relocate_region':
+			self.task = RelocateRegionTask(self)		
 		else:
 			self.task = None
 			print("No such task defined")	
@@ -359,6 +370,10 @@ class RelocateEnv(iGibsonEnv):
 		self.max_succeed_episode_pushing_energy_cost = 0.
 		self.min_succeed_episode_robot_energy_cost = np.inf
 		self.min_succeed_episode_pushing_energy_cost = np.inf
+
+		self.max_step_pushing_energy_cost = 0.
+		self.min_step_pushing_energy_cost = np.inf
+		self.current_step_pushing_energy_cost = 0.
 
 	def load(self):
 		"""
@@ -917,6 +932,15 @@ class RelocateEnv(iGibsonEnv):
 
 		return ratio	
 
+	def compute_step_energy_ratio(self):
+		# running history
+		if self.max_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
+			ratio = 1
+		else:	
+			ratio = (self.current_step_pushing_energy_cost - self.min_step_pushing_energy_cost) / float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
+
+		return ratio	
+
 	def step(self, action):
 		"""
 		Apply robot's action.
@@ -969,6 +993,13 @@ class RelocateEnv(iGibsonEnv):
 		self.current_episode_pushing_energy_translation +=  current_step_pushing_energy_translation
 		self.current_episode_pushing_energy_rotation += current_step_pushing_energy_rotation
 
+		self.current_step_pushing_energy_cost = current_step_pushing_energy_rotation + current_step_pushing_energy_translation
+		self.max_step_pushing_energy_cost = max(self.max_step_pushing_energy_cost, self.current_step_pushing_energy_cost)
+		self.min_step_pushing_energy_cost = min(self.min_step_pushing_energy_cost, self.current_step_pushing_energy_cost)
+
+		#print("step_energy: %f"%(self.current_step_pushing_energy_cost))
+
+		# task compute reward
 		state = self.get_state()
 		info = {}
 
@@ -978,7 +1009,10 @@ class RelocateEnv(iGibsonEnv):
 			else:	
 				reward, done, info, sub_reward = self.task.get_reward_termination_different_objects(self, info)
 		else:
-			reward, done, info, sub_reward = self.task.get_reward_termination(self, info)		
+			reward, done, info, sub_reward = self.task.get_reward_termination(self, info)
+
+		
+			
 
 		# if succeed, update min and max energy among all successful episodes
 		if info['success']:
@@ -990,6 +1024,7 @@ class RelocateEnv(iGibsonEnv):
 			self.min_succeed_episode_robot_energy_cost = min(self.min_succeed_episode_robot_energy_cost, self.current_episode_robot_energy_cost)
 			self.min_succeed_episode_pushing_energy_cost = min(self.min_succeed_episode_pushing_energy_cost, current_episode_pushing_energy_cost)
 
+			
 			#self.current_succeed_episode_robot_energy_cost = self.current_episode_robot_energy_cost
 			#self.current_succeed_episode_pushing_energy_translation = self.current_episode_pushing_energy_translation
 			#self.current_succeed_episode_pushing_energy_rotation = self.current_episode_pushing_energy_rotation
@@ -1180,6 +1215,8 @@ class RelocateEnv(iGibsonEnv):
 		self.non_interactive_collision_links = [] # per step
 		self.interactive_collision_links = [] # per step
 
+		self.current_step_pushing_energy_cost = 0.
+
 
 	def reset(self):
 		"""
@@ -1225,7 +1262,8 @@ if __name__ == '__main__':
 
 	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode)
-
+	
+	#env.scene.get_interactive_obj_dimension()
 	
 	step_time_list = []
 	for episode in range(40):
@@ -1233,9 +1271,13 @@ if __name__ == '__main__':
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
-		for _ in range(100):  # 10 seconds
+		for i in range(100):  # 10 seconds
 			#action = env.action_space.sample()
 			action = 3
+			#if i < 50:
+			#	action = 0
+			#else:
+			#	action = 1	
 			state, reward, done, info = env.step(action)
 			#env.task.get_obj_goal_pos()
 			#pos_distances, rot_distances = env.task.goal_distance()
@@ -1247,8 +1289,9 @@ if __name__ == '__main__':
 			#print(state.shape)
 			#print(state)
 			print('-----------------------------')
-			print('reward', reward)
-			print('-------------------------------')
+			#print('step: %d'%(i))
+			#print('reward', reward)
+			#print('-------------------------------')
 			#print(state['task_obs'].shape)
 			if done:
 				break

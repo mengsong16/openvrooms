@@ -5,8 +5,7 @@ import numpy as np
 
 class CircleGoal(BaseRewardTerminationFunction):
     """
-    ObjectGoal used for object relocation tasks
-    Episode terminates if point goal is reached
+    Allow multiple objects
     """
 
     def __init__(self, config):

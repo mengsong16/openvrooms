@@ -69,6 +69,8 @@ class RelocateGoalFixedTask(BaseTask):
 
 		self.goal_format = self.config.get('goal_format', 'cartesian')
 
+		self.reward_function_choice = self.config.get("reward_function_choice", "0-1-push-time")
+
 		#self.visual_object_at_initial_target_pos = self.config.get(
 		#    'visual_object_at_initial_target_pos', True
 		#)
@@ -311,6 +313,7 @@ class RelocateGoalFixedTask(BaseTask):
 		return reward, done, info, sub_reward
 	'''
 
+	'''
 	# for single object
 	def get_reward_termination(self, env, info):
 		"""
@@ -364,6 +367,139 @@ class RelocateGoalFixedTask(BaseTask):
 			# time elapse (pure locomotion)
 			else:
 				reward = float(self.config["time_elapse_reward"])	
+
+		return reward, done, info, sub_reward
+	'''
+	def get_reward_termination(self, env, info):
+		"""
+		Aggreate reward functions and episode termination conditions
+
+		:param env: environment instance
+		:return reward: total reward of the current timestep
+		:return done: whether the episode is done
+		:return info: additional info
+		"""
+
+		assert self.reward_termination_functions[0].get_name() == "timeout" 
+		assert self.reward_termination_functions[1].get_name() == "object_goal" 
+		assert self.reward_termination_functions[2].get_name() == "negative_and_positive_collision"  
+
+		# get done, success, and sub reward
+		done = False
+		success = False
+
+		sub_reward = {}
+
+		for reward_termination in self.reward_termination_functions:
+			r, d, s = reward_termination.get_reward_termination(self, env)
+
+			#reward += r
+			done = done or d
+			success = success or s
+
+			sub_reward[reward_termination.get_name()] = r
+
+		#info['done'] = done
+		info['success'] = success
+
+		# get reward
+		if self.reward_function_choice == "0-1-push-time":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					reward = float(self.config["collision_reward"])
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])	
+		# 0-1 reward
+		elif self.reward_function_choice == "0-1":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				else:
+					reward = 0.0
+		elif self.reward_function_choice == "0-1-time":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])
+		elif self.reward_function_choice == "0-1-push-time-with-energy":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					obj = env.scene.interative_objects[0]
+					floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width = env.get_interactive_obj_physics(obj)
+					print("fc: %f"%(floor_friction_coefficient))
+					#reward = float(self.config["collision_reward"])
+					reward = float(self.config["time_elapse_reward"]) * floor_friction_coefficient
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])
+		elif self.reward_function_choice == "-1-0-push-time":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = 0.0
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					reward = float(self.config["collision_reward"])
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])	
+		elif self.reward_function_choice == "-1-0-push-time-with-energy":
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = 0.0
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					ratio = env.compute_step_energy_ratio()
+					reward = float(self.config["collision_reward"]) * float(ratio)
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])															
+		else:
+			print("Error: unknown reward function type")			
 
 		return reward, done, info, sub_reward
 

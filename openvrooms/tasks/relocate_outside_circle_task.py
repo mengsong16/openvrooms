@@ -68,12 +68,13 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		print("Initial x-y positions of objects: \n%s"%self.obj_initial_pos)
 		print("Circle radius: \n%s"%self.circle_radius)
 
-		self.sparser_reward = self.config.get("0_1_reward", True)
+		#self.sparser_reward = self.config.get("0_1_reward", True)
+		self.reward_function_choice = self.config.get("reward_function_choice", "0-1-push-time")
 
-		if self.sparser_reward:
-			print("Use 0-1 reward")
-		else:
-			print("Do NOT Use 0-1 reward")	
+		#if self.sparser_reward:
+		#	print("Use 0-1 reward")
+		#else:
+		#	print("Do NOT Use 0-1 reward")	
 
 
 		self.goal_format = self.config.get('goal_format', 'cartesian')
@@ -209,7 +210,7 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		info['success'] = success
 
 		# get reward
-		if self.sparser_reward == False:
+		if self.reward_function_choice == "0-1-push-time":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -230,7 +231,7 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 				else:
 					reward = float(self.config["time_elapse_reward"])	
 		# 0-1 reward
-		else:
+		elif self.reward_function_choice == "0-1":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -242,6 +243,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 					reward = float(self.config["collision_penalty"])
 				else:
 					reward = 0.0
+		else:
+			print("Error: unknown reward function type")			
 
 		return reward, done, info, sub_reward
 

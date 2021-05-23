@@ -8,7 +8,7 @@ from gibson2.utils.utils import parse_config
 ## dimensions
 X_MIN, X_MAX, Y_MIN, Y_MAX = -3.418463, 3.532937, -2.803233, 2.722267
 ROBOT_R = 0.25
-BOX_W, BOX_L = 0.452909, 0.967061
+BOX_W, BOX_L = 0.452909, 0.452909 #0.967061
 
 ## colors
 COLOR_POOL1 = ['pink', 'orange']
@@ -18,7 +18,7 @@ class PlotTrajectory:
     def __init__(self, eval_trial_path: str, ax=None):
         self.eval_trial_path = eval_trial_path
         self.rollouts = self.__read_rollouts()
-        self.success_robot_traj, self.success_box_traj, self.failed_robot_traj, self.failed_box_traj = self.__read_traj()
+        self.success_robot_traj, self.success_box_traj, self.failed_robot_traj, self.failed_box_traj, self.success_eps_num_step, self.failed_eps_num_step = self.__read_traj()
         self.robot_traj_len, self.box_traj_len = self.__get_traj_len()
         self.config = self.__read_config()
 
@@ -57,6 +57,7 @@ class PlotTrajectory:
         # box_traj_len = list()
         success_robot_traj, failed_robot_traj = list(), list()
         success_box_traj, failed_box_traj = list(), list()
+        success_eps_num_step, failed_eps_num_step = list(), list()
 
         for eps in self.rollouts:
             # True if 'success' record is True, or no 'success' record
@@ -81,13 +82,15 @@ class PlotTrajectory:
             if is_success:
                 success_robot_traj.append(np.array(robot_traj, dtype=float)) # [(N_i, 2)]
                 success_box_traj.append(np.array(box_traj, dtype=float)) # [(N_i, 2)]
+                success_eps_num_step.append(len(eps))
             else: 
                 failed_robot_traj.append(np.array(robot_traj, dtype=float)) # [(N_i, 2)]
                 failed_box_traj.append(np.array(box_traj, dtype=float)) # [(N_i, 2)]
+                failed_eps_num_step.append(len(eps))
 
             # robot_x, robot_y = np.array(robot_x, dtype=float), np.array(robot_y, dtype=float) # (N, 2)
             # box_x, box_y = np.array(box_x, dtype=float), np.array(box_y, dtype=float) # (N, 2)
-        return success_robot_traj, success_box_traj, failed_robot_traj, failed_box_traj
+        return success_robot_traj, success_box_traj, failed_robot_traj, failed_box_traj, success_eps_num_step, failed_eps_num_step
     
     # traj: [[x_i, y_i]], (N, 2)
     def calc_traj_len(self, traj: np.ndarray) -> float:
@@ -119,7 +122,8 @@ class PlotTrajectory:
         return robot_mean, robot_std, box_mean, box_std
 
     def plot_traj(self, traj_list, color='k', linestyle='-', label='trajectory', zorder=1):
-        if len(traj_list) == 0: return
+        if len(traj_list) == 0: 
+            return
         for traj in traj_list:
             line, = self.ax.plot(traj[:, 0], traj[:, 1], linewidth=1, color=color, linestyle=linestyle, zorder=zorder)
         line.set_label(label)
@@ -200,25 +204,52 @@ class PlotTrajectory:
             robot = patches.Circle((robot_start[0], robot_start[1]), radius=ROBOT_R, facecolor=color, alpha=0.5)
             self.ax.add_patch(robot)
 
-    def plot_box(self, color='b', draw_shape=True):
+    def plot_box(self, color='b', draw_shape=True, draw_target_box=True):
         if self.config == None: return
 
         r = 0.5 * np.sqrt(BOX_L**2 + BOX_W**2)
         a = np.arctan(BOX_W / BOX_L)
-        for (start_pos, start_orn, goal_pos, goal_orn) in zip(self.config['obj_initial_pos'], self.config['obj_initial_orn'], self.config['obj_target_pos'], self.config['obj_target_orn']):
-            self.ax.scatter(start_pos[0], start_pos[1], c=color, s=20, marker='s', zorder=15) # box_start
-            self.ax.scatter(goal_pos[0], goal_pos[1], c=color, s=20, marker='o', zorder=15) # box_goal
-            if draw_shape:
-                theta1 = start_orn[-1]
-                theta2 = goal_orn[-1]
-                delta_x1 = r * np.cos(3*np.pi/2 - a + theta1)
-                delta_x2 = r * np.cos(3*np.pi/2 - a + theta2)
-                delta_y1 = r * np.sin(3*np.pi/2 - a + theta1)
-                delta_y2 = r * np.sin(3*np.pi/2 - a + theta2)
-                box1 = patches.Rectangle([start_pos[0]+delta_x1, start_pos[1]+delta_y1], BOX_W, BOX_L, angle=180*theta1/np.pi, facecolor=color, alpha=0.5)
-                box2 = patches.Rectangle([goal_pos[0]+delta_x2, goal_pos[1]+delta_y2], BOX_W, BOX_L, angle=180*theta2/np.pi, facecolor=color, alpha=0.5)
-                self.ax.add_patch(box1)
-                self.ax.add_patch(box2)
+        if draw_target_box:
+            for (start_pos, start_orn, goal_pos, goal_orn) in zip(self.config['obj_initial_pos'], self.config['obj_initial_orn'], self.config['obj_target_pos'], self.config['obj_target_orn']):
+                self.ax.scatter(start_pos[0], start_pos[1], c=color, s=20, marker='s', zorder=15) # box_start
+                self.ax.scatter(goal_pos[0], goal_pos[1], c=color, s=20, marker='o', zorder=15) # box_goal
+                if draw_shape:
+                    theta1 = start_orn[-1]
+                    theta2 = goal_orn[-1]
+                    delta_x1 = r * np.cos(3*np.pi/2 - a + theta1)
+                    delta_x2 = r * np.cos(3*np.pi/2 - a + theta2)
+                    delta_y1 = r * np.sin(3*np.pi/2 - a + theta1)
+                    delta_y2 = r * np.sin(3*np.pi/2 - a + theta2)
+                    box1 = patches.Rectangle([start_pos[0]+delta_x1, start_pos[1]+delta_y1], BOX_W, BOX_L, angle=180*theta1/np.pi, facecolor=color, alpha=0.5)
+                    box2 = patches.Rectangle([goal_pos[0]+delta_x2, goal_pos[1]+delta_y2], BOX_W, BOX_L, angle=180*theta2/np.pi, facecolor=color, alpha=0.5)
+                    self.ax.add_patch(box1)
+                    self.ax.add_patch(box2)
+        else:
+            for (start_pos, start_orn) in zip(self.config['obj_initial_pos'], self.config['obj_initial_orn']):
+                self.ax.scatter(start_pos[0], start_pos[1], c=color, s=20, marker='s', zorder=15) # box_start
+                #self.ax.scatter(goal_pos[0], goal_pos[1], c=color, s=20, marker='o', zorder=15) # box_goal
+                if draw_shape:
+                    theta1 = start_orn[-1]
+                    #theta2 = goal_orn[-1]
+                    delta_x1 = r * np.cos(3*np.pi/2 - a + theta1)
+                    #delta_x2 = r * np.cos(3*np.pi/2 - a + theta2)
+                    delta_y1 = r * np.sin(3*np.pi/2 - a + theta1)
+                    #delta_y2 = r * np.sin(3*np.pi/2 - a + theta2)
+                    box1 = patches.Rectangle([start_pos[0]+delta_x1, start_pos[1]+delta_y1], BOX_W, BOX_L, angle=180*theta1/np.pi, facecolor=color, alpha=0.5)
+                    #box2 = patches.Rectangle([goal_pos[0]+delta_x2, goal_pos[1]+delta_y2], BOX_W, BOX_L, angle=180*theta2/np.pi, facecolor=color, alpha=0.5)
+                    self.ax.add_patch(box1)
+                    #self.ax.add_patch(box2) 
+
+                self.plot_goal_region()     
+
+    def plot_goal_region(self, color='g'):
+        left_bottom = self.config['region_boundary']
+        region_width = X_MAX - left_bottom[0]
+        region_length = Y_MAX - left_bottom[1]
+        goal_region = patches.Rectangle([left_bottom[0], left_bottom[1]], region_width, region_length, angle=0, facecolor=color, alpha=0.5)
+        self.ax.add_patch(goal_region)
+                    
+
 
     def plot_settings(self):
         self.plot_floor()
@@ -226,7 +257,7 @@ class PlotTrajectory:
         self.plot_box()
 
 ## plot trajectories for 
-def plot_trajectory(eval_trial_path: str, save_file: str, robot=True, box=True, success=True, failure=True):
+def plot_trajectory(eval_trial_path: str, save_file: str, robot=True, box=True, success=True, failure=True, shortest_path=True, draw_target_box=True):
     print("\n=== PLOT TRAJECTORY ===\n")
     print("robot  : ", robot)
     print("box    : ", box)
@@ -240,17 +271,25 @@ def plot_trajectory(eval_trial_path: str, save_file: str, robot=True, box=True, 
 
     ## plot trajectories
     if robot:
-        if success: plot_traj.plot_traj(plot_traj.success_robot_traj, 'r', '-', 'robot success', 5)
-        if failure: plot_traj.plot_traj(plot_traj.failed_robot_traj, 'r', '--', 'robot failure', 5)
+        if success: 
+            plot_traj.plot_traj(plot_traj.success_robot_traj, 'r', '-', 'robot success', 5)
+        if failure: 
+            plot_traj.plot_traj(plot_traj.failed_robot_traj, 'r', '--', 'robot failure', 5)
     if box:
-        if success: plot_traj.plot_traj(plot_traj.success_box_traj, 'b', '-', 'box success', 5)
-        if failure: plot_traj.plot_traj(plot_traj.failed_box_traj, 'b', '--', 'box failure', 5)
-    plot_traj.plot_shortest_traj()
+        if success: 
+            plot_traj.plot_traj(plot_traj.success_box_traj, 'b', '-', 'box success', 5)
+        if failure: 
+            plot_traj.plot_traj(plot_traj.failed_box_traj, 'b', '--', 'box failure', 5)
+
+    if shortest_path:    
+        plot_traj.plot_shortest_traj()
 
     ## plot settings
     plot_traj.plot_floor()
-    if robot: plot_traj.plot_robot()
-    if box: plot_traj.plot_box()
+    if robot: 
+        plot_traj.plot_robot()
+    if box: 
+        plot_traj.plot_box(draw_target_box=draw_target_box)
 
     plot_traj.crop_graph()
     fig = plot_traj.fig
@@ -263,6 +302,11 @@ def plot_trajectory(eval_trial_path: str, save_file: str, robot=True, box=True, 
     fig.savefig(save_file)
     plt.close('all')
     print("\nfile saved to " + save_file)
+    print("\n---Summary---")
+    print(f"success episode num step: {plot_traj.success_eps_num_step} | mean = {np.mean(plot_traj.success_eps_num_step)}")
+    if len(plot_traj.failed_eps_num_step) != 0: 
+        print(f"failed episode num step : {plot_traj.failed_eps_num_step} | mean = {np.mean(plot_traj.failed_eps_num_step)}")
+    print('')
 
 ## environment settings from 'eval_trial_path1'
 def compare_trajectory(eval_trial_path1: str, eval_trial_path2: str, save_file: str, robot=False, box=True, success=True, failure=False):
@@ -281,11 +325,15 @@ def compare_trajectory(eval_trial_path1: str, eval_trial_path2: str, save_file: 
     ## plot trajectories
     plot_traj1.plot_shortest_traj()
     if robot:
-        if success: plot_traj1.plot_traj(plot_traj1.success_robot_traj, 'r', '-', 'robot success 1', 5)
-        if failure: plot_traj1.plot_traj(plot_traj1.failed_robot_traj, 'r', '--', 'robot failure 1', 5)
+        if success: 
+            plot_traj1.plot_traj(plot_traj1.success_robot_traj, 'r', '-', 'robot success 1', 5)
+        if failure: 
+            plot_traj1.plot_traj(plot_traj1.failed_robot_traj, 'r', '--', 'robot failure 1', 5)
     if box:
-        if success: plot_traj1.plot_traj(plot_traj1.success_box_traj, 'b', '-', 'box success 1', 5)
-        if failure: plot_traj1.plot_traj(plot_traj1.failed_box_traj, 'b', '--', 'box failure 1', 5)
+        if success: 
+            plot_traj1.plot_traj(plot_traj1.success_box_traj, 'b', '-', 'box success 1', 5)
+        if failure: 
+            plot_traj1.plot_traj(plot_traj1.failed_box_traj, 'b', '--', 'box failure 1', 5)
 
     ## plot settings
     plot_traj1.plot_floor()
@@ -321,7 +369,8 @@ def compare_trajectory(eval_trial_path1: str, eval_trial_path2: str, save_file: 
 if __name__ == '__main__':
     #eval_trial_path1 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_8a7b3_00000_0_2021-05-19_22-23-42')
     #eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_284d4_00000_0_2021-05-20_09-33-50')
-    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_193d8_00000_0_2021-05-20_15-45-39')
-    save_file = '2band-short-no-energy-100-2.png'
-    plot_trajectory(eval_trial_path2, save_file, failure=False)
+    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_ea22a_00000_0_2021-05-23_00-45-59')
+    save_file = '2band-region-with-energy.png'
+    #plot_trajectory(eval_trial_path2, save_file)
+    plot_trajectory(eval_trial_path2, save_file, shortest_path=False, draw_target_box=False, robot=False, failure=False)
     #compare_trajectory(eval_trial_path1, eval_trial_path2, save_file)

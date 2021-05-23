@@ -116,5 +116,5 @@ if __name__ == '__main__':
 	aparser.add_argument("--id", default='scene0420_01', help="Scene ID")
 	args = aparser.parse_args()
 
-	data_generation_one_scene(scene_id=args.id, multi_band=True, is_box_replaced=True, reverse_two_band=True)
+	data_generation_one_scene(scene_id=args.id, multi_band=True, is_box_replaced=True, reverse_two_band=False)
 	
