@@ -76,7 +76,7 @@ ppo_train_config = {
            #"config_file": 'fetch_relocate_two_band_reverse_short.yaml',
            #"config_file": 'fetch_relocate_short_reward_shaping.yaml',
            #"config_file": 'fetch_navigate_short.yaml',
-           "config_file": 'fetch_relocate_two_band_region.yaml',
+           "config_file": 'fetch_relocate_two_band_region_reverse.yaml',
            #"config_file": 'fetch_relocate_two_band_short.yaml',
            "mode": "headless",
            #"mode": "gui",
@@ -98,9 +98,9 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.33, #0.33 #0.3
+        "clip_param": 0.34, #0.33 #0.3
         "entropy_coeff": 0,
-        "kl_coeff": 0.3, #0.3,
+        "kl_coeff": 0.2, #0.3,
         "kl_target": 0.01
 }
 

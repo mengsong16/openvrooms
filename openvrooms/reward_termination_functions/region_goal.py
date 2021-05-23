@@ -13,6 +13,8 @@ class RegionGoal(BaseRewardTerminationFunction):
         self.success_reward = float(self.config.get('success_reward', 10.0))
 
         self.success = False
+
+        self.y_flip = self.config.get("y_flip", False)
         
 
     def reset(self, task, env):
@@ -42,10 +44,16 @@ class RegionGoal(BaseRewardTerminationFunction):
         xy_bound = task.region_boundary
 
         if xy_bound.size == 2:
-            if cur_xy_pos[0] > xy_bound[0] and cur_xy_pos[1] > xy_bound[1]:
-                done = True
+            if self.y_flip == False:
+                if cur_xy_pos[0] > xy_bound[0] and cur_xy_pos[1] > xy_bound[1]:
+                    done = True
+                else:
+                    done = False
             else:
-                done = False 
+                if cur_xy_pos[0] > xy_bound[0] and cur_xy_pos[1] < xy_bound[1]:
+                    done = True
+                else:
+                    done = False         
         elif xy_bound.size == 1:  
             if cur_xy_pos[0] > xy_bound[0]:
                 done = True

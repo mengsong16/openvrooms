@@ -67,6 +67,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 		#self.sparser_reward = self.config.get("0_1_reward", False)
 		self.reward_function_choice = self.config.get("reward_function_choice", "0-1-push-time")
 
+		self.y_flip = self.config.get("y_flip", False)
+
 		self.goal_conditioned = False
 
 		self.goal_format = self.config.get('goal_format', 'cartesian')
@@ -122,7 +124,10 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 		if self.region_boundary.size < 2:
 			self.vis_region_y = [-(env.scene.y_range[1]-env.scene.y_range[0])/2.0, (env.scene.y_range[1]-env.scene.y_range[0])/2.0]
 		else:
-			self.vis_region_y = [self.region_boundary[1], (env.scene.y_range[1]-env.scene.y_range[0])/2.0]
+			if self.y_flip == False:
+				self.vis_region_y = [self.region_boundary[1], (env.scene.y_range[1]-env.scene.y_range[0])/2.0]
+			else:
+				self.vis_region_y = [-(env.scene.y_range[1]-env.scene.y_range[0])/2.0, self.region_boundary[1]]	
 		
 
 		vis_region_x_half_extent = (self.vis_region_x[1] - self.vis_region_x[0]) / 2.0
