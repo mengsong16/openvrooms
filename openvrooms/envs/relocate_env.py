@@ -936,6 +936,8 @@ class RelocateEnv(iGibsonEnv):
 		# running history
 		if self.max_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
 			ratio = 1
+		elif self.current_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
+			ratio = sys.float_info.epsilon	/ float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
 		else:	
 			ratio = (self.current_step_pushing_energy_cost - self.min_step_pushing_energy_cost) / float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
 

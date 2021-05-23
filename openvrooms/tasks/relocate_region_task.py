@@ -205,7 +205,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 		info['success'] = success
 
 		# get reward
-		if self.reward_function_choice == "0-1-push-time":
+		# 0-1 reward structure
+		if self.reward_function_choice == "0-1-push-time": # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -221,8 +222,31 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		# 0-1 reward
-		elif self.reward_function_choice == "0-1":
+		elif self.reward_function_choice == "0-1-push-time-with-energy": 
+			# goal reached
+			if self.reward_termination_functions[1].goal_reached():
+				assert info['success'] == True
+				reward = float(self.config["success_reward"])
+			# not succeed	
+			else:	
+				# negative collision
+				if self.reward_termination_functions[2].has_negative_collision():
+					reward = float(self.config["collision_penalty"])	
+				# positive collision (push)	
+				elif self.reward_termination_functions[2].has_positive_collision():	
+					ratio = env.compute_step_energy_ratio()
+					#print(ratio)
+					reward = float(self.config["collision_reward"]) * float(ratio)
+				#elif self.reward_termination_functions[2].has_positive_collision():	
+				#	obj = env.scene.interative_objects[0]
+				#	floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width = env.get_interactive_obj_physics(obj)
+				#	print("fc: %f"%(floor_friction_coefficient))
+					#reward = float(self.config["collision_reward"])
+				#	reward = float(self.config["time_elapse_reward"]) * floor_friction_coefficient
+				# time elapse (pure locomotion)
+				else:
+					reward = float(self.config["time_elapse_reward"])			
+		elif self.reward_function_choice == "0-1": # in use, use episode energy if consider energy
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -233,7 +257,7 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				if self.reward_termination_functions[2].has_negative_collision():
 					reward = float(self.config["collision_penalty"])
 				else:
-					reward = 0.0
+					reward = 0.0			
 		elif self.reward_function_choice == "0-1-time":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
@@ -244,30 +268,24 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# negative collision
 				if self.reward_termination_functions[2].has_negative_collision():
 					reward = float(self.config["collision_penalty"])
-				# time elapse (pure locomotion)
+				# time elapse (do not distinguish pure locomotion and pushing)
 				else:
-					reward = float(self.config["time_elapse_reward"])
-		elif self.reward_function_choice == "0-1-push-time-with-energy":
+					reward = float(self.config["time_elapse_reward"])			
+		# -1-0 reward structure			
+		elif self.reward_function_choice == "-1-0-time":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
-				reward = float(self.config["success_reward"])
+				reward = 0.0
 			# not succeed	
 			else:	
 				# negative collision
 				if self.reward_termination_functions[2].has_negative_collision():
 					reward = float(self.config["collision_penalty"])
-				# positive collision (push)	
-				elif self.reward_termination_functions[2].has_positive_collision():	
-					obj = env.scene.interative_objects[0]
-					floor_friction_coefficient, object_mass, current_pos_xy, current_orn_z, obj_x_width, obj_y_width = env.get_interactive_obj_physics(obj)
-					print("fc: %f"%(floor_friction_coefficient))
-					#reward = float(self.config["collision_reward"])
-					reward = float(self.config["time_elapse_reward"]) * floor_friction_coefficient
-				# time elapse (pure locomotion)
+				# time elapse (do not distinguish pure locomotion and pushing)
 				else:
 					reward = float(self.config["time_elapse_reward"])
-		elif self.reward_function_choice == "-1-0-push-time":
+		elif self.reward_function_choice == "-1-0-push-time": # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -283,7 +301,7 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		elif self.reward_function_choice == "-1-0-push-time-with-energy":
+		elif self.reward_function_choice == "-1-0-push-time-with-energy":   # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True

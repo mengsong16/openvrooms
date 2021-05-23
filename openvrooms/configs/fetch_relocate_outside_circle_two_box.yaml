@@ -19,7 +19,7 @@ turn_angle: 0.1 #0.03
 joint_control: true
 
 # objects: pos:[x,y], orn: eular angles
-obj_initial_pos: [[0.7, 0.7], [0.7, -0.7]] 
+obj_initial_pos: [[0.7, 0.7], [0.7, -0.7]] #[[0.7, 0.4], [0.7, -0.4]] #[[0.7, 0.7], [0.7, -0.7]] 
 obj_initial_orn: [[0, 0, 0], [0, 0, 0]] 
 circle_radius: [1.5] 
 obj_mass: [10, 50] #[70, 10]  
