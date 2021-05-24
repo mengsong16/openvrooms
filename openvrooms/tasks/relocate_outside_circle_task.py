@@ -435,10 +435,18 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 			reward_termination_function.reset(self, env)
 
 	def get_configurations(self):
-		obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
-						[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
-						[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
-						[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+		#obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
+		#				[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
+		#				[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
+		#				[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+		
+		# line 2: line 1 x --> -x
+		# line 3: line 2 swap x,y
+		# line 4: line 1 swap x,y
+		obj_init_pose_base = [[[self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
+						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
+						[[self.obj_initial_pos[0][1], -self.obj_initial_pos[0][0], math.pi/2.0], [self.obj_initial_pos[1][1],-self.obj_initial_pos[1][0], math.pi/2.0]], \
+						[[self.obj_initial_pos[0][1], self.obj_initial_pos[0][0], -math.pi/2.0], [self.obj_initial_pos[1][1], self.obj_initial_pos[1][0], -math.pi/2.0]]]
 
 		self.configurations = []
 		for i in range(4):
@@ -485,10 +493,15 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 
 '''
 def get_configurations():
-		obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
-						[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
-						[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
-						[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+		#obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
+		#				[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
+		#				[[0.7, -0.7, math.pi/2.0], [-0.7, -0.7, math.pi/2.0]], \
+		#				[[0.7, 0.7, -math.pi/2.0], [-0.7, 0.7, -math.pi/2.0]]]
+		obj_init_pose_base = [[[self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
+						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
+						[[self.obj_initial_pos[0][1], -self.obj_initial_pos[0][0], math.pi/2.0], [self.obj_initial_pos[1][1],self.obj_initial_pos[1][0], math.pi/2.0]], \
+						[[self.obj_initial_pos[0][1], self.obj_initial_pos[0][0], -math.pi/2.0], [self.obj_initial_pos[1][1], self.obj_initial_pos[1][0], -math.pi/2.0]]]
+
 
 		configurations = []
 		for i in range(4):
