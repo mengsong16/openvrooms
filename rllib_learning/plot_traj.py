@@ -377,8 +377,8 @@ def compare_trajectory(eval_trial_path1: str, eval_trial_path2: str, save_file: 
 if __name__ == '__main__':
     #eval_trial_path1 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_8a7b3_00000_0_2021-05-19_22-23-42')
     #eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_284d4_00000_0_2021-05-20_09-33-50')
-    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_7bcb4_00000_0_2021-05-23_02-44-35')
-    save_file = '2band-region-reverse-no-energy-1.png'
+    eval_trial_path2 = os.path.join('/home/meng/ray_results/PPO', 'PPO_OpenRoomEnvironmentRLLIB_b9f38_00000_0_2021-05-23_14-35-00')
+    save_file = '2band-region-reverse-with-energy-1.png'
     #plot_trajectory(eval_trial_path2, save_file)
     plot_trajectory(eval_trial_path2, save_file, shortest_path=False, draw_target_box=False, robot=False, failure=False)
     #compare_trajectory(eval_trial_path1, eval_trial_path2, save_file)
