@@ -122,7 +122,8 @@ def plot_2box(ray_path, plot_save_path, average_seeds=True):
 		data.append(no_swap_with_energy_trials)
 		data.append(swap_with_energy_trials)
 		
-		plot_data(plot_save_path, two_box_data_base_path, curve_groups=data, column_name='custom_metrics/episode_pushing_energy_mean', end_iteration=100, plot_name="train_curve_2box_pushing_energy.png")
+		#plot_data(plot_save_path, two_box_data_base_path, curve_groups=data, column_name='custom_metrics/episode_pushing_energy_mean', end_iteration=100, plot_name="train_curve_2box_pushing_energy.png")
+		plot_data(plot_save_path, two_box_data_base_path, curve_groups=data, column_name='custom_metrics/succeed_episode_pushing_energy_mean', end_iteration=100, plot_name="train_curve_2box_pushing_energy.png")
 		plot_data(plot_save_path, two_box_data_base_path, curve_groups=data, column_name='custom_metrics/success_rate_mean', end_iteration=100, plot_name="train_curve_2box_success_rate.png")
 	else:
 		seed_num = len(no_swap_no_energy_trials)
@@ -133,7 +134,7 @@ def plot_2box(ray_path, plot_save_path, average_seeds=True):
 			data.append(no_swap_with_energy_trials[i])
 			data.append(swap_with_energy_trials[i])
 			
-			plot_data(plot_save_path, two_box_data_base_path[i], curve_groups=data, column_name='custom_metrics/episode_pushing_energy_mean', end_iteration=100, plot_name="train_curve_2box_pushing_energy_%d.png"%(i+1))
+			plot_data(plot_save_path, two_box_data_base_path[i], curve_groups=data, column_name='custom_metrics/succeed_episode_pushing_energy_mean', end_iteration=100, plot_name="train_curve_2box_pushing_energy_%d.png"%(i+1))
 			plot_data(plot_save_path, two_box_data_base_path[i], curve_groups=data, column_name='custom_metrics/success_rate_mean', end_iteration=100, plot_name="train_curve_2box_success_rate_%d.png"%(i+1))
 
 def plot_2band(ray_path, plot_save_path, average_seeds=True):
@@ -153,7 +154,7 @@ def plot_2band(ray_path, plot_save_path, average_seeds=True):
 		data.append(two_band_no_energy_trials)
 		data.append(two_band_with_energy_trials)
 		
-		plot_data(plot_save_path, two_band_data_base_path, curve_groups=data, column_name='custom_metrics/episode_pushing_energy_mean', end_iteration=200, plot_name="train_curve_2band_pushing_energy.png")
+		plot_data(plot_save_path, two_band_data_base_path, curve_groups=data, column_name='custom_metrics/succeed_episode_pushing_energy_mean', end_iteration=200, plot_name="train_curve_2band_pushing_energy.png")
 		plot_data(plot_save_path, two_band_data_base_path, curve_groups=data, column_name='custom_metrics/success_rate_mean', end_iteration=200, plot_name="train_curve_2band_success_rate.png")
 	else:
 		seed_num = len(high_friction_no_energy_trials)
@@ -164,13 +165,13 @@ def plot_2band(ray_path, plot_save_path, average_seeds=True):
 			data.append(two_band_no_energy_trials[i])
 			data.append(two_band_with_energy_trials[i])
 			
-			plot_data(plot_save_path, two_band_data_base_path[i], curve_groups=data, column_name='custom_metrics/episode_pushing_energy_mean', end_iteration=200, plot_name="train_curve_2band_pushing_energy_%d.png"%(i+1))
+			plot_data(plot_save_path, two_band_data_base_path[i], curve_groups=data, column_name='custom_metrics/succeed_episode_pushing_energy_mean', end_iteration=200, plot_name="train_curve_2band_pushing_energy_%d.png"%(i+1))
 			plot_data(plot_save_path, two_band_data_base_path[i], curve_groups=data, column_name='custom_metrics/success_rate_mean', end_iteration=200, plot_name="train_curve_2band_success_rate_%d.png"%(i+1))
 
 
 if __name__ == "__main__":
 	ray_path = "/home/meng/ray_results"
 	plot_save_path = os.path.join(ray_path, "plots")
-	#plot_2box(ray_path=ray_path, plot_save_path=os.path.join(plot_save_path, "2box"), average_seeds=False)
-	plot_2band(ray_path=ray_path, plot_save_path=os.path.join(plot_save_path, "2band"), average_seeds=False)
+	plot_2box(ray_path=ray_path, plot_save_path=os.path.join(plot_save_path, "2box"), average_seeds=False)
+	#plot_2band(ray_path=ray_path, plot_save_path=os.path.join(plot_save_path, "2band"), average_seeds=False)
 

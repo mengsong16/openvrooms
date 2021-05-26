@@ -141,13 +141,13 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 			initial_offset=[0, 0, 0.1])
 
 		if self.visual_object_visible_to_agent:
-			for i in list(range(self.obj_num)):
-				env.simulator.import_object(self.initial_pos_vis_objs[i])
+			#for i in list(range(self.obj_num)):
+			#	env.simulator.import_object(self.initial_pos_vis_objs[i])
 			
 			env.simulator.import_object(self.vis_region)
 		else:
-			for i in list(range(self.obj_num)):
-				self.initial_pos_vis_objs[i].load()
+			#for i in list(range(self.obj_num)):
+			#	self.initial_pos_vis_objs[i].load()
 
 			self.vis_region.load()
 	
@@ -336,8 +336,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 			return
 
 		
-		for i in list(range(self.obj_num)):
-				self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
+		#for i in list(range(self.obj_num)):
+		#		self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
 		
 		
 		self.vis_region.set_position(self.vis_region_offset)

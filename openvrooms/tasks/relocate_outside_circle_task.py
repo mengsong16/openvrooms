@@ -444,7 +444,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		# line 3: line 2 swap x,y
 		# line 4: line 1 swap x,y
 		obj_init_pose_base = [[[self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
-						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
+						#[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
+						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
 						[[self.obj_initial_pos[0][1], -self.obj_initial_pos[0][0], math.pi/2.0], [self.obj_initial_pos[1][1],-self.obj_initial_pos[1][0], math.pi/2.0]], \
 						[[self.obj_initial_pos[0][1], self.obj_initial_pos[0][0], -math.pi/2.0], [self.obj_initial_pos[1][1], self.obj_initial_pos[1][0], -math.pi/2.0]]]
 
