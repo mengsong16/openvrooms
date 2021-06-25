@@ -4,3 +4,4 @@ openvrooms.egg-info
 .DS_Store
 .history
 all_learning/runs
+.vscode
