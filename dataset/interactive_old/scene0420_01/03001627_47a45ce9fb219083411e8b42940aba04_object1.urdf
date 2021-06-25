@@ -1,0 +1,21 @@
+<robot name="03001627_47a45ce9fb219083411e8b42940aba04_object1">
+	<link name="_name">
+		<visual>
+			<origin xyz="-3.0847091894871306 -1.746478086537386 0.9111423693485077" rpy="0.0 0.0 0.0" />
+			<geometry>
+				<mesh filename="03001627_47a45ce9fb219083411e8b42940aba04_object1.obj" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="-3.0847091894871306 -1.746478086537386 0.9111423693485077" />
+			<geometry>
+				<mesh filename="03001627_47a45ce9fb219083411e8b42940aba04_object1_vhacd.obj" />
+			</geometry>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0 0 0" />
+			<mass value="1.0" />
+			<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+		</inertial>
+	</link>
+</robot>

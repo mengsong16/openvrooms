@@ -137,6 +137,7 @@ class RelocateGoalFixedTask(BaseTask):
 		#vis_radius = min(env.scene.box_x_width, env.scene.box_y_width) / 2.0 #0.2
 		vis_radius = float(self.config.get('dist_tol'))
 
+		'''
 		self.initial_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):
 			cyl_length = env.scene.interative_objects[i].box_height + 0.2
@@ -147,7 +148,7 @@ class RelocateGoalFixedTask(BaseTask):
 				radius=vis_radius,
 				length=cyl_length,
 				initial_offset=[0, 0, cyl_length / 2.0]))
-
+		'''
 		self.target_pos_vis_objs = []
 		for i in list(np.arange(self.obj_num)):
 			cyl_length = env.scene.interative_objects[i].box_height + 0.2
@@ -161,11 +162,11 @@ class RelocateGoalFixedTask(BaseTask):
 
 		if self.visual_object_visible_to_agent:
 			for i in list(np.arange(self.obj_num)):
-				env.simulator.import_object(self.initial_pos_vis_objs[i])
+				#env.simulator.import_object(self.initial_pos_vis_objs[i])
 				env.simulator.import_object(self.target_pos_vis_objs[i])
 		else:
 			for i in list(np.arange(self.obj_num)):
-				self.initial_pos_vis_objs[i].load()
+				#self.initial_pos_vis_objs[i].load()
 				self.target_pos_vis_objs[i].load()
 
 	
@@ -688,7 +689,7 @@ class RelocateGoalFixedTask(BaseTask):
 
 
 		for i in list(np.arange(self.obj_num)):
-			self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
+			#self.initial_pos_vis_objs[i].set_position([self.obj_initial_pos[i][0], self.obj_initial_pos[i][1], 0])
 			self.target_pos_vis_objs[i].set_position([self.obj_target_pos[i][0], self.obj_target_pos[i][1], 0])
 
 			#print(self.initial_pos_vis_objs[i].get_position())

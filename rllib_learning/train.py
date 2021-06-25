@@ -71,13 +71,14 @@ ppo_train_config = {
            #"config_file": 'fetch_relocate_multi_band.yaml',
            #"config_file": 'fetch_relocate_circle_one_box.yaml',
            #"config_file": 'fetch_relocate_circle_two_box.yaml',
-           "config_file": 'fetch_relocate_outside_circle_two_box.yaml',
+           #"config_file": 'fetch_relocate_outside_circle_two_box.yaml',
            #"config_file": 'fetch_relocate_short.yaml',
            #"config_file": 'fetch_relocate_two_band_reverse_short.yaml',
            #"config_file": 'fetch_relocate_short_reward_shaping.yaml',
            #"config_file": 'fetch_navigate_short.yaml',
-           #"config_file": 'fetch_relocate_two_band_region_reverse.yaml',
+        #    "config_file": 'fetch_relocate_two_band_region_reverse.yaml',
            #"config_file": 'fetch_relocate_two_band_short.yaml',
+           "config_file": 'fetch_relocate_two_band_region.yaml',
            "mode": "headless",
            #"mode": "gui",
            "device_idx": 0, # renderer use gpu 0
@@ -89,7 +90,7 @@ ppo_train_config = {
         "num_workers": 10,
         "lr": 1e-4, # try different lrs, 5e-5
         "framework": "torch",
-        "seed": 1,
+        "seed": 8,
         "train_batch_size": 4000,#8192, #4000,
         "sgd_minibatch_size": 512,
         #"model": {
@@ -98,9 +99,9 @@ ppo_train_config = {
         #"num_framestacks": 4
         #},
         "lambda": 0.98,
-        "clip_param": 0.3, #0.35, #0.33 #0.3
+        "clip_param": 0.35, #0.35, #0.33 #0.3
         "entropy_coeff": 0,
-        "kl_coeff": 0.3, #0.3,
+        "kl_coeff": 0.2, #0.3,
         "kl_target": 0.01
 }
 
@@ -131,7 +132,7 @@ sac_train_config = {
 
 
 stop = {
-        "timesteps_total": 400000, #2000000, #1200000, #300000, #200000, #1000000 #400000, #170000, #120000, #100000 #800000 #1300000  #3000000,
+        "timesteps_total": 2000000, #2000000, #1200000, #300000, #200000, #1000000 #400000, #170000, #120000, #100000 #800000 #1300000  #3000000,
         #"episode_reward_mean": 0,
     }
 

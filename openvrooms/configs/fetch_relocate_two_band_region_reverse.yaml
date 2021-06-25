@@ -46,12 +46,12 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
 # reward
-reward_function_choice: '-1-0-push-time-with-energy' #'-1-0-push-time-with-energy' #'0-1' #[0-1-push-time, 0-1-push-time-with-energy, 0-1-time, 0-1, -1-0-push-time]
+reward_function_choice: '0-1-push-time-with-energy' #'-1-0-push-time-with-energy' #'0-1' #[0-1-push-time, 0-1-push-time-with-energy, 0-1-time, 0-1, -1-0-push-time]
 use_goal_dist_reward: false
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
 goal_dist_reward_weight: 0.1 #1.0 # should > 0
 
-success_reward: 100.0 #800.0
+success_reward: 10.0 #800.0
 dist_tol: 0.25 #0.1 # l2 distance in meter
 angle_tol: 0.2 # eular angle distance ?
 

@@ -28,7 +28,7 @@ from gibson2.robots.locobot_robot import Locobot
 
 
 from openvrooms.tasks.relocate_goal_fixed_task import RelocateGoalFixedTask
-from openvrooms.tasks.relocate_circle_task import RelocateCircleTask
+#from openvrooms.tasks.relocate_circle_task import RelocateCircleTask
 from openvrooms.tasks.relocate_outside_circle_task import RelocateOutsideCircleTask
 from openvrooms.tasks.relocate_region_task import RelocateRegionTask
 from openvrooms.scenes.relocate_scene import RelocateScene
@@ -201,7 +201,9 @@ class RelocateEnv(iGibsonEnv):
 		#	print("Use 0-1 reward")
 		#else:
 		#	print("Do NOT Use 0-1 reward")
-		print("Reward function choice: "+self.reward_function_choice)	
+		print("Reward function choice: "+self.reward_function_choice)
+
+		self.enumerate_facing_directions = self.config.get("enumerate_facing_directions", False)	
 
 	def load_scene_robot(self):
 		"""
@@ -1234,7 +1236,11 @@ class RelocateEnv(iGibsonEnv):
 			self.task.reset_agent(self)
 		# randomize agent and box pose	
 		else:
-			self.task.reset_scene_agent_random(self)
+			if self.enumerate_facing_directions:
+				self.task.reset_scene_agent_enumerate(self)
+			else:	
+				self.task.reset_scene_agent_random(self)
+			
 
 		self.simulator.sync()
 		state = self.get_state()
@@ -1264,6 +1270,7 @@ if __name__ == '__main__':
 
 	env = RelocateEnv(config_file=os.path.join(config_path, args.config),
 					 mode=args.mode)
+	p.resetDebugVisualizerCamera(cameraDistance=4.5, cameraYaw=135, cameraPitch=-40, cameraTargetPosition=[0,0,0])
 	
 	#env.scene.get_interactive_obj_dimension()
 	

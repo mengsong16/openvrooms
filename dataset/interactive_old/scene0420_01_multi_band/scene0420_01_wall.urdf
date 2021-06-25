@@ -1,0 +1,21 @@
+<robot name="scene0420_01_wall">
+	<link name="_name">
+		<visual>
+			<origin xyz="-0.24032888514380188 -0.029116023504124153 -0.20852360071249595" rpy="0.0 0.0 0.0" />
+			<geometry>
+				<mesh filename="scene0420_01_wall.obj" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="-0.24032888514380188 -0.029116023504124153 -0.20852360071249595" />
+			<geometry>
+				<mesh filename="scene0420_01_wall_vhacd.obj" />
+			</geometry>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0 0 0" />
+			<mass value="1.0" />
+			<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+		</inertial>
+	</link>
+</robot>

@@ -6,7 +6,7 @@ from gibson2.render.mesh_renderer import tinyobjloader as tiny
 from openvrooms.config import *
 
 class BoxBBox(object):
-    def __init__(self):
+    def __init__(self, small_box):
         self.reader = None
         self.mtllib = ''
         # predefine v/vt indices for each of the 12 trimesh faces
@@ -39,6 +39,9 @@ class BoxBBox(object):
 				 (2,3,4),
 				 (2,1,3)
                 ])
+
+        # small or big
+        self.small_box = small_box
 
     def parse_obj(self, obj_file_name):
         # parse .obj file
@@ -81,7 +84,9 @@ class BoxBBox(object):
         [x1, y1, z1] = np.max(vertices, axis=0) # (3, )
         #y1 = y1 - 0.32
         [x0, y0, z0] = np.min(vertices, axis=0) # (3, )
-        y1 = x1 - x0 + y0
+
+        if self.small_box:
+            y1 = x1 - x0 + y0
 
         bounds = np.array([
             [x0, y0], 

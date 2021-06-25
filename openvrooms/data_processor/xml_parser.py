@@ -13,6 +13,8 @@ from openvrooms.data_processor.split import split_layout
 from openvrooms.data_processor.floor_bbox import FloorBBox
 from openvrooms.data_processor.box_bbox import BoxBBox
 from openvrooms.data_processor.duplicate import duplicate_floor
+import time
+import copy
 
 
 class SceneObj(object):
@@ -209,8 +211,8 @@ class SceneParser:
 			# resize
 			replicated_albedo_texture = np.concatenate(replicated_albedo_texture, axis=0)
 			replicated_roughness_texture = np.concatenate(replicated_roughness_texture, axis=0)
-			replicated_albedo_texture = cv2.resize(replicated_albedo_texture, dsize=(texture_size, int(texture_size*resize_scale)), interpolation=cv2.INTER_AREA)
-			replicated_roughness_texture = cv2.resize(replicated_roughness_texture, dsize=(texture_size, int(texture_size*resize_scale)), interpolation=cv2.INTER_AREA)
+			replicated_albedo_texture = cv2.resize(replicated_albedo_texture, dsize=(texture_size//2, int(texture_size//2*resize_scale)), interpolation=cv2.INTER_AREA)
+			replicated_roughness_texture = cv2.resize(replicated_roughness_texture, dsize=(texture_size//2, int(texture_size//2*resize_scale)), interpolation=cv2.INTER_AREA)
 			# store the replicated texture maps to the combined texture lists
 			combined_albedo_texture.append(replicated_albedo_texture)
 			combined_roughness_texture.append(replicated_roughness_texture)
@@ -225,8 +227,8 @@ class SceneParser:
 			# save combined texture images
 			combined_albedo_texture_imgname = obj.id + '_diffuse_tiled_combined' + ('' if obj_idx==0 else str(obj_idx)) + '.png'
 			combined_roughness_texture_imgname = obj.id + '_rough_tiled_combined' + ('' if obj_idx==0 else str(obj_idx)) + '.png'
-			cv2.imwrite(os.path.join(self.save_root, combined_albedo_texture_imgname), combined_albedo_texture[:, :, ::-1])
-			cv2.imwrite(os.path.join(self.save_root, combined_roughness_texture_imgname), combined_roughness_texture[:, :, ::-1])  
+			cv2.imwrite(os.path.join(self.save_root, combined_albedo_texture_imgname), combined_albedo_texture[:, :, ::-1], [cv2.IMWRITE_PNG_COMPRESSION, 9])
+			cv2.imwrite(os.path.join(self.save_root, combined_roughness_texture_imgname), combined_roughness_texture[:, :, ::-1], [cv2.IMWRITE_PNG_COMPRESSION, 9])  
 			
 			## write .mtl file 
 			with open(obj.mtl_path, 'a') as f:
@@ -332,7 +334,7 @@ class SceneParser:
 	# each shape block corresponds to one object, and may inlcude multiple bsdf blocks (materials)
 	# the same shape id could appear multiple times in the scene, each for one object instance
 	# is_split: split layout
-	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, is_box_replaced=False, borders=[-1., 0.], border_type="y_border", reverse_two_band=False):
+	def parse(self, split_floor=False, is_split=True, is_floor_replaced=True, is_box_replaced=False, borders=[-1., 0.], border_type="y_border", reverse_two_band=False, small_box=True):
 		## clear output directory and recreate an empty directory
 		if os.path.isdir(self.save_root): 
 			rmtree(self.save_root)
@@ -363,8 +365,21 @@ class SceneParser:
 		## get scene xml file
 		self.xml_root = self.__get_scene_xml(scene_xml_path)
 
+		## only include interactive object into the scene
+		check_set = copy.deepcopy(self.static_objs)
+		check_set.add(self.scene_id)
+		check_set.add('03337140_2f449bf1b7eade5772594f16694be05_object')
 		## parse scene xml
 		for shape_block in tqdm(self.xml_root.findall('shape'), desc='shape block'):
+
+			## 
+			shape_id = shape_block.get('id')
+			exist = False
+			for item in check_set:
+				if shape_id.lower().find(item) != -1:
+					exist = True
+			if not exist: continue
+
 			obj = self.parse_shape_block(shape_block)
 			if obj == None: 
 				continue
@@ -391,7 +406,7 @@ class SceneParser:
 		
 		## replace box with rectangle object
 		if is_box_replaced:
-			box = BoxBBox()
+			box = BoxBBox(small_box=small_box)
 			box_cnt = 0
 			for obj in self.obj_list:
 				if obj.obj_path == '03337140_2f449bf1b7eade5772594f16694be05_object.obj':
@@ -406,6 +421,10 @@ class SceneParser:
 		print('Scene id: %s, Total: %d objects'%(self.scene_id, len(self.obj_list)))
 		print('Output folder: %s'%(self.save_root))
 		print('-------------------------------------')
+		print('============ obj list ================')
+		for obj in self.obj_list:
+			print(obj.id)
+		print('============ obj list ================')
 
 		return self.obj_list
 	

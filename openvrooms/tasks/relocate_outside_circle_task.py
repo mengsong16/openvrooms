@@ -110,6 +110,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		print("--------------- Check validity of initial scene ------------")
 		self.check_initial_scene_collision(env)
 		print("--------------------------------------------- ")
+
+		self.facing_direction_index = 0
 		
 
 	def load_visualization(self, env):
@@ -137,14 +139,14 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		self.vis_circles = []
 		for i in list(range(self.circle_num)):
 			if i % 2 == 0:
-				color = [0, 0, 1, 0.3]
+				color = [1, 0.27, 0, 0.5]
 			else:
 				color = [0, 1, 0, 0.3]	
 			self.vis_circles.append(VisualMarker(
 				visual_shape=p.GEOM_CYLINDER,
 				rgba_color=color,
 				radius=self.circle_radius[i],
-				length=0.2,
+				length=0.05,
 				initial_offset=[0, 0, 0]))
 
 			
@@ -434,6 +436,36 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		for reward_termination_function in self.reward_termination_functions:
 			reward_termination_function.reset(self, env)
 
+	def reset_scene_agent_enumerate(self, env):
+		'''
+		correct_scene = False
+		robot_orn = 0
+		obj_init_pose = []
+
+		while correct_scene == False:
+			robot_orn, obj_init_pose = self.random_initial_pose(env)
+			correct_scene = self.check_initial_pose(env, robot_orn, obj_init_pose)
+		'''
+		obj_init_pose, robot_orn = self.enumerate_predefined_pose()	
+
+		obj_initial_pos = []
+		obj_initial_orn = []
+		for i in range(len(obj_init_pose)):
+			obj_initial_pos.append([obj_init_pose[i][0], obj_init_pose[i][1]])
+			obj_initial_orn.append([0,0,obj_init_pose[i][2]])
+
+		env.scene.reset_interactive_object_poses(np.array(obj_initial_pos), np.array(obj_initial_orn))
+
+		# land robot at initial pose
+		env.land(env.robots[0], self.agent_initial_pos, [0,0,robot_orn])
+	
+		# robot x,y
+		self.robot_pos = self.agent_initial_pos[:2]
+
+		# reset reward functions
+		for reward_termination_function in self.reward_termination_functions:
+			reward_termination_function.reset(self, env)		
+
 	def get_configurations(self):
 		#obj_init_pose_base = [[[0.7, 0.7, 0], [0.7, -0.7, 0]], \
 		#				[[-0.7, 0.7, -math.pi], [-0.7, -0.7, -math.pi]], \
@@ -444,8 +476,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		# line 3: line 2 swap x,y
 		# line 4: line 1 swap x,y
 		obj_init_pose_base = [[[self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
-						#[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
-						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
+						[[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], -math.pi], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], -math.pi]], \
+						# [[-self.obj_initial_pos[0][0], self.obj_initial_pos[0][1], 0], [-self.obj_initial_pos[1][0], self.obj_initial_pos[1][1], 0]], \
 						[[self.obj_initial_pos[0][1], -self.obj_initial_pos[0][0], math.pi/2.0], [self.obj_initial_pos[1][1],-self.obj_initial_pos[1][0], math.pi/2.0]], \
 						[[self.obj_initial_pos[0][1], self.obj_initial_pos[0][0], -math.pi/2.0], [self.obj_initial_pos[1][1], self.obj_initial_pos[1][0], -math.pi/2.0]]]
 
@@ -491,6 +523,34 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 		else:
 			obj_pose[0], obj_pose[1] = obj_pose[1], obj_pose[0]		
 			return obj_pose, robot_orn[index]
+
+	def enumerate_predefined_pose(self):
+			
+		configurations = self.get_configurations()
+		
+		robot_orn = [0, -math.pi, -math.pi/2.0, math.pi/2.0]
+
+		#index = random.choice(list(range(4)))
+
+		#obj_pose = obj_init_pose[index]
+		obj_pose = self.configurations[self.config_index][self.facing_direction_index]
+
+		#swap = random.choice(list(range(2)))
+		#swap = 1
+
+		# next
+		old_facing_direction_index = self.facing_direction_index
+		self.facing_direction_index = (self.facing_direction_index + 1) % 4	
+
+		#if swap == 0:
+		if self.swap == False:
+			return obj_pose, robot_orn[old_facing_direction_index]
+		# swap two box		
+		else:
+			obj_pose[0], obj_pose[1] = obj_pose[1], obj_pose[0]		
+			return obj_pose, robot_orn[old_facing_direction_index]
+
+
 
 '''
 def get_configurations():

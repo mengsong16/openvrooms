@@ -130,15 +130,16 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				self.vis_region_y = [-(env.scene.y_range[1]-env.scene.y_range[0])/2.0, self.region_boundary[1]]	
 		
 
-		vis_region_x_half_extent = (self.vis_region_x[1] - self.vis_region_x[0]) / 2.0
-		vis_region_y_half_extent = (self.vis_region_y[1] - self.vis_region_y[0]) / 2.0
+		vis_region_x_half_extent = (self.vis_region_x[1] - self.vis_region_x[0]) / 1.0
+		vis_region_y_half_extent = (self.vis_region_y[1] - self.vis_region_y[0]) / 1.0
 		self.vis_region_offset = [self.vis_region_x[0]+vis_region_x_half_extent, self.vis_region_y[0]+vis_region_y_half_extent, 0]
 
 		self.vis_region = VisualMarker(
 			visual_shape=p.GEOM_BOX,
-			rgba_color=[0, 1, 0, 0.3],
-			half_extents=[vis_region_x_half_extent, vis_region_y_half_extent, 0.1],
-			initial_offset=[0, 0, 0.1])
+			rgba_color=[0.68, 1, 0.18, 0.3],
+			# rgba_color=[0, 1, 0, 0.1],
+			half_extents=[vis_region_x_half_extent, vis_region_y_half_extent, 0.001],
+			initial_offset=[0, 0, 0.001])
 
 		if self.visual_object_visible_to_agent:
 			#for i in list(range(self.obj_num)):
