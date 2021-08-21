@@ -66,19 +66,8 @@ ppo_train_config = {
         "env": OpenRoomEnvironmentRLLIB,  
         "env_config": {
            "env": env_option,
-           #"config_file": '%s_%s.yaml'%(robot_option, env_option),
-           #"config_file": 'fetch_relocate_different_objects.yaml',
-           #"config_file": 'fetch_relocate_multi_band.yaml',
-           #"config_file": 'fetch_relocate_circle_one_box.yaml',
-           #"config_file": 'fetch_relocate_circle_two_box.yaml',
-           #"config_file": 'fetch_relocate_outside_circle_two_box.yaml',
-           #"config_file": 'fetch_relocate_short.yaml',
-           #"config_file": 'fetch_relocate_two_band_reverse_short.yaml',
-           #"config_file": 'fetch_relocate_short_reward_shaping.yaml',
-           #"config_file": 'fetch_navigate_short.yaml',
-        #    "config_file": 'fetch_relocate_two_band_region_reverse.yaml',
-           #"config_file": 'fetch_relocate_two_band_short.yaml',
-           "config_file": 'fetch_relocate_two_band_region.yaml',
+           "config_file": 'fetch_relocate_outside_circle_two_box.yaml',
+           #"config_file": 'fetch_relocate_two_band_region.yaml',
            "mode": "headless",
            #"mode": "gui",
            "device_idx": 0, # renderer use gpu 0
@@ -90,7 +79,7 @@ ppo_train_config = {
         "num_workers": 10,
         "lr": 1e-4, # try different lrs, 5e-5
         "framework": "torch",
-        "seed": 8,
+        "seed": 1,
         "train_batch_size": 4000,#8192, #4000,
         "sgd_minibatch_size": 512,
         #"model": {
@@ -107,15 +96,15 @@ ppo_train_config = {
 
 #sac_train_config = sac.DEFAULT_CONFIG.copy()
 sac_train_config = {
-        #"env": "Breakout-v0",
-        "env": OpenRoomEnvironmentRLLIB,  
-        "env_config": {
-           "env": env_option,
-           "config_file": '%s_%s.yaml'%(robot_option, env_option),
-           "mode": "headless",
-           "device_idx": 0, # renderer use gpu 0
-           "frame_stack": 0
-        },
+        "env": "Breakout-v0",
+        #"env": OpenRoomEnvironmentRLLIB,  
+        #"env_config": {
+        #   "env": env_option,
+        #   "config_file": '%s_%s.yaml'%(robot_option, env_option),
+        #   "mode": "headless",
+        #   "device_idx": 0, # renderer use gpu 0
+        #   "frame_stack": 0
+        #},
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         "num_gpus": 1,
         "num_workers": 10,

@@ -19,7 +19,7 @@ obj_num: 1
 wheel_velocity: 0.5 
 
 # for joint level energy only
-normalized_energy: false 
+normalized_joint_energy: false 
 
 # simulation
 action_timestep: 0.1 #0.2  # environment executes action per action_timestep second, 1/10

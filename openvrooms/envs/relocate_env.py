@@ -101,14 +101,34 @@ class RelocateEnv(iGibsonEnv):
 
 		# energy in reward function
 		#self.energy_cost_scale = self.config.get('energy_cost_scale', 1.0)
-		self.use_energy_cost = self.config.get('use_energy_cost')
+		#self.use_energy_cost = self.config.get('use_energy_cost')
 		self.ratio_method = self.config.get('ratio_method')
 		self.joint_level_energy = self.config.get('joint_level_energy')
-		self.normalized_energy = self.config.get('normalized_energy')
-		self.heuristic_succeed_episode_energy_min = float(self.config.get('heuristic_succeed_episode_energy_min', 0))
-		self.heuristic_succeed_episode_energy_max = float(self.config.get('heuristic_succeed_episode_energy_max', 300))
+		self.normalized_joint_energy = self.config.get('normalized_joint_energy')
 
+		#self.heuristic_per_step_energy_min = float(self.config.get('heuristic_per_step_energy_min', 0))
+		#self.heuristic_per_step_energy_max = float(self.config.get('heuristic_per_step_energy_max', 300))
 
+		#self.heuristic_succeed_episode_energy_min = float(self.config.get('heuristic_succeed_episode_energy_min', 0))
+		#self.heuristic_succeed_episode_energy_max = float(self.config.get('heuristic_succeed_episode_energy_max', 300))
+
+		# set heuristic energy bounds
+		self.heuristic_per_step_energy_min = 0.0
+
+		if self.joint_level_energy:
+			self.heuristic_per_step_energy_max = 500
+			print("Robot per step max energy should be the maximum joint output energy, dummy value is used here since this situation is not considered yet!")
+		else:	
+			self.heuristic_per_step_energy_max = self.compute_per_step_pushing_energy_upper_bound()
+		
+		self.heuristic_succeed_episode_energy_min = 0.0
+		
+		# max steps per episode
+		self.max_step = int(self.config.get('max_step'))
+		self.heuristic_succeed_episode_energy_max = self.heuristic_per_step_energy_max * self.max_step
+		
+
+		# renderer parameters
 		enable_shadow = self.config.get('enable_shadow', False)
 		enable_pbr = self.config.get('enable_pbr', True)
 		texture_scale = self.config.get('texture_scale', 1.0)
@@ -134,7 +154,7 @@ class RelocateEnv(iGibsonEnv):
 								   rendering_settings=settings,
 								   external_camera_pos=self.config.get('external_camera_pos', [0, 0, 1.2]),
 								   external_camera_view_direction=self.config.get('external_camera_view_direction', [1, 0, 0]),
-								   normalized_energy=self.normalized_energy,
+								   normalized_joint_energy=self.normalized_joint_energy,
 								   discrete_action_space=self.config.get('is_discrete', False), 
 								   wheel_velocity=self.config.get('wheel_velocity', 1.0))
 
@@ -142,19 +162,47 @@ class RelocateEnv(iGibsonEnv):
 
 		self.automatic_reset = automatic_reset
 
+		# reward function choices
+		print('--------------------------------')
+		self.reward_function_choice = self.config.get("reward_function_choice")	
+		#if self.sparser_reward:
+		#	print("Use 0-1 reward")
+		#else:
+		#	print("Do NOT Use 0-1 reward")
+		print("Reward function choice: "+self.reward_function_choice)
 
-		if self.use_energy_cost:
+		print('--------------------------------')
+		#if self.use_energy_cost:
+		if "-energy" in self.config.get("reward_function_choice"):
 			print("Consider energy cost in success reward")
-			if self.ratio_method == "paper":
-				print("Use paper's method to compute ratio")
-			elif self.ratio_method == "heuristic":
-				print("Use heuristics to compute ratio")
+
+			if self.joint_level_energy:
+				print("Use robot energy")
+				if self.normalized_joint_energy:
+					print("Normalized joint energy")
+				else:
+					print("Raw joint energy")	
+			else:
+				print("Use pushing energy")	
+
+			#if self.ratio_method == "paper":
+			#	print("Use paper's method to compute ratio")
+			if self.ratio_method == "heuristic":
+				print("Use heuristic bounds to compute ratio")
+				print("Per-step energy lower bound: %f"%self.heuristic_per_step_energy_min)
+				print("Per-step energy upper bound: %f"%self.heuristic_per_step_energy_max)
+				print("Per-episode energy lower bound: %f"%self.heuristic_succeed_episode_energy_min)
+				print("Per-episode energy upper bound: %f"%self.heuristic_succeed_episode_energy_max)
 			elif self.ratio_method == "history":
 				print("Use running history to compute ratio")		
 			else:
 				print("Error: undefined ratio computing method")
 		else:
 			print("DO NOT consider energy cost in success reward")	
+		print('--------------------------------')
+		
+
+
 		print('--------------------------------')
 		if self.config["use_goal_dist_reward"]:
 			print("Use goal distance reward")
@@ -195,13 +243,7 @@ class RelocateEnv(iGibsonEnv):
 		self.config_index = int(self.config.get('config_index', 0))
 		print("Configuration index: %d"%(self.config_index))
 
-		print('--------------------------------')
-		self.reward_function_choice = self.config.get("reward_function_choice", "0-1-push-time")	
-		#if self.sparser_reward:
-		#	print("Use 0-1 reward")
-		#else:
-		#	print("Do NOT Use 0-1 reward")
-		print("Reward function choice: "+self.reward_function_choice)
+		
 
 		self.enumerate_facing_directions = self.config.get("enumerate_facing_directions", False)	
 
@@ -367,15 +409,21 @@ class RelocateEnv(iGibsonEnv):
 		self.non_interactive_collision_links = [] # per step
 		self.interactive_collision_links = [] # per step
 
-		## record min and max energy among all successful episodes
+		## record min and max episode energy among all successful episodes
 		self.max_succeed_episode_robot_energy_cost = 0.
 		self.max_succeed_episode_pushing_energy_cost = 0.
 		self.min_succeed_episode_robot_energy_cost = np.inf
 		self.min_succeed_episode_pushing_energy_cost = np.inf
 
-		self.max_step_pushing_energy_cost = 0.
-		self.min_step_pushing_energy_cost = np.inf
-		self.current_step_pushing_energy_cost = 0.
+		## record min and max step energy among all episodes
+		self.max_step_pushing_energy_cost = 0. 
+		self.max_step_robot_energy_cost = 0. 
+		self.min_step_pushing_energy_cost = np.inf 
+		self.min_step_robot_energy_cost = np.inf 
+
+
+		self.current_step_pushing_energy_cost = 0.0 # per step
+		self.current_step_robot_energy_cost = 0.0 # per step
 
 	def load(self):
 		"""
@@ -394,6 +442,24 @@ class RelocateEnv(iGibsonEnv):
 		self.load_action_space()
 		self.load_miscellaneous_variables()
 		self.set_physics()
+
+	
+	def compute_per_step_pushing_energy_upper_bound(self):
+		# robot moving velocity in the world frame (m/s)
+		v_max = 1
+		dist_max = v_max * float(self.config['action_timestep'])
+		obj_mass = np.array(self.config.get('obj_mass'), dtype="float32")
+		max_mass = np.amax(obj_mass)
+		floor_friction = np.array(self.config.get('floor_friction'), dtype="float32")
+		max_coeff = np.amax(floor_friction)
+
+		print("-----------------------------------")
+		print("max mass: %f"%(max_mass))
+		print("max friction: %f"%(max_coeff))
+		print("max steps per episode: %f"%(int(self.config.get('max_step'))))
+		print("-----------------------------------")
+
+		return abs(max_coeff * max_mass) * GRAVITY * dist_max
 
 	def load_observation_space(self, task_obs_dim):
 		"""
@@ -702,10 +768,10 @@ class RelocateEnv(iGibsonEnv):
 		'''
 
 		# get robot energy of current action step after stepping physics simulator
-		current_step_robot_energy_cost = self.simulator.robot_energy_cost
+		self.current_step_robot_energy_cost = self.simulator.robot_energy_cost
 
 		
-		return non_interactive_collision_links, interactive_collision_links, current_step_robot_energy_cost
+		return non_interactive_collision_links, interactive_collision_links #, self.current_step_robot_energy_cost
 
 	# get collision where bodyA=interactive_object, bodyB=non_interactive_object or interactive_object
 	def filter_interactive_collision_links(self):
@@ -900,34 +966,45 @@ class RelocateEnv(iGibsonEnv):
 	# lower energy --> lower ratio
 	# ratio: [0,1]
 	# three methods
-	def compute_energy_ratio(self):
+	def compute_episode_energy_ratio(self):
 		# running history
 		if self.ratio_method == "history":
-			if self.joint_level_energy: # normalized or not
+			# robot energy
+			if self.joint_level_energy: 
+				# raw robot energy
+				assert self.normalized_joint_energy == False
+
 				if self.max_succeed_episode_robot_energy_cost == self.min_succeed_episode_robot_energy_cost:
-					ratio = 0
+					ratio = 1
+				elif self.current_episode_robot_energy_cost == self.min_succeed_episode_robot_energy_cost:
+					ratio = sys.float_info.epsilon	/ float(self.max_succeed_episode_robot_energy_cost - self.min_succeed_episode_robot_energy_cost)		
 				else:	
 					ratio = (self.current_episode_robot_energy_cost - self.min_succeed_episode_robot_energy_cost) / float(self.max_succeed_episode_robot_energy_cost - self.min_succeed_episode_robot_energy_cost)
+			# pushing energy
 			else:
 				if self.max_succeed_episode_pushing_energy_cost == self.min_succeed_episode_pushing_energy_cost:
-					ratio = 0
+					ratio = 1
+				elif self.current_episode_pushing_energy_cost == self.min_succeed_episode_pushing_energy_cost:
+					ratio = sys.float_info.epsilon	/ float(self.max_succeed_episode_pushing_energy_cost - self.min_succeed_episode_pushing_energy_cost)	
 				else:	
 					current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
 					ratio = (current_episode_pushing_energy_cost - self.min_succeed_episode_pushing_energy_cost) / float(self.max_succeed_episode_pushing_energy_cost - self.min_succeed_episode_pushing_energy_cost)
 		# heuristics 
 		elif self.ratio_method == "heuristic":
+			# robot energy
 			if self.joint_level_energy: # normalized or not
 				ratio = (self.current_episode_robot_energy_cost - self.heuristic_succeed_episode_energy_min) / float(self.heuristic_succeed_episode_energy_max - self.heuristic_succeed_episode_energy_min)
+			# pushing energy
 			else:
 				current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
 				ratio = (current_episode_pushing_energy_cost - self.heuristic_succeed_episode_energy_min) / float(self.heuristic_succeed_episode_energy_max - self.heuristic_succeed_episode_energy_min)	
 		# paper's method		
-		elif self.ratio_method == "paper":
-			assert self.joint_level_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported by joint level energy cost!"
-			assert self.normalized_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported when joint level energy is normalized!"
+		#elif self.ratio_method == "paper":
+		#	assert self.joint_level_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported by joint level energy cost!"
+		#	assert self.normalized_joint_energy == True, "[relocate_env] Energy ratio computed by paper's method is only supported when joint level energy is normalized!"
 			
-			physics_simulation_steps = int(self.config.get('max_step')) * int(self.action_timestep / self.physics_timestep)
-			ratio = self.current_episode_robot_energy_cost / float(physics_simulation_steps)	
+		#	physics_simulation_steps = int(self.config.get('max_step')) * int(self.action_timestep / self.physics_timestep)
+		#	ratio = self.current_episode_robot_energy_cost / float(physics_simulation_steps)	
 		else:
 			print("Error: undefined ratio computing method")
 			return 0
@@ -936,12 +1013,37 @@ class RelocateEnv(iGibsonEnv):
 
 	def compute_step_energy_ratio(self):
 		# running history
-		if self.max_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
-			ratio = 1
-		elif self.current_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
-			ratio = sys.float_info.epsilon	/ float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
-		else:	
-			ratio = (self.current_step_pushing_energy_cost - self.min_step_pushing_energy_cost) / float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
+		if self.ratio_method == "history":
+			# robot energy
+			if self.joint_level_energy:
+				# raw robot energy
+				assert self.normalized_joint_energy == False
+
+				if self.max_step_robot_energy_cost == self.min_step_robot_energy_cost:
+					ratio = 1
+				elif self.current_step_robot_energy_cost == self.min_step_robot_energy_cost:
+					ratio = sys.float_info.epsilon	/ float(self.max_step_robot_energy_cost - self.min_step_robot_energy_cost)	
+				else:	
+					ratio = (self.current_step_robot_energy_cost - self.min_step_robot_energy_cost) / float(self.max_step_robot_energy_cost - self.min_step_robot_energy_cost)
+			# pushing energy
+			else:
+				if self.max_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
+					ratio = 1
+				elif self.current_step_pushing_energy_cost == self.min_step_pushing_energy_cost:
+					ratio = sys.float_info.epsilon	/ float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
+				else:	
+					ratio = (self.current_step_pushing_energy_cost - self.min_step_pushing_energy_cost) / float(self.max_step_pushing_energy_cost - self.min_step_pushing_energy_cost)
+		# heuristics
+		elif self.ratio_method == "heuristic":
+			# robot energy
+			if self.joint_level_energy: # normalized or not
+				ratio = (self.current_step_robot_energy_cost - self.heuristic_per_step_energy_min) / float(self.heuristic_per_step_energy_max - self.heuristic_per_step_energy_min)
+			# pushing energy
+			else:
+				ratio = (self.current_step_pushing_energy_cost - self.heuristic_per_step_energy_min) / float(self.heuristic_per_step_energy_max - self.heuristic_per_step_energy_min)	
+		else:
+			print("Error: undefined ratio computing method")
+			return 0
 
 		return ratio	
 
@@ -972,7 +1074,8 @@ class RelocateEnv(iGibsonEnv):
 			
 
 		# step simulator, check collisions, compute current_step_robot_energy_cost
-		non_interactive_collision_links, interactive_collision_links, current_step_robot_energy_cost = self.run_simulation()
+		#non_interactive_collision_links, interactive_collision_links, self.current_step_robot_energy_cost = self.run_simulation()
+		non_interactive_collision_links, interactive_collision_links = self.run_simulation()
 
 		# after step
 		# used by reward_termination collision
@@ -984,7 +1087,7 @@ class RelocateEnv(iGibsonEnv):
 
 
 		# accumulate robot energy cost at this step
-		self.current_episode_robot_energy_cost += current_step_robot_energy_cost
+		self.current_episode_robot_energy_cost += self.current_step_robot_energy_cost
 		
 		#print('Energy cost: %f'%(self.robot_energy_cost_cur_step * self.energy_cost_scale))
 		#print('Action: %s'%(action))
@@ -992,14 +1095,17 @@ class RelocateEnv(iGibsonEnv):
 		#	print('Push')
 		#print('--------------------------')
 
-		# accumulate pushing energy cost at this step
+		# accumulate step pushing energy cost to episode pushing energy at this step
 		current_step_pushing_energy_translation, current_step_pushing_energy_rotation = self.compute_pushing_energy_per_action_step(prev_obj_pos_xy, prev_obj_orn_z)
 		self.current_episode_pushing_energy_translation +=  current_step_pushing_energy_translation
 		self.current_episode_pushing_energy_rotation += current_step_pushing_energy_rotation
 
+		# update running history of min and max step energy (pushing and robot) among all trajectories
 		self.current_step_pushing_energy_cost = current_step_pushing_energy_rotation + current_step_pushing_energy_translation
 		self.max_step_pushing_energy_cost = max(self.max_step_pushing_energy_cost, self.current_step_pushing_energy_cost)
 		self.min_step_pushing_energy_cost = min(self.min_step_pushing_energy_cost, self.current_step_pushing_energy_cost)
+		self.max_step_robot_energy_cost = max(self.max_step_robot_energy_cost, self.current_step_robot_energy_cost)
+		self.min_step_robot_energy_cost = min(self.min_step_robot_energy_cost, self.current_step_robot_energy_cost)
 
 		#print("step_energy: %f"%(self.current_step_pushing_energy_cost))
 
@@ -1017,8 +1123,7 @@ class RelocateEnv(iGibsonEnv):
 
 		
 			
-
-		# if succeed, update min and max energy among all successful episodes
+		# if succeed, update running history of min and max episode energy (pushing and robot) among all successful episodes
 		if info['success']:
 			# compute current episode pushing energy
 			current_episode_pushing_energy_cost = self.current_episode_pushing_energy_translation + self.current_episode_pushing_energy_rotation
@@ -1035,8 +1140,9 @@ class RelocateEnv(iGibsonEnv):
 
 		# consider energy cost in reward function when succeed
 		# make sure that current_episode_energy, max_succeed and min_succeed are updated before ratio
-		if info['success'] and self.use_energy_cost:
-			ratio = self.compute_energy_ratio()
+		#if info['success'] and self.use_energy_cost:
+		if info['success'] and self.reward_function_choice == "0-1-with-per-episode-energy":  # in use
+			ratio = self.compute_episode_energy_ratio()
 			reward = reward * (1 - ratio)
 		
 		#print(sub_reward)
@@ -1216,10 +1322,11 @@ class RelocateEnv(iGibsonEnv):
 		#self.current_succeed_episode_pushing_energy_translation = 0.0 # per episode
 		#self.current_succeed_episode_pushing_energy_rotation = 0.0 # per episode
 
-		self.non_interactive_collision_links = [] # per step
-		self.interactive_collision_links = [] # per step
+		self.non_interactive_collision_links = [] 
+		self.interactive_collision_links = []
 
-		self.current_step_pushing_energy_cost = 0.
+		self.current_step_pushing_energy_cost = 0. # per step
+		self.current_step_robot_energy_cost = 0. # per step
 
 
 	def reset(self):
@@ -1275,14 +1382,14 @@ if __name__ == '__main__':
 	#env.scene.get_interactive_obj_dimension()
 	
 	step_time_list = []
-	for episode in range(40):
+	for episode in range(2):
 		print("***********************************")
 		print('Episode: {}'.format(episode))
 		start = time.time()
 		env.reset()
 		for i in range(100):  # 10 seconds
-			#action = env.action_space.sample()
-			action = 3
+			action = env.action_space.sample()
+			#action = 3
 			#if i < 50:
 			#	action = 0
 			#else:
@@ -1298,6 +1405,8 @@ if __name__ == '__main__':
 			#print(state.shape)
 			#print(state)
 			print('-----------------------------')
+			print("current step pushing energy: %f"%env.current_step_pushing_energy_cost)
+			print("current step robot energy: %f"%(env.current_step_robot_energy_cost))
 			#print('step: %d'%(i))
 			#print('reward', reward)
 			#print('-------------------------------')
@@ -1305,9 +1414,11 @@ if __name__ == '__main__':
 			if done:
 				break
 			#print('...')
-		print('Episode robot output energy: %f'%(env.current_episode_robot_energy_cost))
-		print('Episode pushing energy (translation): %f'%(env.current_episode_pushing_energy_translation))
-		print('Episode pushing energy (rotation): %f'%(env.current_episode_pushing_energy_rotation))	
+		print('-----------------------------')	
+		print('Episode robot energy: %f'%(env.current_episode_robot_energy_cost))
+		#print('Episode pushing energy (translation): %f'%(env.current_episode_pushing_energy_translation))
+		#print('Episode pushing energy (rotation): %f'%(env.current_episode_pushing_energy_rotation))	
+		print('Episode pushing energy: %f'%(env.current_episode_pushing_energy_translation + env.current_episode_pushing_energy_rotation))
 		#print('Episode energy cost (normalized): %f'%(env.current_episode_robot_energy_cost/float(400.0)))
 		#print('Episode energy cost: %f'%(env.current_episode_robot_energy_cost/float(env.current_step)))
 		print('Episode finished after {} timesteps, took {} seconds.'.format(

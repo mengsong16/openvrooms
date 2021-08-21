@@ -231,9 +231,10 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 					reward = float(self.config["collision_reward"])
 				# time elapse (pure locomotion)
 				else:
-					reward = float(self.config["time_elapse_reward"])	
+					reward = float(self.config["time_elapse_reward"])
+		# 0-1 reward structure					
 		# 0-1 reward
-		elif self.reward_function_choice == "0-1":
+		elif (self.reward_function_choice == "0-1" or self.reward_function_choice == "0-1-with-per-episode-energy"): # in use, use episode energy if consider energy
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -245,7 +246,9 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 					reward = float(self.config["collision_penalty"])
 				else:
 					reward = 0.0
-		elif self.reward_function_choice == "-1-0-push-time": # in use
+		# -1-0 reward structure				
+		# -1-0-push-time reward			
+		elif self.reward_function_choice == "-1-0-push-time": 
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -261,7 +264,8 @@ class RelocateOutsideCircleTask(RelocateGoalFixedTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		elif self.reward_function_choice == "-1-0-push-time-with-energy":   # in use
+		# -1-0-push-time with per-step energy reward				
+		elif self.reward_function_choice == "-1-0-push-time-with-per-step-energy":   
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True

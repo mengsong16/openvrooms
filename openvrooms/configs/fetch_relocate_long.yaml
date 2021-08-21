@@ -60,10 +60,10 @@ out_of_bound_reward: -1000.0
 # use energy in reward function
 use_energy_cost: false
 joint_level_energy: false # false: pushing energy, true: robot output energy
-normalized_energy: false # for joint level energy only
+normalized_joint_energy: false # for joint level energy only
 ratio_method: "history" # "paper" "history" "heuristic"
-heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
-heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+#heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
+#heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
 
 
 # episode termination condition

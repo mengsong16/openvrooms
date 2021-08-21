@@ -45,7 +45,7 @@ goal_format: cartesian
 task_obs_dim: 6 # basic dimensions in state, addtional dimensions 6 per object
 
 # reward
-reward_function_choice: '0-1-push-time' #'-1-0-push-time-with-energy' #'0-1' #[0-1-push-time, 0-1-push-time-with-energy, 0-1-time, 0-1, -1-0-push-time]
+reward_function_choice: "0-1-push-time-with-per-step-energy" # 0-1-push-time
 #reward_function_choice: '0-1-push-time' 
 use_goal_dist_reward: false
 rot_dist_reward_weight: 0.0 # (position distance reward weight is 1)
@@ -61,12 +61,14 @@ time_elapse_reward: -1.0 #0.0
 out_of_bound_reward: -1000.0
 
 # use energy in reward function
-use_energy_cost: false
-joint_level_energy: false # false: pushing energy, true: robot output energy
-normalized_energy: false #false  # for joint level energy only
-ratio_method: "history" # "paper" "history" "heuristic"
-heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
-heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+#use_energy_cost: false
+joint_level_energy: true # false: pushing energy, true: robot output energy
+normalized_joint_energy: false #false  # for joint level energy only
+ratio_method: "history" # "history" "heuristic"
+#heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
+#heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+#heuristic_per_step_energy_min: 0 # only for ratio_method is heuristic
+#heuristic_per_step_energy_max: 300 #380 # only for ratio_method is heuristic
 
 # episode termination condition
 max_step: 400

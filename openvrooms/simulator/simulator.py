@@ -44,7 +44,7 @@ class Simulator:
                  rendering_settings=MeshRendererSettings(),
                  external_camera_pos=[0, 0, 1.2],
                  external_camera_view_direction=[1, 0, 0],
-                 normalized_energy=True,
+                 normalized_joint_energy=False,
                  discrete_action_space=False,
                  wheel_velocity=1.0):
         """
@@ -103,7 +103,7 @@ class Simulator:
         self.body_links_awake = 0
 
         self.robot_energy_cost = 0.0  # robot energy for one action step
-        self.normalized_energy = normalized_energy
+        self.normalized_joint_energy = normalized_joint_energy
         self.discrete_action_space = discrete_action_space
         self.wheel_velocity = wheel_velocity
 
@@ -617,19 +617,19 @@ class Simulator:
         for _ in range(n):
             p.stepSimulation()
 
-            # accumulate robot energy cost
-            self.robot_energy_cost += self.robots[0].get_energy(self.physics_timestep, self.normalized_energy, self.discrete_action_space, self.wheel_velocity)
+            # accumulate robot energy cost (normalized or not)
+            self.robot_energy_cost += self.robots[0].get_energy(self.physics_timestep, self.normalized_joint_energy, self.discrete_action_space, self.wheel_velocity)
             
             
             '''
-            print(self.normalized_energy)
+            print(self.normalized_joint_energy)
             print(self.discrete_action_space)
             print(self.wheel_velocity)
-            print(self.robots[0].get_energy(self.physics_timestep, self.normalized_energy, self.discrete_action_space, self.wheel_velocity)) 
+            print(self.robots[0].get_energy(self.physics_timestep, self.normalized_joint_energy, self.discrete_action_space, self.wheel_velocity)) 
             print('---------------------------------------------------------------------')   
             '''
         # ensure [0,1]
-        #if self.normalized_energy:
+        #if self.normalized_joint_energy:
         #self.robot_energy_cost /= float(n)
 
         #print(self.robot_energy_cost) [0.1,0.2, navigate without pushing]

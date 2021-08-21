@@ -57,19 +57,20 @@ tier_cost: -1.0
 use_tier_reward: false
 
 #0_1_reward: true
-reward_function_choice: '0-1' #'-1-0-push-time'
+reward_function_choice: '0-1-with-per-episode-energy' # 0-1
 random_init_pose: true #true
 swap: true
 config_index: 0 # 0 - 7
 enumerate_facing_directions: True
 
 # use energy in reward function
-use_energy_cost: true #true 
+#use_energy_cost: true #true 
 joint_level_energy: false # false: pushing energy, true: robot output energy
-normalized_energy: false #false  # for joint level energy only
-ratio_method: "history" # "paper" "history" "heuristic"
-heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
-heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+normalized_joint_energy: false #false  # for joint level energy only
+ratio_method: "heuristic" # "history" "heuristic"
+#heuristic_succeed_episode_energy_min: 30 # only for ratio_method is heuristic
+#heuristic_succeed_episode_energy_max: 250 #380 # only for ratio_method is heuristic
+
 
 # episode termination condition
 max_step: 400

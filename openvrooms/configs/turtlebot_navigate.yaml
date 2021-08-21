@@ -52,7 +52,7 @@ time_elapse_reward: 0.0 #-1.0
 out_of_bound_reward: -1000.0
 
 energy_cost_scale: 1.0
-normalized_energy: false
+normalized_joint_energy: false
 
 # episode termination condition
 max_step: 200

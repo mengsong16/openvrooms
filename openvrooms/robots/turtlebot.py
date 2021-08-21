@@ -136,7 +136,7 @@ class Turtlebot(LocomotorRobot):
             #print("---------------------------")
             #print(raw_energy)
             #print(max_energy)
-            #print(normalized_energy)
+            #print(normalized_joint_energy)
             #print("---------------------------")
             return normalized_power * physics_simulation_timestep
         #print("Energy cost: %f"%energy)

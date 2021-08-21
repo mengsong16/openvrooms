@@ -140,6 +140,7 @@ class NavigateEnv(RelocateEnv):
 		self.current_episode = 0
 		self.collision_links = []
 		self.current_episode_robot_energy_cost = 0.0 # per episode
+		self.current_step_robot_energy_cost = 0.0 # per step
 
 	def load(self):
 		"""
@@ -218,10 +219,10 @@ class NavigateEnv(RelocateEnv):
 		self.simulator_step()
 
 		# get robot energy of current action step after stepping physics simulator
-		current_step_robot_energy_cost = self.simulator.robot_energy_cost
+		self.current_step_robot_energy_cost = self.simulator.robot_energy_cost
 		
 
-		return self.filter_collision_links(), current_step_robot_energy_cost	
+		return self.filter_collision_links() #, self.current_step_robot_energy_cost	
 
 	# populate information into info
 	def populate_info(self, info):
@@ -249,12 +250,13 @@ class NavigateEnv(RelocateEnv):
 			self.robots[0].apply_action(action)
 
 		# run simulation and check collisions
-		collisions, current_step_robot_energy_cost = self.run_simulation()
+		#collisions, current_step_robot_energy_cost = self.run_simulation()
+		collisions = self.run_simulation()
 		self.collision_links = collisions
 		self.collision_step += int(len(self.collision_links) > 0)
 
 		# accumulate robot energy cost at this step
-		self.current_episode_robot_energy_cost += current_step_robot_energy_cost
+		self.current_episode_robot_energy_cost += self.current_step_robot_energy_cost
 		
 		state = self.get_state()
 		info = {}

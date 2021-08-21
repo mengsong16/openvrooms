@@ -482,7 +482,7 @@ class RelocateGoalFixedTask(BaseTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		elif self.reward_function_choice == "-1-0-push-time-with-energy":
+		elif self.reward_function_choice == "-1-0-push-time-with-per-step-energy":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True

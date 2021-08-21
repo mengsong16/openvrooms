@@ -191,6 +191,7 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 		done = False
 		success = False
 
+		# compute each reward condition respectively
 		sub_reward = {}
 
 		for reward_termination in self.reward_termination_functions:
@@ -207,6 +208,7 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 
 		# get reward
 		# 0-1 reward structure
+		# 0-1-push-time
 		if self.reward_function_choice == "0-1-push-time": # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
@@ -223,7 +225,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		elif self.reward_function_choice == "0-1-push-time-with-energy": 
+		# 0-1-push-time with per-step energy			
+		elif self.reward_function_choice == "0-1-push-time-with-per-step-energy":  # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -246,8 +249,9 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				#	reward = float(self.config["time_elapse_reward"]) * floor_friction_coefficient
 				# time elapse (pure locomotion)
 				else:
-					reward = float(self.config["time_elapse_reward"])			
-		elif self.reward_function_choice == "0-1": # in use, use episode energy if consider energy
+					reward = float(self.config["time_elapse_reward"])	
+		# 0-1					
+		elif self.reward_function_choice == "0-1": 
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True
@@ -258,7 +262,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				if self.reward_termination_functions[2].has_negative_collision():
 					reward = float(self.config["collision_penalty"])
 				else:
-					reward = 0.0			
+					reward = 0.0
+		# 0-1-time						
 		elif self.reward_function_choice == "0-1-time":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
@@ -272,7 +277,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (do not distinguish pure locomotion and pushing)
 				else:
 					reward = float(self.config["time_elapse_reward"])			
-		# -1-0 reward structure			
+		# -1-0 reward structure	
+		# -1-0-time		
 		elif self.reward_function_choice == "-1-0-time":
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
@@ -286,6 +292,7 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (do not distinguish pure locomotion and pushing)
 				else:
 					reward = float(self.config["time_elapse_reward"])
+		# -1-0-push-time			
 		elif self.reward_function_choice == "-1-0-push-time": # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
@@ -302,7 +309,8 @@ class RelocateRegionTask(RelocateGoalFixedTask):
 				# time elapse (pure locomotion)
 				else:
 					reward = float(self.config["time_elapse_reward"])	
-		elif self.reward_function_choice == "-1-0-push-time-with-energy":   # in use
+		# -1-0-push-time with per-step energy			
+		elif self.reward_function_choice == "-1-0-push-time-with-per-step-energy":   # in use
 			# goal reached
 			if self.reward_termination_functions[1].goal_reached():
 				assert info['success'] == True

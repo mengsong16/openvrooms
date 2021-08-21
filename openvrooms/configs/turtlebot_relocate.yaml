@@ -54,7 +54,7 @@ out_of_bound_reward: -1000.0
 
 use_energy_cost: false
 energy_cost_scale: 1.0
-normalized_energy: true
+normalized_joint_energy: false
 
 # episode termination condition
 max_step: 200
