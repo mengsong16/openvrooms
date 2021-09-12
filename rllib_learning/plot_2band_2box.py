@@ -53,7 +53,7 @@ def plot_data(plot_save_path, data_base_path, curve_groups, column_name, end_ite
 		results = load_data(data_base_path, curve_groups[i], column_name) 
 		# Plot each line
 		# (may want to automate this part e.g. with a loop).
-		sns_plot = sns.lineplot(data=results, legend=False, palette=[colors[i]])
+		sns_plot = sns.lineplot(data=results, legend=False, palette=[colors[i]], ci="sd")
 
 
 
